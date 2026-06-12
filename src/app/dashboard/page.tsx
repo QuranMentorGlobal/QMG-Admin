@@ -39,47 +39,47 @@ export default function DashboardPage() {
 
       const { data: profile } = await supabase
         .from('profiles').select('first_name').eq('id', user.id).single()
-      setAdminName(profile?.first_name || 'Admin')
+      setAdminName((profile as any)?.first_name || 'Admin')
 
+      // Run each query independently so one failure doesn't block the rest
       const [students, teachers, bookings, payments, pending, reviews] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'student'),
-        supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'teacher'),
-        supabase.from('bookings').select('id', { count: 'exact' }),
-        supabase.from('payments').select('platform_fee_usd'),
-        supabase.from('teacher_profiles').select('id', { count: 'exact' }).eq('status', 'pending'),
-        supabase.from('reviews').select('id', { count: 'exact' }).eq('is_published', false),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
+        supabase.from('bookings').select('id', { count: 'exact', head: true }),
+        supabase.from('payments').select('platform_fee_usd').limit(1000),
+        supabase.from('teacher_profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('is_published', false),
       ])
 
-      const revenue = (payments.data as any[] || []).reduce(
-        (sum: number, p: any) => sum + (p.platform_fee_usd || 0), 0
+      const revenue = ((payments.data as any[]) || []).reduce(
+        (sum: number, p: any) => sum + (Number(p.platform_fee_usd) || 0), 0
       )
 
       setStats({
-        totalStudents: students.count || 0,
-        totalTeachers: teachers.count || 0,
-        totalBookings: bookings.count || 0,
-        totalRevenue: revenue,
-        pendingTeachers: pending.count || 0,
-        pendingReviews: reviews.count || 0,
+        totalStudents:  students.count  ?? 0,
+        totalTeachers:  teachers.count  ?? 0,
+        totalBookings:  bookings.count  ?? 0,
+        totalRevenue:   revenue,
+        pendingTeachers: pending.count  ?? 0,
+        pendingReviews:  reviews.count  ?? 0,
       })
       setLoading(false)
     }
-    load()
+    load().catch(() => setLoading(false))
   }, [])
 
   const statCards: StatCard[] = [
-    { label: 'Total Students',    value: stats.totalStudents,               numericValue: stats.totalStudents,    icon: Users,         color: '#1B5E37', bg: '#E8F5EE' },
-    { label: 'Total Teachers',    value: stats.totalTeachers,               numericValue: stats.totalTeachers,    icon: GraduationCap, color: '#B8952A', bg: '#F0E4B8' },
-    { label: 'Total Bookings',    value: stats.totalBookings,               numericValue: stats.totalBookings,    icon: BookOpen,      color: '#6366F1', bg: '#EEF2FF' },
-    { label: 'Platform Revenue',  value: `$${stats.totalRevenue.toFixed(0)}`, numericValue: stats.totalRevenue,  icon: DollarSign,    color: '#0891B2', bg: '#E0F7FA' },
-    { label: 'Pending Teachers',  value: stats.pendingTeachers,             numericValue: stats.pendingTeachers,  icon: Clock,         color: '#DC2626', bg: '#FEE2E2', urgent: true },
-    { label: 'Pending Reviews',   value: stats.pendingReviews,              numericValue: stats.pendingReviews,   icon: TrendingUp,    color: '#7C3AED', bg: '#F3E8FF', urgent: true },
+    { label: 'Total Students',   value: stats.totalStudents,                numericValue: stats.totalStudents,   icon: Users,         color: '#1B5E37', bg: '#E8F5EE' },
+    { label: 'Total Teachers',   value: stats.totalTeachers,                numericValue: stats.totalTeachers,   icon: GraduationCap, color: '#B8952A', bg: '#F0E4B8' },
+    { label: 'Total Bookings',   value: stats.totalBookings,                numericValue: stats.totalBookings,   icon: BookOpen,      color: '#6366F1', bg: '#EEF2FF' },
+    { label: 'Platform Revenue', value: `$${stats.totalRevenue.toFixed(0)}`, numericValue: stats.totalRevenue,  icon: DollarSign,    color: '#0891B2', bg: '#E0F7FA' },
+    { label: 'Pending Teachers', value: stats.pendingTeachers,              numericValue: stats.pendingTeachers, icon: Clock,         color: '#DC2626', bg: '#FEE2E2', urgent: true },
+    { label: 'Pending Reviews',  value: stats.pendingReviews,               numericValue: stats.pendingReviews,  icon: TrendingUp,    color: '#7C3AED', bg: '#F3E8FF', urgent: true },
   ]
 
   return (
     <AdminLayout adminName={adminName}>
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="mb-7">
           <h1 className="text-2xl font-bold text-ink">
             Welcome back, <span style={{ color: '#1B5E37' }}>{adminName}</span> 👋
@@ -87,7 +87,6 @@ export default function DashboardPage() {
           <p className="text-sm text-ink-light mt-1">Here's what's happening on the platform today.</p>
         </div>
 
-        {/* Stat Cards */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {[...Array(6)].map((_, i) => (
@@ -119,7 +118,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Quick Actions */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h2 className="text-base font-bold text-ink mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
