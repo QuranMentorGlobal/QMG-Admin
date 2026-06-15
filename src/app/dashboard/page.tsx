@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
-import { Users, GraduationCap, BookOpen, DollarSign, Clock, TrendingUp } from 'lucide-react'
+import { Users, GraduationCap, BookOpen, DollarSign, Clock, Star } from 'lucide-react'
 
 type Stats = {
   totalStudents: number
@@ -11,16 +11,6 @@ type Stats = {
   totalRevenue: number
   pendingTeachers: number
   pendingReviews: number
-}
-
-type StatCard = {
-  label: string
-  value: string | number
-  numericValue: number
-  icon: any
-  color: string
-  bg: string
-  urgent?: boolean
 }
 
 export default function DashboardPage() {
@@ -33,14 +23,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      // Fetch stats immediately — no user check needed, API route handles auth
       const res = await fetch('/api/stats')
       if (res.ok) {
         const data = await res.json()
         setStats(data)
       }
-
-      // Get admin name separately — don't block stats on this
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
@@ -49,78 +36,90 @@ export default function DashboardPage() {
             .from('profiles').select('first_name').eq('id', user.id).single()
           setAdminName((profile as any)?.first_name || 'Admin')
         }
-      } catch (e) {
-        // admin name is optional — fail silently
-      }
-
+      } catch {}
       setLoading(false)
     }
     load().catch(() => setLoading(false))
   }, [])
 
-  const statCards: StatCard[] = [
-    { label: 'Total Students',   value: stats.totalStudents,                numericValue: stats.totalStudents,   icon: Users,         color: '#1B5E37', bg: '#E8F5EE' },
-    { label: 'Total Teachers',   value: stats.totalTeachers,                numericValue: stats.totalTeachers,   icon: GraduationCap, color: '#B8952A', bg: '#F0E4B8' },
-    { label: 'Total Bookings',   value: stats.totalBookings,                numericValue: stats.totalBookings,   icon: BookOpen,      color: '#6366F1', bg: '#EEF2FF' },
-    { label: 'Platform Revenue', value: `$${stats.totalRevenue.toFixed(0)}`, numericValue: stats.totalRevenue,  icon: DollarSign,    color: '#0891B2', bg: '#E0F7FA' },
-    { label: 'Pending Teachers', value: stats.pendingTeachers,              numericValue: stats.pendingTeachers, icon: Clock,         color: '#DC2626', bg: '#FEE2E2', urgent: true },
-    { label: 'Pending Reviews',  value: stats.pendingReviews,               numericValue: stats.pendingReviews,  icon: TrendingUp,    color: '#7C3AED', bg: '#F3E8FF', urgent: true },
+  const statCards = [
+    { label: 'Total Students',   value: stats.totalStudents,                  icon: Users,         bg: '#E8F5EE', color: '#1B5E37', urgent: false },
+    { label: 'Total Teachers',   value: stats.totalTeachers,                  icon: GraduationCap, bg: '#F0E4B8', color: '#B8952A', urgent: false },
+    { label: 'Total Bookings',   value: stats.totalBookings,                  icon: BookOpen,      bg: '#EDE6D6', color: '#097434', urgent: false },
+    { label: 'Platform Revenue', value: `$${stats.totalRevenue.toFixed(0)}`,  icon: DollarSign,    bg: '#E8F5EE', color: '#1B5E37', urgent: false },
+    { label: 'Pending Teachers', value: stats.pendingTeachers,                icon: Clock,         bg: '#FEF3C7', color: '#B8952A', urgent: stats.pendingTeachers > 0 },
+    { label: 'Pending Reviews',  value: stats.pendingReviews,                 icon: Star,          bg: '#FEE2E2', color: '#DC2626', urgent: stats.pendingReviews > 0 },
+  ]
+
+  const quickActions = [
+    { label: 'Review Applications', href: '/teachers/pending', emoji: '📋', color: '#1B5E37', bg: '#E8F5EE' },
+    { label: 'Moderate Reviews',    href: '/reviews',          emoji: '⭐', color: '#B8952A', bg: '#F0E4B8' },
+    { label: 'View Bookings',       href: '/bookings',         emoji: '📅', color: '#097434', bg: '#EDE6D6' },
+    { label: 'Platform Settings',   href: '/settings',         emoji: '⚙️', color: '#1B5E37', bg: '#E8F5EE' },
   ]
 
   return (
     <AdminLayout adminName={adminName}>
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-7">
-          <h1 className="text-2xl font-bold text-ink">
-            Welcome back, <span style={{ color: '#1B5E37' }}>{adminName}</span> 👋
+      <div style={{ maxWidth: 1100 }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 800, color: '#097434', margin: 0 }}>
+            Welcome back, {adminName} 👋
           </h1>
-          <p className="text-sm text-ink-light mt-1">Here's what's happening on the platform today.</p>
+          <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 4 }}>
+            Here's what's happening on QuranMentorGlobal today.
+          </p>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 h-28 animate-pulse">
-                <div className="h-4 bg-gray-100 rounded w-1/2 mb-3" />
-                <div className="h-8 bg-gray-100 rounded w-1/3" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {statCards.map(({ label, value, numericValue, icon: Icon, color, bg, urgent }) => (
-              <div key={label}
-                className="bg-white rounded-2xl p-5 shadow-sm border flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
-                style={{ borderColor: urgent && numericValue > 0 ? '#FECACA' : '#F3F4F6' }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: bg }}>
-                  <Icon size={22} style={{ color }} />
+        {/* Stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
+          {loading
+            ? [...Array(6)].map((_, i) => (
+                <div key={i} style={{ background: '#fff', borderRadius: 16, height: 100, border: '1px solid #E8E4DA' }}>
+                  <div style={{ margin: 20, height: 16, background: '#F0EDE6', borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
+                  <div style={{ margin: '8px 20px', height: 28, background: '#F0EDE6', borderRadius: 8, width: '50%', animation: 'pulse 1.5s infinite' }} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-                  <p className="text-xs text-ink-light font-medium mt-0.5">{label}</p>
-                  {urgent && numericValue > 0 && (
-                    <span className="text-xs font-bold text-red-500">Needs attention !</span>
-                  )}
+              ))
+            : statCards.map(({ label, value, icon: Icon, bg, color, urgent }) => (
+                <div key={label} style={{
+                  background: '#fff', borderRadius: 16, padding: '18px 20px',
+                  border: `1px solid ${urgent ? '#FECACA' : '#E8E4DA'}`,
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  boxShadow: urgent ? '0 0 0 2px rgba(220,38,38,0.08)' : 'none',
+                }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={20} style={{ color }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 22, fontWeight: 800, color, margin: 0, lineHeight: 1.1 }}>{value}</p>
+                    <p style={{ fontSize: 12, color: '#9A9A8A', margin: '3px 0 0', fontWeight: 500 }}>{label}</p>
+                    {urgent && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626' }}>Needs attention</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))
+          }
+        </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-base font-bold text-ink mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Review Applications', href: '/teachers/pending', emoji: '📋', color: '#1B5E37' },
-              { label: 'Moderate Reviews',    href: '/reviews',          emoji: '⭐', color: '#B8952A' },
-              { label: 'View Bookings',       href: '/bookings',         emoji: '📅', color: '#6366F1' },
-              { label: 'Platform Settings',   href: '/settings',         emoji: '⚙️', color: '#0891B2' },
-            ].map(({ label, href, emoji, color }) => (
-              <a key={href} href={href}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl text-center text-sm font-semibold transition-all hover:-translate-y-1 hover:shadow-md border border-gray-100"
-                style={{ color }}>
-                <span className="text-2xl">{emoji}</span>
+        {/* Quick Actions */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '22px 24px', border: '1px solid #E8E4DA' }}>
+          <h2 style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: '0 0 16px', letterSpacing: '0.01em' }}>
+            Quick Actions
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+            {quickActions.map(({ label, href, emoji, color, bg }) => (
+              <a key={href} href={href} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                padding: '16px 12px', borderRadius: 12, textAlign: 'center',
+                textDecoration: 'none', fontSize: 12, fontWeight: 700, color,
+                background: bg, border: `1px solid ${bg}`,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '' }}>
+                <span style={{ fontSize: 24 }}>{emoji}</span>
                 {label}
               </a>
             ))}
