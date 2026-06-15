@@ -1,20 +1,23 @@
+// qmg-admin: src/app/teachers/pending/page.tsx
 'use client'
 import { useEffect, useState } from 'react'
-// Admin data fetched via API routes that use service role key
 import AdminLayout from '@/components/AdminLayout'
-import { CheckCircle, XCircle, Clock, Globe, DollarSign } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, Play, Eye } from 'lucide-react'
 
-type Application = {
+type PendingTeacher = {
   id: string
   user_id: string
+  status: string
   years_experience: number
+  ijazah_verified: boolean
   specializations: string[]
   teaching_languages: string[]
+  available_days: string[]
   hourly_rate_usd: number
   trial_rate_usd: number
-  available_days: string[]
-  ijazah_verified: boolean
-  status: string
+  profile_photo_url: string
+  intro_video_url: string | null
+  rejection_reason: string | null
   profiles: {
     first_name: string
     last_name: string
@@ -25,311 +28,267 @@ type Application = {
   }
 }
 
-export default function TeacherApplicationsPage() {
-  const [applications, setApplications] = useState<Application[]>([])
+export default function PendingTeachersPage() {
+  const [teachers, setTeachers] = useState<PendingTeacher[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [selected, setSelected] = useState<Application | null>(null)
-  const [showRejectModal, setShowRejectModal] = useState<Application | null>(null)
-  const [rejectionReason, setRejectionReason] = useState('')
   const [toast, setToast] = useState('')
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [rejectReason, setRejectReason] = useState<Record<string, string>>({})
+  const [showReject, setShowReject] = useState<string | null>(null)
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
 
-  useEffect(() => { fetchApplications() }, [])
+  useEffect(() => { fetchPending() }, [])
 
-  async function fetchApplications() {
-    const res = await fetch('/api/pending-teachers')
-    if (res.ok) {
+  async function fetchPending() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/pending-teachers')
       const data = await res.json()
-      setApplications(data || [])
+      setTeachers(Array.isArray(data) ? data : [])
+    } catch (e) {
+      showToast('❌ Failed to load pending teachers')
     }
     setLoading(false)
   }
 
-  async function handleAction(id: string, userId: string, action: 'approved' | 'rejected', reason?: string) {
-  setActionLoading(id)
-
-  // Use API route to bypass RLS
-  await fetch('/api/review-teacher', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, userId, action, reason }),
-  })
-
-  // Get teacher details for email
-  const { data: prof } = await supabase
-    .from('profiles')
-    .select('first_name, last_name, email')
-    .eq('id', userId)
-    .single() as any
-
-  if (prof) {
+  async function handleAction(teacher: PendingTeacher, action: 'approved' | 'rejected') {
+    if (action === 'rejected' && !rejectReason[teacher.id]?.trim()) {
+      showToast('❌ Please provide a rejection reason')
+      return
+    }
+    setActionLoading(teacher.id)
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/email`, {
+      const res = await fetch('/api/review-teacher', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: action,
-          teacherName: `${prof.first_name} ${prof.last_name}`,
-          teacherEmail: prof.email,
-          reason: reason || '',
+          id: teacher.id,
+          userId: teacher.user_id,
+          action,
+          reason: rejectReason[teacher.id] || null,
         }),
       })
+      const data = await res.json()
+      if (data.error) { showToast('❌ ' + data.error); setActionLoading(null); return }
+      showToast(action === 'approved' ? '✅ Teacher approved!' : '❌ Teacher rejected.')
+      setShowReject(null)
+      await fetchPending()
     } catch (e) {
-      console.error('Email notification failed:', e)
+      showToast('❌ Action failed. Please try again.')
     }
+    setActionLoading(null)
   }
 
-  showToast(action === 'approved' ? '✅ Teacher approved & notified!' : '❌ Application rejected & teacher notified.')
-  setSelected(null)
-  setShowRejectModal(null)
-  setRejectionReason('')
-  await fetchApplications()
-  setActionLoading(null)
-}
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 3000)
-  }
-
-  function openRejectModal(app: Application) {
-    setRejectionReason('')
-    setShowRejectModal(app)
-    setSelected(null)
+    setTimeout(() => setToast(''), 3500)
   }
 
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-ink">Teacher Applications</h1>
-          <p className="text-sm text-ink-light mt-1">Review and approve incoming teacher applications</p>
-        </div>
-
-        {/* Toast */}
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#1B5E37' }}>
+            style={{ background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626' }}>
             {toast}
           </div>
         )}
 
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-ink">Pending Applications</h1>
+            <p className="text-sm text-ink-light mt-1">
+              {teachers.length} teacher{teachers.length !== 1 ? 's' : ''} awaiting review
+            </p>
+          </div>
+          <button onClick={fetchPending}
+            className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 hover:bg-gray-50 transition-all">
+            ↻ Refresh
+          </button>
+        </div>
+
         {loading ? (
           <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />)}
+            {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl h-28 animate-pulse" />)}
           </div>
-        ) : applications.length === 0 ? (
-          <div className="bg-white rounded-2xl p-16 text-center shadow-sm border border-gray-100">
-            <div className="text-5xl mb-4">🎉</div>
-            <p className="text-lg font-bold text-ink">All caught up!</p>
-            <p className="text-sm text-ink-light mt-1">No pending teacher applications.</p>
+        ) : teachers.length === 0 ? (
+          <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: '#F5F0E8' }}>
+              <CheckCircle size={28} style={{ color: '#1B5E37' }} />
+            </div>
+            <p className="font-semibold text-ink">All caught up!</p>
+            <p className="text-sm text-ink-light mt-1">No pending applications at the moment.</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {applications.map(app => (
-              <div key={app.id}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 transition-all hover:shadow-md">
+          <div className="space-y-4">
+            {teachers.map(t => {
+              const name = `${t.profiles?.first_name || ''} ${t.profiles?.last_name || ''}`.trim()
+              const isExpanded = expanded === t.id
+              const isRejecting = showReject === t.id
 
-                {/* Avatar */}
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
-                  {(app.profiles?.first_name || 'T')[0]}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold text-ink">
-                      {app.profiles?.first_name} {app.profiles?.last_name}
-                    </p>
-                    {app.ijazah_verified && (
-                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                        style={{ background: '#F0E4B8', color: '#B8952A' }}>
-                        ✓ Ijazah
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-ink-light mt-0.5">{app.profiles?.email} · {app.profiles?.country}</p>
-                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-ink-light">
-                    <span className="flex items-center gap-1"><Clock size={12} /> {app.years_experience} yrs exp</span>
-                    <span className="flex items-center gap-1"><DollarSign size={12} /> ${app.hourly_rate_usd}/hr</span>
-                    <span className="flex items-center gap-1"><Globe size={12} /> {(app.teaching_languages || []).join(', ')}</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => setSelected(app)}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-ink-mid hover:bg-gray-50 transition-all">
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => handleAction(app.id, app.user_id, 'approved')}
-                    disabled={actionLoading === app.id}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                    style={{ background: '#1B5E37' }}>
-                    <CheckCircle size={15} className="inline mr-1" />Approve
-                  </button>
-                  <button
-                    onClick={() => openRejectModal(app)}
-                    disabled={actionLoading === app.id}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                    style={{ background: '#DC2626' }}>
-                    <XCircle size={15} className="inline mr-1" />Reject
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Detail Modal */}
-        {selected && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-ink">Application Details</h2>
-                  <button onClick={() => setSelected(null)}
-                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-ink-light hover:bg-gray-200 text-lg">
-                    ×
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl"
-                      style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
-                      {(selected.profiles?.first_name || 'T')[0]}
+              return (
+                <div key={t.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                  {/* Header row */}
+                  <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                    {/* Avatar */}
+                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                      {t.profile_photo_url
+                        ? <img src={t.profile_photo_url} className="w-full h-full object-cover" alt={name} />
+                        : <div className="w-full h-full flex items-center justify-center text-xl font-bold"
+                            style={{ background: 'linear-gradient(135deg,#1B5E37,#097434)', color: '#fff' }}>
+                            {(t.profiles?.first_name || 'T')[0]}
+                          </div>}
                     </div>
-                    <div>
-                      <p className="font-bold text-ink">{selected.profiles?.first_name} {selected.profiles?.last_name}</p>
-                      <p className="text-sm text-ink-light">{selected.profiles?.email}</p>
-                      <p className="text-sm text-ink-light">{selected.profiles?.country} · {selected.profiles?.phone}</p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <p className="font-bold text-ink">{name || 'Unknown'}</p>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1"
+                          style={{ background: '#FEF3C7', color: '#D97706' }}>
+                          <Clock size={10} /> Pending Review
+                        </span>
+                        {t.ijazah_verified && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: '#E8F5EE', color: '#1B5E37' }}>
+                            ✓ Ijazah
+                          </span>
+                        )}
+                        {t.intro_video_url && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: '#EEF2FF', color: '#4F46E5' }}>
+                            🎥 Video Attached
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-ink-light">{t.profiles?.email} · {t.profiles?.country}</p>
+                      <p className="text-xs mt-1 text-ink-light">
+                        {t.years_experience} yrs exp · ${t.hourly_rate_usd}/hr ·&nbsp;
+                        {(t.specializations || []).join(', ')}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                      <button onClick={() => setExpanded(isExpanded ? null : t.id)}
+                        className="px-3 py-2 rounded-xl text-xs font-semibold border transition-all hover:bg-gray-50 flex items-center gap-1.5"
+                        style={{ borderColor: '#E0DDD5', color: '#6B6B6B' }}>
+                        <Eye size={13} /> {isExpanded ? 'Hide' : 'View Details'}
+                      </button>
+                      <button onClick={() => handleAction(t, 'approved')}
+                        disabled={actionLoading === t.id}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+                        style={{ background: 'linear-gradient(135deg,#1B5E37,#097434)' }}>
+                        <CheckCircle size={13} />
+                        {actionLoading === t.id ? '...' : 'Approve'}
+                      </button>
+                      <button onClick={() => setShowReject(isRejecting ? null : t.id)}
+                        disabled={actionLoading === t.id}
+                        className="px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
+                        style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }}>
+                        <XCircle size={13} />
+                        Reject
+                      </button>
                     </div>
                   </div>
 
-                  {selected.profiles?.bio && (
-                    <div>
-                      <p className="text-xs font-bold text-ink-light uppercase tracking-wide mb-1">Bio</p>
-                      <p className="text-sm text-ink-mid leading-relaxed">{selected.profiles.bio}</p>
+                  {/* Rejection reason input */}
+                  {isRejecting && (
+                    <div className="px-5 pb-4 border-t border-gray-50">
+                      <p className="text-xs font-semibold mb-2 mt-3" style={{ color: '#DC2626' }}>Rejection Reason (required — sent to teacher)</p>
+                      <textarea
+                        value={rejectReason[t.id] || ''}
+                        onChange={e => setRejectReason(prev => ({ ...prev, [t.id]: e.target.value }))}
+                        placeholder="e.g. Please upload a clearer profile photo and provide more detail about your teaching experience..."
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none"
+                        style={{ borderColor: '#FECACA', fontFamily: 'inherit' }}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => handleAction(t, 'rejected')}
+                          disabled={actionLoading === t.id || !rejectReason[t.id]?.trim()}
+                          className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                          style={{ background: '#DC2626' }}>
+                          {actionLoading === t.id ? 'Rejecting...' : 'Confirm Reject'}
+                        </button>
+                        <button onClick={() => setShowReject(null)}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold border hover:bg-gray-50 transition-all"
+                          style={{ borderColor: '#E0DDD5', color: '#6B6B6B' }}>
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Experience', value: `${selected.years_experience} years` },
-                      { label: 'Hourly Rate', value: `$${selected.hourly_rate_usd}` },
-                      { label: 'Trial Rate', value: `$${selected.trial_rate_usd}` },
-                      { label: 'Ijazah', value: selected.ijazah_verified ? 'Verified ✓' : 'Not verified' },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3">
-                        <p className="text-xs text-ink-light font-medium">{label}</p>
-                        <p className="text-sm font-bold text-ink mt-0.5">{value}</p>
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 p-5 space-y-4" style={{ background: '#FAFAFA' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Bio */}
+                        <div className="sm:col-span-2">
+                          <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#9A9A8A' }}>Bio</p>
+                          <p className="text-sm" style={{ color: '#3D3D3D', lineHeight: 1.6 }}>
+                            {t.profiles?.bio || '—'}
+                          </p>
+                        </div>
+                        {[
+                          { label: 'Phone', value: t.profiles?.phone || '—' },
+                          { label: 'Experience', value: `${t.years_experience} years` },
+                          { label: 'Ijazah', value: t.ijazah_verified ? 'Yes ✓' : 'No' },
+                          { label: 'Hourly Rate', value: `$${t.hourly_rate_usd}/hr` },
+                          { label: 'Trial Rate', value: t.trial_rate_usd ? `$${t.trial_rate_usd}` : 'Free' },
+                          { label: 'Languages', value: (t.teaching_languages || []).join(', ') || '—' },
+                          { label: 'Specializations', value: (t.specializations || []).join(', ') || '—' },
+                          { label: 'Available Days', value: (t.available_days || []).join(', ') || '—' },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: '#9A9A8A' }}>{label}</p>
+                            <p className="text-sm font-medium" style={{ color: '#1A1A1A' }}>{value}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  <div>
-                    <p className="text-xs font-bold text-ink-light uppercase tracking-wide mb-2">Specializations</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected.specializations || []).map(s => (
-                        <span key={s} className="text-xs px-3 py-1 rounded-full font-medium"
-                          style={{ background: '#E8F5EE', color: '#1B5E37' }}>{s}</span>
-                      ))}
+                      {/* Intro video */}
+                      {t.intro_video_url && (
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#9A9A8A' }}>
+                            Introduction Video
+                          </p>
+                          {playingVideo === t.id ? (
+                            <div className="rounded-xl overflow-hidden" style={{ maxWidth: 480 }}>
+                              <video controls autoPlay className="w-full rounded-xl"
+                                style={{ maxHeight: 280, background: '#000' }}>
+                                <source src={t.intro_video_url} />
+                                Your browser does not support video playback.
+                              </video>
+                              <button onClick={() => setPlayingVideo(null)}
+                                className="mt-2 text-xs font-semibold" style={{ color: '#6B6B6B' }}>
+                                ✕ Close video
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setPlayingVideo(t.id)}
+                              className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:border-indigo-300 hover:bg-indigo-50"
+                              style={{ borderColor: '#E0DDD5' }}>
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'linear-gradient(135deg,#4F46E5,#7C3AED)' }}>
+                                <Play size={16} color="#fff" />
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-semibold" style={{ color: '#1A1A1A' }}>Watch Introduction Video</p>
+                                <p className="text-xs" style={{ color: '#6B6B6B' }}>Click to play teacher's intro video</p>
+                              </div>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold text-ink-light uppercase tracking-wide mb-2">Teaching Languages</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected.teaching_languages || []).map(l => (
-                        <span key={l} className="text-xs px-3 py-1 rounded-full font-medium"
-                          style={{ background: '#F0E4B8', color: '#B8952A' }}>{l}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold text-ink-light uppercase tracking-wide mb-2">Available Days</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected.available_days || []).map(d => (
-                        <span key={d} className="text-xs px-3 py-1 rounded-full bg-gray-100 text-ink-mid font-medium">{d}</span>
-                      ))}
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => handleAction(selected.id, selected.user_id, 'approved')}
-                    disabled={!!actionLoading}
-                    className="flex-1 py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90"
-                    style={{ background: '#1B5E37' }}>
-                    ✅ Approve
-                  </button>
-                  <button
-                    onClick={() => openRejectModal(selected)}
-                    disabled={!!actionLoading}
-                    className="flex-1 py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90"
-                    style={{ background: '#DC2626' }}>
-                    ❌ Reject
-                  </button>
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
         )}
-
-        {/* Reject Reason Modal */}
-        {showRejectModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-ink">Reject Application</h2>
-                <button
-                  onClick={() => { setShowRejectModal(null); setRejectionReason('') }}
-                  className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-ink-light hover:bg-gray-200 text-lg">
-                  ×
-                </button>
-              </div>
-
-              <p className="text-sm text-ink-light mb-1">
-                Rejecting: <strong className="text-ink">{showRejectModal.profiles?.first_name} {showRejectModal.profiles?.last_name}</strong>
-              </p>
-              <p className="text-sm text-ink-light mb-4">
-                Please give a reason so the teacher knows what to fix and can resubmit.
-              </p>
-
-              <textarea
-                value={rejectionReason}
-                onChange={e => setRejectionReason(e.target.value)}
-                rows={4}
-                placeholder="e.g. Your profile photo is unclear. Please upload a professional photo showing your face clearly. Also please add more detail to your bio."
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none resize-none mb-2 leading-relaxed"
-              />
-              <p className="text-xs text-right mb-4" style={{ color: '#9CA3AF' }}>
-                {rejectionReason.length} characters
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => { setShowRejectModal(null); setRejectionReason('') }}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold border border-gray-200 text-ink-mid hover:bg-gray-50 transition-all">
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleAction(showRejectModal.id, showRejectModal.user_id, 'rejected', rejectionReason)}
-                  disabled={!rejectionReason.trim() || !!actionLoading}
-                  className="flex-1 py-3 rounded-xl text-white text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: '#DC2626' }}>
-                  {actionLoading ? 'Rejecting...' : 'Confirm Rejection'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </AdminLayout>
   )
