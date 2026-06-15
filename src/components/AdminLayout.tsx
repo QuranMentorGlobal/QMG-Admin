@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, ClipboardList,
-  MessageSquare, CreditCard
+  CreditCard, MessageSquare,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -15,8 +15,15 @@ const NAV_ITEMS = [
   { href: '/students',         label: 'Student Management',   icon: Users           },
   { href: '/bookings',         label: 'Bookings Overview',    icon: BookOpen        },
   { href: '/reviews',          label: 'Reviews Moderation',   icon: Star            },
+  { href: '/payments',         label: 'Payments & Revenue',   icon: CreditCard      },
+  { href: '/support',          label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/settings',         label: 'Platform Settings',    icon: Settings        },
 ]
+
+// ── Correct brand colors ──────────────────────────────────────
+const SIDEBAR_BG  = 'linear-gradient(180deg, rgb(0,87,34) 0%, rgb(15,137,61) 100%)'
+const GOLD        = '#B8952A'
+const GOLD_LIGHT  = '#D4AF50'
 
 export default function AdminLayout({
   children,
@@ -25,7 +32,7 @@ export default function AdminLayout({
   children: React.ReactNode
   adminName?: string
 }) {
-  const router = useRouter()
+  const router   = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -35,118 +42,165 @@ export default function AdminLayout({
     router.push('/login')
   }
 
-  // ── KEY FIX: exact match only, no startsWith ──────────────
   function isActive(href: string) {
     return pathname === href
   }
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full"
-      style={{ background: 'linear-gradient(180deg, #0D3D20 0%, #1B5E37 100%)' }}>
+    <div className="flex flex-col h-full" style={{ background: SIDEBAR_BG }}>
 
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-            style={{ background: 'rgba(184,149,42,0.2)', border: '1px solid rgba(184,149,42,0.4)' }}>
-            🕌
-          </div>
+      <div style={{ padding: '20px 16px 18px', borderBottom: '1px solid rgba(255,255,255,0.12)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(184,149,42,0.2)', border: '1px solid rgba(184,149,42,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+          }}>🕌</div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">
-              Quran<span style={{ color: '#D4AF50' }}>Mentor</span>
+            <p style={{ color: '#fff', fontWeight: 800, fontSize: 14, lineHeight: '1.2', fontFamily: "'Playfair Display', serif" }}>
+              Quran<span style={{ color: GOLD_LIGHT }}>Mentor</span>
             </p>
-            <span className="text-xs font-bold tracking-widest uppercase px-1.5 py-0.5 rounded mt-0.5 inline-block"
-              style={{ background: 'rgba(184,149,42,0.25)', color: '#D4AF50' }}>
-              Admin
-            </span>
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+              padding: '2px 7px', borderRadius: 20, marginTop: 3, display: 'inline-block',
+              background: 'rgba(184,149,42,0.25)', color: GOLD_LIGHT,
+            }}>Admin</span>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isActive(href)
           return (
             <button
               key={href}
               onClick={() => { router.push(href); setSidebarOpen(false) }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
               style={{
-                background: active ? 'rgba(255,255,255,0.13)' : 'transparent',
-                color: active ? '#fff' : 'rgba(255,255,255,0.58)',
-              }}>
-              <Icon size={17} className="flex-shrink-0" />
-              <span className="flex-1 text-left leading-tight">{label}</span>
-              {active && <ChevronRight size={14} style={{ color: '#D4AF50' }} />}
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 12px', borderRadius: 10, marginBottom: 2,
+                background: active ? 'rgba(255,255,255,0.14)' : 'transparent',
+                color: active ? '#ffffff' : 'rgba(255,255,255,0.62)',
+                border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: active ? 700 : 500,
+                fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s',
+                textAlign: 'left',
+              }}
+              onMouseEnter={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'
+              }}
+              onMouseLeave={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
+              }}
+            >
+              <Icon size={16} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>{label}</span>
+              {active && <ChevronRight size={13} style={{ color: GOLD_LIGHT, flexShrink: 0 }} />}
             </button>
           )
         })}
       </nav>
 
       {/* Sign Out */}
-      <div className="px-3 py-4 border-t border-white/10 flex-shrink-0">
+      <div style={{ padding: '10px 10px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/10"
-          style={{ color: 'rgba(255,255,255,0.55)' }}>
-          <LogOut size={17} />
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+            background: 'transparent', color: 'rgba(255,255,255,0.5)',
+            fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+        >
+          <LogOut size={16} />
           <span>Sign Out</span>
         </button>
       </div>
     </div>
   )
 
-  return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F8F9FA' }}>
+  const activePage = NAV_ITEMS.find(n => isActive(n.href))
 
-      {/* Desktop Sidebar — fixed width */}
-      <div className="hidden lg:flex flex-col w-56 flex-shrink-0 h-full">
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F5F0E8' }}>
+
+      {/* Desktop Sidebar */}
+      <div style={{ display: 'none', width: 224, flexShrink: 0, height: '100%' }}
+        className="lg:flex lg:flex-col">
+        <SidebarContent />
+      </div>
+      <div className="hidden lg:flex lg:flex-col" style={{ width: 224, flexShrink: 0, height: '100%' }}>
         <SidebarContent />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="w-56 flex-shrink-0 h-full">
+        <div className="lg:hidden" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
+          <div style={{ width: 224, flexShrink: 0, height: '100%' }}>
             <SidebarContent />
           </div>
-          <div className="flex-1 bg-black/50" onClick={() => setSidebarOpen(false)} />
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)' }} onClick={() => setSidebarOpen(false)} />
         </div>
       )}
 
-      {/* Right side: topbar + page content */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      {/* Main area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
 
         {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 lg:px-6 gap-4 flex-shrink-0">
+        <header style={{
+          height: 56, background: '#fff', borderBottom: '1px solid #E8E4DA',
+          display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, flexShrink: 0,
+        }}>
           <button
-            className="lg:hidden p-2 rounded-lg text-ink-light hover:bg-gray-100"
-            onClick={() => setSidebarOpen(!sidebarOpen)}>
+            className="lg:hidden"
+            style={{
+              padding: '6px 8px', borderRadius: 8, border: 'none',
+              background: 'transparent', cursor: 'pointer', color: '#6B6B6B',
+            }}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          {/* Page title from nav */}
-          <p className="text-sm font-semibold text-ink-light hidden sm:block">
-            {NAV_ITEMS.find(n => isActive(n.href))?.label || 'Admin Panel'}
-          </p>
+          {/* Breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, color: '#9A9A8A' }}>Admin</span>
+            {activePage && (
+              <>
+                <span style={{ fontSize: 12, color: '#C8C4B8' }}>/</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#1B5E37' }}>{activePage.label}</span>
+              </>
+            )}
+          </div>
 
-          <div className="flex-1" />
+          <div style={{ flex: 1 }} />
 
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-ink leading-tight">{adminName || 'Admin'}</p>
-              <p className="text-xs text-ink-light">Super Admin</p>
+          {/* Admin info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ textAlign: 'right', display: 'none' }} className="sm:block">
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', lineHeight: '1.2' }}>
+                {adminName || 'Admin'}
+              </p>
+              <p style={{ fontSize: 11, color: '#9A9A8A' }}>Super Admin</p>
             </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-              style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgb(0,87,34), rgb(15,137,61))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#F5F5F0', fontSize: 14, fontWeight: 800, flexShrink: 0,
+            }}>
               {(adminName || 'A')[0].toUpperCase()}
             </div>
           </div>
         </header>
 
-        {/* Page content — scrollable */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        {/* Page content */}
+        <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}
+          className="lg:p-7">
           {children}
         </main>
       </div>
