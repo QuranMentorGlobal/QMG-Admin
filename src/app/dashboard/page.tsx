@@ -49,23 +49,19 @@ export default function DashboardPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      {/* No maxWidth wrapper — fills full content area */}
+
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 800, color: '#097434', margin: 0 }}>
           Welcome back, {adminName} 👋
         </h1>
-        <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 6 }}>
+        <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 6, margin: '6px 0 0' }}>
           Here's what's happening on QuranMentorGlobal today.
         </p>
       </div>
 
-      {/* Stat cards — fill full width, responsive columns */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 14,
-        marginBottom: 24,
-      }} className="stat-grid">
+      {/* Stat cards — 3 equal columns, full width */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}
+        className="admin-stat-grid">
         {loading
           ? [...Array(6)].map((_, i) => (
               <div key={i} style={{ background: '#fff', borderRadius: 16, height: 86, border: '1px solid #E8E4DA', animation: 'pulse 1.5s infinite' }} />
@@ -90,22 +86,24 @@ export default function DashboardPage() {
         }
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions — 4 equal columns, full width */}
       <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: '0 0 14px', fontFamily: "'DM Sans',sans-serif" }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: '0 0 14px' }}>
           Quick Actions
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
+        {/* 4 equal columns — no auto-fill, always exactly 4 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}
+          className="admin-quick-grid">
           {quickActions.map(({ label, href, emoji, color, bg }) => (
             <a key={href} href={href} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-              padding: '16px 12px', borderRadius: 12, textAlign: 'center',
-              textDecoration: 'none', fontSize: 12, fontWeight: 700, color, background: bg,
-              transition: 'all 0.15s', fontFamily: "'DM Sans',sans-serif",
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 8, padding: '20px 12px', borderRadius: 12, textAlign: 'center',
+              textDecoration: 'none', fontSize: 13, fontWeight: 700, color, background: bg,
+              transition: 'all 0.15s', fontFamily: "'DM Sans',sans-serif", minHeight: 90,
             }}
             onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)' }}
             onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = ''; el.style.boxShadow = '' }}>
-              <span style={{ fontSize: 24 }}>{emoji}</span>
+              <span style={{ fontSize: 26 }}>{emoji}</span>
               {label}
             </a>
           ))}
@@ -113,9 +111,9 @@ export default function DashboardPage() {
       </div>
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
-        @media(max-width:900px){ .stat-grid{ grid-template-columns: repeat(2,1fr) !important; } }
-        @media(max-width:500px){ .stat-grid{ grid-template-columns: 1fr !important; } }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @media(max-width:900px) { .admin-stat-grid { grid-template-columns: repeat(2,1fr) !important; } }
+        @media(max-width:500px) { .admin-stat-grid { grid-template-columns: 1fr !important; } .admin-quick-grid { grid-template-columns: repeat(2,1fr) !important; } }
       `}</style>
     </AdminLayout>
   )
