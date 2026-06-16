@@ -102,7 +102,7 @@ export default function AdminLayout({
                   padding: '9px 12px', borderRadius: 10, marginBottom: 1,
                   background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
                   // ── PURE WHITE, no opacity trick that causes dimming ──
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.85)',
+                  color: "#ffffff",
                   border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: active ? 700 : 400,
                   fontFamily: "'DM Sans', sans-serif",
@@ -119,7 +119,7 @@ export default function AdminLayout({
                   if (!active) {
                     const el = e.currentTarget as HTMLElement
                     el.style.background = 'transparent'
-                    el.style.color = 'rgba(255,255,255,0.85)'
+                    el.style.color = '#ffffff'
                   }
                 }}
               >
@@ -202,8 +202,8 @@ export default function AdminLayout({
             alignItems: 'center', gap: 8,
             position: 'absolute', left: '50%', transform: 'translateX(-50%)',
           }}>
-            <img src="/logo.png" alt="QMG" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-            <BrandNameDark size={16} />
+            <img src="/logo.png" alt="QMG" style={{ width: 34, height: 34, objectFit: 'contain' }} />
+            <BrandNameDark size={20} />
           </div>
 
           {/* Right: Admin name + avatar */}
