@@ -81,7 +81,7 @@ export default function AdminPaymentsPage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold" style={{ color: '#0D3D20', fontFamily: "'Playfair Display', serif" }}>Payments & Revenue</h1>
           <p className="text-sm mt-1 text-gray-500">Full payment history, revenue and commission tracking</p>
