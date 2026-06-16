@@ -20,6 +20,27 @@ const NAV_ITEMS = [
   { href: '/settings',         label: 'Platform Settings',    icon: Settings        },
 ]
 
+// ── Shared name component so sidebar + topbar are always identical ──
+function BrandName({ size = 15 }: { size?: number }) {
+  return (
+    <span style={{ fontFamily: "'Playfair Display', serif", fontSize: size, fontWeight: 800, lineHeight: 1 }}>
+      <span style={{ color: '#ffffff' }}>Quran</span>
+      <span style={{ color: '#D4AF50' }}>Mentor</span>
+      <span style={{ color: '#ffffff' }}>Global</span>
+    </span>
+  )
+}
+
+function BrandNameDark({ size = 16 }: { size?: number }) {
+  return (
+    <span style={{ fontFamily: "'Playfair Display', serif", fontSize: size, fontWeight: 800, lineHeight: 1 }}>
+      <span style={{ color: '#097434' }}>Quran</span>
+      <span style={{ color: '#B8952A' }}>Mentor</span>
+      <span style={{ color: '#097434' }}>Global</span>
+    </span>
+  )
+}
+
 export default function AdminLayout({
   children,
   adminName,
@@ -48,18 +69,21 @@ export default function AdminLayout({
         display: 'flex', flexDirection: 'column', height: '100%',
         background: 'linear-gradient(180deg, rgb(0,87,34) 0%, rgb(15,137,61) 100%)',
       }}>
-        {/* Logo */}
-        <div style={{ padding: '16px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-            <img src="/logo.png" alt="QMG" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
-            <div>
-              <p style={{ color: '#ffffff', fontWeight: 800, fontSize: 15, fontFamily: "'Playfair Display', serif", lineHeight: 1.1, margin: 0 }}>
-                Quran<span style={{ color: '#D4AF50' }}>Mentor</span>
-              </p>
+        {/* Logo — same name as topbar */}
+        <div style={{
+          padding: '16px 12px 14px',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+        }}>
+          <img src="/logo.png" alt="QMG" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
+          <div>
+            <BrandName size={14} />
+            <div style={{ marginTop: 3 }}>
               <span style={{
                 fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
-                display: 'inline-block', marginTop: 3, background: 'rgba(184,149,42,0.3)',
-                color: '#D4AF50', padding: '1px 7px', borderRadius: 20,
+                background: 'rgba(184,149,42,0.3)', color: '#D4AF50',
+                padding: '1px 7px', borderRadius: 20, display: 'inline-block',
               }}>Admin Panel</span>
             </div>
           </div>
@@ -77,26 +101,25 @@ export default function AdminLayout({
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '9px 12px', borderRadius: 10, marginBottom: 1,
                   background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  color: '#ffffff',                     // ← pure white always
-                  opacity: active ? 1 : 0.78,           // ← dim inactive slightly, never grey
+                  // ── PURE WHITE, no opacity trick that causes dimming ──
+                  color: active ? '#ffffff' : 'rgba(255,255,255,0.85)',
                   border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: active ? 700 : 400,
                   fontFamily: "'DM Sans', sans-serif",
-                  transition: 'opacity 0.15s, background 0.15s',
-                  textAlign: 'left',
+                  transition: 'all 0.15s', textAlign: 'left',
                 }}
                 onMouseEnter={e => {
                   if (!active) {
                     const el = e.currentTarget as HTMLElement
                     el.style.background = 'rgba(255,255,255,0.1)'
-                    el.style.opacity = '1'
+                    el.style.color = '#ffffff'
                   }
                 }}
                 onMouseLeave={e => {
                   if (!active) {
                     const el = e.currentTarget as HTMLElement
                     el.style.background = 'transparent'
-                    el.style.opacity = '0.78'
+                    el.style.color = 'rgba(255,255,255,0.85)'
                   }
                 }}
               >
@@ -115,12 +138,12 @@ export default function AdminLayout({
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 10,
               padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: 'transparent', color: '#ffffff', opacity: 0.6,
+              background: 'transparent', color: 'rgba(255,255,255,0.65)',
               fontSize: 13, fontWeight: 400, fontFamily: "'DM Sans', sans-serif",
-              transition: 'opacity 0.15s, background 0.15s',
+              transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.1)'; el.style.opacity = '1' }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.opacity = '0.6' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.1)'; el.style.color = '#ffffff' }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'rgba(255,255,255,0.65)' }}
           >
             <LogOut size={16} />
             <span>Sign Out</span>
@@ -164,31 +187,29 @@ export default function AdminLayout({
             {sidebarOpen ? <X size={20} color="#6B6B6B" /> : <Menu size={20} color="#6B6B6B" />}
           </button>
 
-          {/* Left: page label */}
+          {/* Left: current page label */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#B8952A', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0, fontFamily: "'DM Sans',sans-serif" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: '#B8952A', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>
               Admin Panel
             </p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: 0, fontFamily: "'Playfair Display',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: 0, fontFamily: "'Playfair Display',serif" }}>
               {activePage?.label || 'Dashboard'}
             </p>
           </div>
 
-          {/* Center: QuranMentorGlobal logo */}
+          {/* Center: SAME brand name as sidebar */}
           <div className="hidden lg:flex" style={{
             alignItems: 'center', gap: 8,
             position: 'absolute', left: '50%', transform: 'translateX(-50%)',
           }}>
             <img src="/logo.png" alt="QMG" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-            <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, fontWeight: 800, color: '#097434', whiteSpace: 'nowrap' }}>
-              Quran<span style={{ color: '#B8952A' }}>Mentor</span>Global
-            </span>
+            <BrandNameDark size={16} />
           </div>
 
-          {/* Right: name + avatar */}
+          {/* Right: Admin name + avatar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div className="hidden sm:block" style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', margin: 0, lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', margin: 0, lineHeight: 1.2 }}>
                 {adminName || 'Admin'}
               </p>
               <p style={{ fontSize: 11, color: '#9A9A8A', margin: 0 }}>Super Admin</p>
@@ -204,13 +225,11 @@ export default function AdminLayout({
           </div>
         </header>
 
-        {/* ── FULL WIDTH content — no maxWidth, pages fill entire area ── */}
+        {/* Full width content — NO maxWidth, NO centering */}
         <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '28px 28px',   // consistent breathing room, NO maxWidth here
-          width: '100%',
-          boxSizing: 'border-box',
+          flex: 1, overflowY: 'auto',
+          padding: '28px',
+          width: '100%', boxSizing: 'border-box',
         }}>
           {children}
         </main>
