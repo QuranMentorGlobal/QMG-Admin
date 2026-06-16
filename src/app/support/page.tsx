@@ -137,7 +137,7 @@ export default function AdminSupportPage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
             style={{ background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626' }}>
