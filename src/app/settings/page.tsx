@@ -21,24 +21,21 @@ export default function SettingsPage() {
     trial_enabled: true,
   })
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [toast, setToast] = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [toast, setToast]     = useState('')
 
   useEffect(() => { fetchSettings() }, [])
 
   async function fetchSettings() {
     const supabase = createClient()
-    const { data } = await supabase
-      .from('platform_settings')
-      .select('*')
-      .single() as any
+    const { data } = await supabase.from('platform_settings').select('*').single() as any
     if (data) {
       setSettings({
-        commission_rate: data.commission_rate ?? 15,
-        platform_name: data.platform_name ?? 'QuranMentorGlobal',
-        contact_email: data.contact_email ?? 'info@quranmentorglobal.com',
+        commission_rate:  data.commission_rate  ?? 15,
+        platform_name:    data.platform_name    ?? 'QuranMentorGlobal',
+        contact_email:    data.contact_email    ?? 'info@quranmentorglobal.com',
         support_whatsapp: data.support_whatsapp ?? '',
-        trial_enabled: data.trial_enabled ?? true,
+        trial_enabled:    data.trial_enabled    ?? true,
       })
     }
     setLoading(false)
@@ -58,116 +55,157 @@ export default function SettingsPage() {
     setSaving(false)
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '11px 16px', borderRadius: 12,
+    border: '1.5px solid #E8E4DA', fontSize: 14, outline: 'none',
+    fontFamily: "'DM Sans', sans-serif", color: '#1A1A1A', background: '#fff',
+    transition: 'border-color 0.15s',
+  }
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: 13, fontWeight: 700,
+    color: '#097434', marginBottom: 4, fontFamily: "'DM Sans', sans-serif",
+  }
+
+  const hintStyle: React.CSSProperties = {
+    fontSize: 12, color: '#9A9A8A', marginBottom: 10,
+    fontFamily: "'DM Sans', sans-serif",
+  }
+
   if (loading) return (
     <AdminLayout>
-      <div className="max-w-2xl mx-auto space-y-4">
-        {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl h-20 animate-pulse" />)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[1,2,3].map(i => <div key={i} style={{ background: '#fff', borderRadius: 16, height: 80, border: '1px solid #E8E4DA', animation: 'pulse 1.5s infinite' }} />)}
       </div>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
     </AdminLayout>
   )
 
   return (
     <AdminLayout>
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-ink">Platform Settings</h1>
-          <p className="text-sm text-ink-light mt-1">Configure global platform settings</p>
+      {toast && (
+        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 20px', borderRadius: 12, background: '#1B5E37', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+          {toast}
         </div>
+      )}
 
-        {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#1B5E37' }}>{toast}</div>
-        )}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 800, color: '#097434', margin: 0 }}>Platform Settings</h1>
+        <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 4 }}>Configure global platform settings</p>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+      {/* Two-column layout on wide screens, single column on mobile */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}
+        className="settings-grid">
 
-          {/* Commission Rate */}
-          <div className="p-6">
-            <label className="block text-sm font-bold text-ink mb-1">Commission Rate (%)</label>
-            <p className="text-xs text-ink-light mb-3">Percentage taken from each lesson payment</p>
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                min="0"
-                max="50"
-                value={settings.commission_rate}
-                onChange={e => setSettings({ ...settings, commission_rate: Number(e.target.value) })}
-                className="w-32 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold outline-none focus:border-green-DEFAULT text-center"
-              />
-              <span className="text-sm text-ink-light">% per lesson</span>
-            </div>
-          </div>
-
-          {/* Platform Name */}
-          <div className="p-6">
-            <label className="block text-sm font-bold text-ink mb-1">Platform Name</label>
-            <p className="text-xs text-ink-light mb-3">Used in emails and notifications</p>
+        {/* Commission Rate */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <label style={labelStyle}>Commission Rate (%)</label>
+          <p style={hintStyle}>Percentage taken from each lesson payment</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <input
-              type="text"
-              value={settings.platform_name}
-              onChange={e => setSettings({ ...settings, platform_name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-DEFAULT"
+              type="number" min="0" max="50"
+              value={settings.commission_rate}
+              onChange={e => setSettings({ ...settings, commission_rate: Number(e.target.value) })}
+              style={{ ...inputStyle, width: 120, textAlign: 'center', fontWeight: 800, fontSize: 20, color: '#1B5E37' }}
             />
-          </div>
-
-          {/* Contact Email */}
-          <div className="p-6">
-            <label className="block text-sm font-bold text-ink mb-1">Contact Email</label>
-            <p className="text-xs text-ink-light mb-3">Public contact email shown on the platform</p>
-            <input
-              type="email"
-              value={settings.contact_email}
-              onChange={e => setSettings({ ...settings, contact_email: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-DEFAULT"
-            />
-          </div>
-
-          {/* WhatsApp */}
-          <div className="p-6">
-            <label className="block text-sm font-bold text-ink mb-1">Support WhatsApp</label>
-            <p className="text-xs text-ink-light mb-3">WhatsApp number for student/teacher support</p>
-            <input
-              type="text"
-              value={settings.support_whatsapp}
-              onChange={e => setSettings({ ...settings, support_whatsapp: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-DEFAULT"
-              placeholder="+92-300-0000000"
-            />
-          </div>
-
-          {/* Trial Lessons Toggle */}
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-ink">Trial Lessons</p>
-                <p className="text-xs text-ink-light mt-0.5">Allow students to book trial lessons with teachers</p>
-              </div>
-              <button
-                onClick={() => setSettings({ ...settings, trial_enabled: !settings.trial_enabled })}
-                className="relative w-12 h-6 rounded-full transition-all flex-shrink-0"
-                style={{ background: settings.trial_enabled ? '#1B5E37' : '#D1D5DB' }}>
-                <div className="absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm"
-                  style={{ left: settings.trial_enabled ? '28px' : '4px' }} />
-              </button>
-            </div>
+            <span style={{ fontSize: 14, color: '#6B7A6B', fontWeight: 600 }}>% per lesson</span>
           </div>
         </div>
 
-        <button
-          onClick={saveSettings}
-          disabled={saving}
-          className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 disabled:opacity-60"
-          style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
-          <Save size={16} />
-          {saving ? 'Saving...' : 'Save Settings'}
-        </button>
+        {/* Platform Name */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <label style={labelStyle}>Platform Name</label>
+          <p style={hintStyle}>Used in emails and notifications</p>
+          <input
+            type="text"
+            value={settings.platform_name}
+            onChange={e => setSettings({ ...settings, platform_name: e.target.value })}
+            style={inputStyle}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
+          />
+        </div>
 
-        <div className="mt-4 p-4 rounded-xl text-xs text-ink-light"
-          style={{ background: '#F0E4B8' }}>
-          💡 <strong>Note:</strong> The Settings page requires a <code>platform_settings</code> table in Supabase.
-          Create it with columns: <code>id, commission_rate, platform_name, contact_email, support_whatsapp, trial_enabled</code>.
+        {/* Contact Email */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <label style={labelStyle}>Contact Email</label>
+          <p style={hintStyle}>Public contact email shown on the platform</p>
+          <input
+            type="email"
+            value={settings.contact_email}
+            onChange={e => setSettings({ ...settings, contact_email: e.target.value })}
+            style={inputStyle}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
+          />
+        </div>
+
+        {/* WhatsApp */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <label style={labelStyle}>Support WhatsApp</label>
+          <p style={hintStyle}>WhatsApp number for student/teacher support</p>
+          <input
+            type="text"
+            value={settings.support_whatsapp}
+            onChange={e => setSettings({ ...settings, support_whatsapp: e.target.value })}
+            style={inputStyle}
+            placeholder="+92-300-0000000"
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
+          />
         </div>
       </div>
+
+      {/* Trial toggle — full width */}
+      <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: 0, fontFamily: "'DM Sans',sans-serif" }}>Trial Lessons</p>
+            <p style={{ fontSize: 12, color: '#9A9A8A', margin: '4px 0 0' }}>Allow students to book free trial lessons with teachers</p>
+          </div>
+          <button
+            onClick={() => setSettings({ ...settings, trial_enabled: !settings.trial_enabled })}
+            style={{
+              width: 52, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer',
+              background: settings.trial_enabled ? '#1B5E37' : '#D1D5DB',
+              position: 'relative', flexShrink: 0, transition: 'background 0.2s',
+            }}>
+            <div style={{
+              position: 'absolute', top: 3, width: 22, height: 22,
+              background: '#fff', borderRadius: '50%', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+              transition: 'left 0.2s',
+              left: settings.trial_enabled ? 27 : 3,
+            }} />
+          </button>
+        </div>
+      </div>
+
+      {/* Save button */}
+      <button
+        onClick={saveSettings}
+        disabled={saving}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          padding: '14px', borderRadius: 14, border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+          background: 'linear-gradient(135deg, rgb(0,87,34), rgb(15,137,61))',
+          color: '#ffffff', fontWeight: 800, fontSize: 15, fontFamily: "'DM Sans',sans-serif",
+          opacity: saving ? 0.7 : 1, transition: 'opacity 0.15s', marginBottom: 14,
+        }}>
+        <Save size={17} />
+        {saving ? 'Saving…' : 'Save Settings'}
+      </button>
+
+      {/* Note */}
+      <div style={{ padding: '14px 18px', borderRadius: 12, background: '#F0E4B8', fontSize: 12, color: '#6B5A1E', fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6 }}>
+        💡 <strong>Note:</strong> The Settings page requires a <code>platform_settings</code> table in Supabase with columns:{' '}
+        <code>id, commission_rate, platform_name, contact_email, support_whatsapp, trial_enabled</code>.
+      </div>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @media(max-width:700px){ .settings-grid{ grid-template-columns: 1fr !important; } }
+      `}</style>
     </AdminLayout>
   )
 }
