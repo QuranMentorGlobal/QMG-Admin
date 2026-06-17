@@ -5,19 +5,20 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, ClipboardList,
-  CreditCard, MessageSquare,
+  CreditCard, MessageSquare, ShieldCheck,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',        label: 'Dashboard',            icon: LayoutDashboard },
-  { href: '/teachers/pending', label: 'Teacher Applications', icon: ClipboardList   },
-  { href: '/teachers',         label: 'Teacher Management',   icon: GraduationCap   },
-  { href: '/students',         label: 'Student Management',   icon: Users           },
-  { href: '/bookings',         label: 'Bookings Overview',    icon: BookOpen        },
-  { href: '/reviews',          label: 'Reviews Moderation',   icon: Star            },
-  { href: '/payments',         label: 'Payments & Revenue',   icon: CreditCard      },
-  { href: '/support',          label: 'Support Tickets',      icon: MessageSquare   },
-  { href: '/settings',         label: 'Platform Settings',    icon: Settings        },
+  { href: '/dashboard',            label: 'Dashboard',            icon: LayoutDashboard },
+  { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
+  { href: '/teachers/pending',     label: 'Teacher Applications', icon: ClipboardList   },
+  { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
+  { href: '/students',             label: 'Student Management',   icon: Users           },
+  { href: '/bookings',             label: 'Bookings Overview',    icon: BookOpen        },
+  { href: '/reviews',              label: 'Reviews Moderation',   icon: Star            },
+  { href: '/payments',             label: 'Payments & Revenue',   icon: CreditCard      },
+  { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
+  { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
 ]
 
 // ── Shared name component so sidebar + topbar are always identical ──
