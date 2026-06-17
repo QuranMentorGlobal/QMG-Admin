@@ -11,7 +11,6 @@ import {
 const NAV_ITEMS = [
   { href: '/dashboard',            label: 'Dashboard',            icon: LayoutDashboard },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
-  { href: '/teachers/pending',     label: 'Teacher Applications', icon: ClipboardList   },
   { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
   { href: '/students',             label: 'Student Management',   icon: Users           },
   { href: '/bookings',             label: 'Bookings Overview',    icon: BookOpen        },
