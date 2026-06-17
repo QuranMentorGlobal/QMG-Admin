@@ -2,7 +2,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
-import { ShieldCheck, Eye, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText } from 'lucide-react'
+import { ShieldCheck, Eye, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play, Clock } from 'lucide-react'
 
 type Teacher = {
   id: string
@@ -19,9 +19,13 @@ type Teacher = {
   years_experience: number
   specializations: string[]
   teaching_languages: string[]
+  hourly_rate_usd: number
+  trial_rate_usd: number
+  available_days: string[]
   profile_photo_url: string | null
   intro_video_url: string | null
   submitted_at: string | null
+  rejection_reason: string | null
   profiles: {
     first_name: string
     last_name: string
@@ -34,11 +38,11 @@ type Teacher = {
 
 type TierKey = 'identity' | 'quran_mentor' | 'ijazah' | 'phone'
 
-const TIER_CONFIG: { key: TierKey; label: string; icon: string; color: string; bgColor: string }[] = [
-  { key: 'phone',        label: 'Phone Verified',        icon: '📱', color: '#6B7280', bgColor: '#F3F4F6' },
-  { key: 'identity',     label: 'Identity Verified',     icon: '🛡️', color: '#1E40AF', bgColor: '#EFF6FF' },
-  { key: 'quran_mentor', label: 'Quran Mentor Verified', icon: '📖', color: '#1B5E37', bgColor: '#E8F5EE' },
-  { key: 'ijazah',       label: 'Ijazah Verified',       icon: '🏅', color: '#92710A', bgColor: '#FDF8E8' },
+const TIER_CONFIG: { key: TierKey; label: string; icon: string; color: string }[] = [
+  { key: 'phone',        label: 'Phone Verified',        icon: '📱', color: '#6B7280' },
+  { key: 'identity',     label: 'Identity Verified',     icon: '🛡️', color: '#1E40AF' },
+  { key: 'quran_mentor', label: 'Quran Mentor Verified', icon: '📖', color: '#1B5E37' },
+  { key: 'ijazah',       label: 'Ijazah Verified',       icon: '🏅', color: '#92710A' },
 ]
 
 export default function VerificationQueuePage() {
@@ -49,6 +53,7 @@ export default function VerificationQueuePage() {
   const [toast, setToast] = useState('')
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [docUrls, setDocUrls] = useState<Record<string, string>>({})
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'identity' | 'quran_mentor' | 'ijazah'>('all')
 
   useEffect(() => { fetchQueue() }, [])
@@ -72,8 +77,6 @@ export default function VerificationQueuePage() {
 
   async function loadSignedUrl(docUrl: string) {
     if (!docUrl) return
-    // Extract path from URL — the URL might be a full Supabase storage URL
-    // or just a path. We need the path relative to the bucket.
     let path = docUrl
     if (docUrl.includes('verification-documents/')) {
       path = docUrl.split('verification-documents/').pop() || docUrl
@@ -83,16 +86,47 @@ export default function VerificationQueuePage() {
       const data = await res.json()
       if (data.signedUrl) {
         setDocUrls(prev => ({ ...prev, [docUrl]: data.signedUrl }))
+        window.open(data.signedUrl, '_blank')
+      } else {
+        showToast('❌ Failed to load document')
       }
     } catch {
       showToast('❌ Failed to load document')
     }
   }
 
+  // ── Initial application approve/reject ──
+  async function handleApplicationAction(teacher: Teacher, action: 'approved' | 'rejected') {
+    if (action === 'rejected' && !notes[`${teacher.id}-app`]?.trim()) {
+      showToast('❌ Please provide a rejection reason')
+      return
+    }
+    setActionLoading(`${teacher.id}-app-${action}`)
+    try {
+      const res = await fetch('/api/review-teacher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: teacher.id,
+          userId: teacher.user_id,
+          action,
+          reason: notes[`${teacher.id}-app`] || '',
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      showToast(action === 'approved' ? '✅ Teacher approved and now live!' : '✅ Application rejected')
+      fetchQueue()
+    } catch (err: any) {
+      showToast(`❌ Error: ${err.message}`)
+    }
+    setActionLoading(null)
+  }
+
+  // ── Per-tier approve/reject ──
   async function handleTierAction(teacher: Teacher, tier: TierKey, action: 'approve' | 'reject') {
     const loadingKey = `${teacher.id}-${tier}-${action}`
     setActionLoading(loadingKey)
-
     try {
       const res = await fetch('/api/verification-action', {
         method: 'POST',
@@ -107,9 +141,8 @@ export default function VerificationQueuePage() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-
       showToast(`✅ ${tier.replace('_', ' ')} ${action}d successfully`)
-      fetchQueue() // Refresh the list
+      fetchQueue()
     } catch (err: any) {
       showToast(`❌ Error: ${err.message}`)
     }
@@ -119,15 +152,6 @@ export default function VerificationQueuePage() {
   function getName(t: Teacher) {
     const p = t.profiles
     return p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : 'Unknown'
-  }
-
-  function getPendingTiers(t: Teacher): TierKey[] {
-    const tiers: TierKey[] = []
-    if (!t.phone_verified) tiers.push('phone')
-    if (t.identity_document_url && !t.identity_verified) tiers.push('identity')
-    if (!t.quran_mentor_verified && t.status === 'approved') tiers.push('quran_mentor')
-    if (t.ijazah_document_url && !t.ijazah_verified) tiers.push('ijazah')
-    return tiers
   }
 
   function getVerifiedCount(t: Teacher): number {
@@ -148,10 +172,11 @@ export default function VerificationQueuePage() {
     return true
   })
 
+  const pendingCount = teachers.filter(t => t.status === 'pending').length
+
   return (
     <AdminLayout>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        {/* Toast */}
         {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 200,
@@ -170,110 +195,103 @@ export default function VerificationQueuePage() {
               Verification Queue
             </h1>
             <p style={{ fontSize: 13, color: '#6B7280', margin: '4px 0 0' }}>
-              Review and approve teacher verification tiers
+              Approve new teachers and manage verification tiers
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {(['all', 'pending', 'identity', 'quran_mentor', 'ijazah'] as const).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
+            {([
+              { key: 'all', label: 'All' },
+              { key: 'pending', label: `New Applications${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
+              { key: 'identity', label: '🛡️ ID Pending' },
+              { key: 'quran_mentor', label: '📖 QM Pending' },
+              { key: 'ijazah', label: '🏅 Ijazah Pending' },
+            ] as const).map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key as any)}
                 style={{
                   padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                  border: '1.5px solid',
-                  borderColor: filter === f ? '#1B5E37' : '#E5E7EB',
-                  background: filter === f ? '#1B5E37' : '#fff',
-                  color: filter === f ? '#fff' : '#6B7280',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-              >
-                {f === 'all' ? 'All' : f === 'pending' ? 'New Applications' : f === 'identity' ? '🛡️ ID' : f === 'quran_mentor' ? '📖 QM' : '🏅 Ijazah'}
+                  border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
+                  borderColor: filter === f.key ? '#1B5E37' : '#E5E7EB',
+                  background: filter === f.key ? '#1B5E37' : '#fff',
+                  color: filter === f.key ? '#fff' : '#6B7280',
+                }}>
+                {f.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Loading */}
+        {/* Loading / Empty */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
             Loading verification queue…
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{
-            textAlign: 'center', padding: 60, background: '#fff',
-            borderRadius: 16, border: '1px dashed #E5E7EB',
-          }}>
+          <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px dashed #E5E7EB' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
             <p style={{ fontWeight: 700, color: '#097434', fontSize: 16 }}>Queue is clear!</p>
-            <p style={{ color: '#9CA3AF', fontSize: 13, marginTop: 4 }}>No pending verification requests.</p>
+            <p style={{ color: '#9CA3AF', fontSize: 13, marginTop: 4 }}>No pending items in this category.</p>
           </div>
         ) : (
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map(teacher => {
               const isExpanded = expanded === teacher.id
-              const pendingTiers = getPendingTiers(teacher)
-              const verifiedCount = getVerifiedCount(teacher)
+              const isPending = teacher.status === 'pending'
               const name = getName(teacher)
+              const verifiedCount = getVerifiedCount(teacher)
 
               return (
-                <div
-                  key={teacher.id}
-                  style={{
-                    background: '#fff', borderRadius: 16,
-                    border: `1.5px solid ${teacher.status === 'pending' ? '#FDE68A' : '#E5E7EB'}`,
-                    overflow: 'hidden', transition: 'all 0.2s',
-                  }}
-                >
-                  {/* Header row */}
-                  <button
-                    onClick={() => setExpanded(isExpanded ? null : teacher.id)}
+                <div key={teacher.id} style={{
+                  background: '#fff', borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s',
+                  border: `1.5px solid ${isPending ? '#FDE68A' : '#E5E7EB'}`,
+                }}>
+                  {/* Collapsed header */}
+                  <button onClick={() => setExpanded(isExpanded ? null : teacher.id)}
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '16px 20px', cursor: 'pointer', border: 'none', background: 'transparent',
                       textAlign: 'left', gap: 12,
-                    }}
-                  >
+                    }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                      {/* Avatar */}
                       <div style={{
-                        width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                        width: 42, height: 42, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                         background: teacher.profile_photo_url ? undefined : 'linear-gradient(135deg, #1B5E37, #097434)',
-                        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', fontWeight: 700, fontSize: 16,
                       }}>
                         {teacher.profile_photo_url
                           ? <img src={teacher.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : (teacher.profiles?.first_name?.[0] || '?').toUpperCase()
-                        }
+                          : (teacher.profiles?.first_name?.[0] || '?').toUpperCase()}
                       </div>
-
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 700, fontSize: 14, color: '#1A1A1A' }}>{name}</span>
-                          {teacher.status === 'pending' && (
-                            <span style={{
-                              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                              background: '#FEF3C7', color: '#D97706',
-                            }}>NEW APPLICATION</span>
+                          {isPending && (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#FEF3C7', color: '#D97706' }}>
+                              NEW APPLICATION
+                            </span>
                           )}
-                          <span style={{ fontSize: 11, color: '#9CA3AF' }}>
-                            {verifiedCount}/4 tiers
-                          </span>
+                          {!isPending && (
+                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{verifiedCount}/4 tiers</span>
+                          )}
                         </div>
                         <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
                           {teacher.profiles?.email} · {teacher.profiles?.country || 'N/A'}
-                          {teacher.submitted_at && ` · Submitted ${new Date(teacher.submitted_at).toLocaleDateString()}`}
+                          {teacher.submitted_at && ` · ${new Date(teacher.submitted_at).toLocaleDateString()}`}
                         </div>
                       </div>
                     </div>
-
-                    {/* Tier status dots */}
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-                      <span title="Basic" style={{ width: 10, height: 10, borderRadius: '50%', background: (teacher.email_verified && teacher.phone_verified) ? '#22C55E' : '#E5E7EB' }} />
-                      <span title="Identity" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.identity_verified ? '#3B82F6' : teacher.identity_document_url ? '#FCD34D' : '#E5E7EB' }} />
-                      <span title="QM" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.quran_mentor_verified ? '#1B5E37' : '#E5E7EB' }} />
-                      <span title="Ijazah" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.ijazah_verified ? '#B8952A' : teacher.ijazah_document_url ? '#FCD34D' : '#E5E7EB' }} />
+                      {!isPending && (
+                        <>
+                          <span title="Basic" style={{ width: 10, height: 10, borderRadius: '50%', background: (teacher.email_verified && teacher.phone_verified) ? '#22C55E' : '#E5E7EB' }} />
+                          <span title="Identity" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.identity_verified ? '#3B82F6' : teacher.identity_document_url ? '#FCD34D' : '#E5E7EB' }} />
+                          <span title="QM" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.quran_mentor_verified ? '#1B5E37' : '#E5E7EB' }} />
+                          <span title="Ijazah" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.ijazah_verified ? '#B8952A' : teacher.ijazah_document_url ? '#FCD34D' : '#E5E7EB' }} />
+                        </>
+                      )}
+                      {isPending && <Clock size={16} color="#D97706" />}
                       {isExpanded ? <ChevronUp size={16} color="#9CA3AF" /> : <ChevronDown size={16} color="#9CA3AF" />}
                     </div>
                   </button>
@@ -282,27 +300,20 @@ export default function VerificationQueuePage() {
                   {isExpanded && (
                     <div style={{ padding: '0 20px 20px', borderTop: '1px solid #F3F4F6' }}>
 
-                      {/* Teacher info summary */}
-                      <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                        gap: 12, padding: '16px 0', marginBottom: 16,
-                      }}>
+                      {/* Teacher info grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, padding: '16px 0' }}>
                         {[
                           { label: 'Experience', value: `${teacher.years_experience} years` },
                           { label: 'Phone', value: teacher.profiles?.phone || 'N/A' },
+                          { label: 'Hourly Rate', value: `$${teacher.hourly_rate_usd}` },
+                          { label: 'Trial Rate', value: teacher.trial_rate_usd ? `$${teacher.trial_rate_usd}` : 'Free' },
                           { label: 'Specializations', value: (teacher.specializations || []).join(', ') || 'N/A' },
                           { label: 'Languages', value: (teacher.teaching_languages || []).join(', ') || 'N/A' },
+                          { label: 'Available Days', value: (teacher.available_days || []).map((d: string) => d.slice(0, 3)).join(', ') || 'N/A' },
                         ].map(item => (
-                          <div key={item.label} style={{
-                            padding: '10px 14px', borderRadius: 10,
-                            background: '#F9FAFB', border: '1px solid #F3F4F6',
-                          }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-                              {item.label}
-                            </div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-                              {item.value}
-                            </div>
+                          <div key={item.label} style={{ padding: '8px 12px', borderRadius: 10, background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{item.label}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{item.value}</div>
                           </div>
                         ))}
                       </div>
@@ -315,145 +326,170 @@ export default function VerificationQueuePage() {
                         </div>
                       )}
 
-                      {/* Existing notes */}
-                      {teacher.verification_notes && (
-                        <div style={{
-                          padding: '12px 14px', borderRadius: 10, marginBottom: 16,
-                          background: '#FFFBEB', border: '1px solid #FDE68A',
-                        }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-                            Admin Notes History
-                          </div>
-                          <pre style={{ fontSize: 12, color: '#92400E', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-                            {teacher.verification_notes}
-                          </pre>
+                      {/* Intro video */}
+                      {teacher.intro_video_url && (
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Intro Video</div>
+                          {playingVideo === teacher.id ? (
+                            <div style={{ borderRadius: 12, overflow: 'hidden', background: '#000', position: 'relative' }}>
+                              <video controls autoPlay style={{ width: '100%', maxHeight: 300, display: 'block' }}>
+                                <source src={teacher.intro_video_url} />
+                              </video>
+                              <button onClick={() => setPlayingVideo(null)}
+                                style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
+                                Close
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setPlayingVideo(teacher.id)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10,
+                                border: '1.5px solid #1B5E37', background: '#E8F5EE', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#1B5E37',
+                              }}>
+                              <Play size={16} /> Watch Introduction Video
+                            </button>
+                          )}
                         </div>
                       )}
 
-                      {/* Per-tier verification cards */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {TIER_CONFIG.map(tierCfg => {
-                          const isVerified = teacher[`${tierCfg.key}_verified` as keyof Teacher] as boolean
-                          const docUrl = tierCfg.key === 'identity'
-                            ? teacher.identity_document_url
-                            : tierCfg.key === 'ijazah'
-                              ? teacher.ijazah_document_url
-                              : null
-                          const hasDoc = !!docUrl
-                          const needsReview = tierCfg.key === 'identity'
-                            ? (hasDoc && !isVerified)
-                            : tierCfg.key === 'ijazah'
-                              ? (hasDoc && !isVerified)
-                              : tierCfg.key === 'quran_mentor'
-                                ? (!isVerified && teacher.status === 'approved')
-                                : !isVerified
-                          const notesKey = `${teacher.id}-${tierCfg.key}`
+                      {/* Admin notes history */}
+                      {teacher.verification_notes && (
+                        <div style={{ padding: '12px 14px', borderRadius: 10, marginBottom: 16, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Admin Notes History</div>
+                          <pre style={{ fontSize: 12, color: '#92400E', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{teacher.verification_notes}</pre>
+                        </div>
+                      )}
 
-                          return (
-                            <div
-                              key={tierCfg.key}
+                      {/* ════ PENDING: Application Approve/Reject ════ */}
+                      {isPending && (
+                        <div style={{ padding: 16, borderRadius: 12, border: '2px solid #FDE68A', background: '#FFFBEB', marginBottom: 16 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                            <Clock size={18} color="#D97706" />
+                            <span style={{ fontWeight: 700, fontSize: 14, color: '#92400E' }}>Application Decision</span>
+                          </div>
+                          <p style={{ fontSize: 12, color: '#92400E', marginBottom: 12, lineHeight: 1.5 }}>
+                            This teacher is applying to join the platform. Approving makes their profile live and visible to students.
+                          </p>
+                          <input type="text" placeholder="Notes / rejection reason (required for rejection)..."
+                            value={notes[`${teacher.id}-app`] || ''}
+                            onChange={e => setNotes(prev => ({ ...prev, [`${teacher.id}-app`]: e.target.value }))}
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', fontFamily: 'inherit', marginBottom: 12 }}
+                            onFocus={e => { e.currentTarget.style.borderColor = '#B8952A' }}
+                            onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+                          />
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            <button onClick={() => handleApplicationAction(teacher, 'approved')}
+                              disabled={actionLoading !== null}
                               style={{
+                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                                border: 'none', color: '#fff', background: '#1B5E37', cursor: 'pointer',
+                                opacity: actionLoading ? 0.6 : 1,
+                              }}>
+                              <CheckCircle size={16} />
+                              {actionLoading === `${teacher.id}-app-approved` ? 'Approving…' : 'Approve Teacher'}
+                            </button>
+                            <button onClick={() => handleApplicationAction(teacher, 'rejected')}
+                              disabled={actionLoading !== null}
+                              style={{
+                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                                border: '1.5px solid #FECACA', color: '#DC2626', background: '#FEF2F2', cursor: 'pointer',
+                                opacity: actionLoading ? 0.6 : 1,
+                              }}>
+                              <XCircle size={16} />
+                              {actionLoading === `${teacher.id}-app-rejected` ? 'Rejecting…' : 'Reject'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ════ APPROVED: Per-tier verification ════ */}
+                      {!isPending && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                            Verification Tiers
+                          </div>
+                          {TIER_CONFIG.map(tierCfg => {
+                            const isVerified = teacher[`${tierCfg.key}_verified` as keyof Teacher] as boolean
+                            const docUrl = tierCfg.key === 'identity' ? teacher.identity_document_url
+                              : tierCfg.key === 'ijazah' ? teacher.ijazah_document_url : null
+                            const hasDoc = !!docUrl
+                            const needsReview = tierCfg.key === 'identity' ? (hasDoc && !isVerified)
+                              : tierCfg.key === 'ijazah' ? (hasDoc && !isVerified)
+                              : tierCfg.key === 'quran_mentor' ? (!isVerified)
+                              : !isVerified
+                            const notesKey = `${teacher.id}-${tierCfg.key}`
+
+                            return (
+                              <div key={tierCfg.key} style={{
                                 padding: '14px 16px', borderRadius: 12,
                                 border: `1.5px solid ${isVerified ? '#D1FAE5' : needsReview ? '#FDE68A' : '#F3F4F6'}`,
                                 background: isVerified ? '#F0FDF4' : '#fff',
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ fontSize: 20 }}>{tierCfg.icon}</span>
-                                  <div>
-                                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1A1A' }}>{tierCfg.label}</span>
-                                    {isVerified && (
-                                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#16A34A' }}>✓ Verified</span>
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span style={{ fontSize: 20 }}>{tierCfg.icon}</span>
+                                    <div>
+                                      <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1A1A' }}>{tierCfg.label}</span>
+                                      {isVerified && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#16A34A' }}>✓ Verified</span>}
+                                      {!isVerified && needsReview && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#D97706' }}>⏳ Needs review</span>}
+                                      {!isVerified && !needsReview && <span style={{ marginLeft: 8, fontSize: 11, color: '#9CA3AF' }}>Not submitted</span>}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    {hasDoc && (
+                                      <button onClick={() => loadSignedUrl(docUrl!)}
+                                        style={{
+                                          display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+                                          fontSize: 12, fontWeight: 600, border: '1.5px solid #3B82F6', color: '#3B82F6', background: '#EFF6FF', cursor: 'pointer',
+                                        }}>
+                                        <Eye size={14} /> View Doc
+                                      </button>
                                     )}
                                     {!isVerified && needsReview && (
-                                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#D97706' }}>⏳ Needs review</span>
-                                    )}
-                                    {!isVerified && !needsReview && (
-                                      <span style={{ marginLeft: 8, fontSize: 11, color: '#9CA3AF' }}>Not submitted</span>
+                                      <>
+                                        <button onClick={() => handleTierAction(teacher, tierCfg.key, 'approve')}
+                                          disabled={actionLoading !== null}
+                                          style={{
+                                            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+                                            fontSize: 12, fontWeight: 600, border: 'none', color: '#fff', background: '#1B5E37', cursor: 'pointer',
+                                            opacity: actionLoading ? 0.6 : 1,
+                                          }}>
+                                          <CheckCircle size={14} />
+                                          {actionLoading === `${teacher.id}-${tierCfg.key}-approve` ? '...' : 'Approve'}
+                                        </button>
+                                        <button onClick={() => handleTierAction(teacher, tierCfg.key, 'reject')}
+                                          disabled={actionLoading !== null}
+                                          style={{
+                                            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+                                            fontSize: 12, fontWeight: 600, border: '1.5px solid #FECACA', color: '#DC2626', background: '#FEF2F2', cursor: 'pointer',
+                                            opacity: actionLoading ? 0.6 : 1,
+                                          }}>
+                                          <XCircle size={14} />
+                                          {actionLoading === `${teacher.id}-${tierCfg.key}-reject` ? '...' : 'Reject'}
+                                        </button>
+                                      </>
                                     )}
                                   </div>
                                 </div>
-
-                                {/* Action buttons */}
-                                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                                  {/* View document button */}
-                                  {hasDoc && (
-                                    <button
-                                      onClick={() => {
-                                        if (docUrls[docUrl!]) {
-                                          window.open(docUrls[docUrl!], '_blank')
-                                        } else {
-                                          loadSignedUrl(docUrl!)
-                                          showToast('Loading document… click again in a moment')
-                                        }
-                                      }}
-                                      style={{
-                                        display: 'flex', alignItems: 'center', gap: 4,
-                                        padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                                        border: '1.5px solid #3B82F6', color: '#3B82F6', background: '#EFF6FF',
-                                        cursor: 'pointer',
-                                      }}
-                                    >
-                                      <Eye size={14} /> View Doc
-                                    </button>
-                                  )}
-
-                                  {!isVerified && needsReview && (
-                                    <>
-                                      <button
-                                        onClick={() => handleTierAction(teacher, tierCfg.key, 'approve')}
-                                        disabled={actionLoading !== null}
-                                        style={{
-                                          display: 'flex', alignItems: 'center', gap: 4,
-                                          padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                                          border: 'none', color: '#fff', background: '#1B5E37',
-                                          cursor: 'pointer', opacity: actionLoading ? 0.6 : 1,
-                                        }}
-                                      >
-                                        <CheckCircle size={14} />
-                                        {actionLoading === `${teacher.id}-${tierCfg.key}-approve` ? 'Approving…' : 'Approve'}
-                                      </button>
-                                      <button
-                                        onClick={() => handleTierAction(teacher, tierCfg.key, 'reject')}
-                                        disabled={actionLoading !== null}
-                                        style={{
-                                          display: 'flex', alignItems: 'center', gap: 4,
-                                          padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                                          border: '1.5px solid #FECACA', color: '#DC2626', background: '#FEF2F2',
-                                          cursor: 'pointer', opacity: actionLoading ? 0.6 : 1,
-                                        }}
-                                      >
-                                        <XCircle size={14} />
-                                        {actionLoading === `${teacher.id}-${tierCfg.key}-reject` ? 'Rejecting…' : 'Reject'}
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                {!isVerified && needsReview && (
+                                  <div style={{ marginTop: 10 }}>
+                                    <input type="text" placeholder={`Notes for ${tierCfg.label} decision…`}
+                                      value={notes[notesKey] || ''}
+                                      onChange={e => setNotes(prev => ({ ...prev, [notesKey]: e.target.value }))}
+                                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+                                      onFocus={e => { e.currentTarget.style.borderColor = '#B8952A' }}
+                                      onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+                                    />
+                                  </div>
+                                )}
                               </div>
+                            )
+                          })}
+                        </div>
+                      )}
 
-                              {/* Notes input for tiers needing review */}
-                              {!isVerified && needsReview && (
-                                <div style={{ marginTop: 10 }}>
-                                  <input
-                                    type="text"
-                                    placeholder={`Notes for ${tierCfg.label} decision…`}
-                                    value={notes[notesKey] || ''}
-                                    onChange={e => setNotes(prev => ({ ...prev, [notesKey]: e.target.value }))}
-                                    style={{
-                                      width: '100%', padding: '8px 12px', borderRadius: 8,
-                                      border: '1.5px solid #E5E7EB', fontSize: 12, outline: 'none',
-                                      fontFamily: 'inherit',
-                                    }}
-                                    onFocus={e => { e.currentTarget.style.borderColor = '#B8952A' }}
-                                    onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
                     </div>
                   )}
                 </div>
