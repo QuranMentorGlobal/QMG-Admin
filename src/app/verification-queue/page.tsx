@@ -176,8 +176,8 @@ export default function VerificationQueuePage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        {toast && (
+     <div>
+      {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 200,
             background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626',
