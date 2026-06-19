@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { href: '/payments',             label: 'Payments & Revenue',   icon: CreditCard      },
   { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
-  { href: '/admin-management',     label: 'Sub Admin Management',  icon: UserCog         },
+  { href: '/admin-management',     label: 'Sub Admin',             icon: UserCog         },
   { href: '/audit-log',            label: 'Audit Log',             icon: ScrollText      },
 ]
 
