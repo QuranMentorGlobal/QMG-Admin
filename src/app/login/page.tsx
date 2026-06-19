@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-dark px-4"
-      style={{ background: 'linear-gradient(135deg, #0D3D20 0%, #1B5E37 100%)' }}>
+      style={{ background: 'linear-gradient(135deg, #0B0B0B 0%, #B8952A 100%)' }}>
       
       {/* Decorative circles */}
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
           {/* Logo / Brand */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-              style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
+              style={{ background: 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
               <span className="text-2xl">🕌</span>
             </div>
             <h1 className="font-display text-2xl font-bold text-green-dark">QuranMentor<span style={{ color: '#B8952A' }}>Global</span></h1>
@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
               onClick={handleLogin}
               disabled={loading}
               className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #1B5E37, #0D3D20)', boxShadow: '0 8px 24px rgba(27,94,55,0.35)' }}>
+              style={{ background: 'linear-gradient(135deg, #B8952A, #0B0B0B)', boxShadow: '0 8px 24px rgba(184,149,42,0.35)' }}>
               {loading ? 'Signing in...' : 'Sign In to Admin Panel'}
             </button>
           </div>

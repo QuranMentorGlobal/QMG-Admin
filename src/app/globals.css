@@ -7,7 +7,7 @@
 html, body { height: 100%; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: #F5F0E8;
   color: #1A1A1A;
   -webkit-font-smoothing: antialiased;
@@ -15,8 +15,8 @@ body {
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(27,94,55,0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(27,94,55,0.5); }
+::-webkit-scrollbar-thumb { background: rgba(184,149,42,0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(184,149,42,0.5); }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

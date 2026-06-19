@@ -38,7 +38,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string }> = {
     open:        { bg: 'rgba(184,149,42,0.12)', color: '#B8952A' },
     in_progress: { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
-    resolved:    { bg: 'rgba(27,94,55,0.1)',    color: '#1B5E37' },
+    resolved:    { bg: 'rgba(184,149,42,0.1)',    color: '#B8952A' },
     closed:      { bg: 'rgba(0,0,0,0.06)',      color: '#666'    },
   }
   const s = map[status] ?? map.open
@@ -50,7 +50,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function RoleBadge({ role }: { role: string }) {
   const map: Record<string, { bg: string; color: string }> = {
-    student: { bg: 'rgba(27,94,55,0.1)',    color: '#1B5E37' },
+    student: { bg: 'rgba(184,149,42,0.1)',    color: '#B8952A' },
     teacher: { bg: 'rgba(184,149,42,0.12)', color: '#B8952A' },
     parent:  { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
   }
@@ -140,17 +140,17 @@ export default function AdminSupportPage() {
       <div className="w-full">
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626' }}>
+            style={{ background: toast.startsWith('✅') ? '#B8952A' : '#DC2626' }}>
             {toast}
           </div>
         )}
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: '#0D3D20', fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-2xl font-bold" style={{ color: '#0B0B0B', fontFamily: "'Fraunces', serif" }}>
             Support Tickets
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6B7A6B' }}>
+          <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
             Manage and reply to user support requests
           </p>
         </div>
@@ -158,10 +158,10 @@ export default function AdminSupportPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Total',    value: tickets.length,  color: '#0D3D20' },
+            { label: 'Total',    value: tickets.length,  color: '#0B0B0B' },
             { label: 'Open',     value: openCount,        color: '#B8952A' },
             { label: 'Urgent',   value: urgentCount,      color: '#DC2626' },
-            { label: 'Resolved', value: tickets.filter(t => t.status === 'resolved').length, color: '#1B5E37' },
+            { label: 'Resolved', value: tickets.filter(t => t.status === 'resolved').length, color: '#B8952A' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
@@ -176,7 +176,7 @@ export default function AdminSupportPage() {
             {['all', 'open', 'in_progress', 'resolved', 'closed'].map(s => (
               <button key={s} onClick={() => setFilterStatus(s)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={filterStatus === s ? { background: '#1B5E37', color: '#fff' } : { color: '#666' }}>
+                style={filterStatus === s ? { background: '#B8952A', color: '#fff' } : { color: '#666' }}>
                 {s.replace('_', ' ')}
               </button>
             ))}
@@ -211,10 +211,10 @@ export default function AdminSupportPage() {
                     key={ticket.id}
                     onClick={() => { setSelected(ticket); setReply(ticket.admin_reply || '') }}
                     className="w-full text-left bg-white rounded-2xl p-4 shadow-sm border transition-all hover:shadow-md"
-                    style={{ borderColor: selected?.id === ticket.id ? '#1B5E37' : '#F0EDE6', borderWidth: selected?.id === ticket.id ? 1.5 : 1 }}
+                    style={{ borderColor: selected?.id === ticket.id ? '#B8952A' : '#F0EDE6', borderWidth: selected?.id === ticket.id ? 1.5 : 1 }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <p className="font-semibold text-sm" style={{ color: '#0D3D20' }}>{ticket.subject}</p>
+                      <p className="font-semibold text-sm" style={{ color: '#0B0B0B' }}>{ticket.subject}</p>
                       <div className="flex gap-1 flex-shrink-0">
                         <PriorityBadge priority={ticket.priority} />
                         <StatusBadge status={ticket.status} />
@@ -253,7 +253,7 @@ export default function AdminSupportPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
                       <RoleBadge role={selected.role} />
-                      <p className="font-bold text-sm" style={{ color: '#0D3D20' }}>{selected.user_name}</p>
+                      <p className="font-bold text-sm" style={{ color: '#0B0B0B' }}>{selected.user_name}</p>
                     </div>
                     <p className="text-xs text-gray-500">{selected.user_email}</p>
                   </div>
@@ -264,7 +264,7 @@ export default function AdminSupportPage() {
                   {/* Subject */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <p className="font-bold" style={{ color: '#0D3D20' }}>{selected.subject}</p>
+                      <p className="font-bold" style={{ color: '#0B0B0B' }}>{selected.subject}</p>
                       <PriorityBadge priority={selected.priority} />
                     </div>
                     <p className="text-xs text-gray-400">{selected.category}</p>
@@ -273,7 +273,7 @@ export default function AdminSupportPage() {
                   {/* Original message */}
                   <div className="rounded-xl p-4" style={{ background: '#F9F7F4' }}>
                     <p className="text-xs font-semibold mb-2 text-gray-500">User message:</p>
-                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#0D3D20' }}>{selected.message}</p>
+                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#0B0B0B' }}>{selected.message}</p>
                     <p className="text-xs text-gray-400 mt-2">
                       {new Date(selected.created_at).toLocaleString('en-GB')}
                     </p>
@@ -281,9 +281,9 @@ export default function AdminSupportPage() {
 
                   {/* Previous reply */}
                   {selected.admin_reply && (
-                    <div className="rounded-xl p-4" style={{ background: 'rgba(27,94,55,0.06)', border: '1px solid rgba(27,94,55,0.1)' }}>
-                      <p className="text-xs font-semibold mb-2" style={{ color: '#1B5E37' }}>Your previous reply:</p>
-                      <p className="text-sm whitespace-pre-wrap" style={{ color: '#0D3D20' }}>{selected.admin_reply}</p>
+                    <div className="rounded-xl p-4" style={{ background: 'rgba(184,149,42,0.06)', border: '1px solid rgba(184,149,42,0.1)' }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: '#B8952A' }}>Your previous reply:</p>
+                      <p className="text-sm whitespace-pre-wrap" style={{ color: '#0B0B0B' }}>{selected.admin_reply}</p>
                     </div>
                   )}
 
@@ -298,8 +298,8 @@ export default function AdminSupportPage() {
                       rows={5}
                       placeholder="Type your reply to the user..."
                       className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none"
-                      style={{ borderColor: '#E0DDD5', fontFamily: "'DM Sans', sans-serif" }}
-                      onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#1B5E37' }}
+                      style={{ borderColor: '#E0DDD5', fontFamily: "'Inter', sans-serif" }}
+                      onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#B8952A' }}
                       onBlur={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E0DDD5' }}
                     />
                   </div>
@@ -314,7 +314,7 @@ export default function AdminSupportPage() {
                         <button key={s} onClick={() => setReplyStatus(s)}
                           className="px-3 py-1.5 rounded-xl text-xs font-semibold capitalize border transition-all"
                           style={replyStatus === s
-                            ? { background: '#1B5E37', color: '#fff', borderColor: '#1B5E37' }
+                            ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
                             : { background: '#fff', color: '#666', borderColor: '#E0DDD5' }}>
                           {s.replace('_', ' ')}
                         </button>
@@ -326,9 +326,9 @@ export default function AdminSupportPage() {
                     onClick={sendReply}
                     disabled={sending || !reply.trim()}
                     className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
-                    style={{ background: '#1B5E37' }}
-                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLElement).style.background = '#0D3D20' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#1B5E37' }}
+                    style={{ background: '#B8952A' }}
+                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLElement).style.background = '#0B0B0B' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#B8952A' }}
                   >
                     {sending ? 'Sending…' : selected.admin_reply ? '✓ Update Reply' : '✓ Send Reply'}
                   </button>

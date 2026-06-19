@@ -90,7 +90,7 @@ export default function PendingTeachersPage() {
       <div className="w-full">
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626' }}>
+            style={{ background: toast.startsWith('✅') ? '#B8952A' : '#DC2626' }}>
             {toast}
           </div>
         )}
@@ -116,7 +116,7 @@ export default function PendingTeachersPage() {
           <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ background: '#F5F0E8' }}>
-              <CheckCircle size={28} style={{ color: '#1B5E37' }} />
+              <CheckCircle size={28} style={{ color: '#B8952A' }} />
             </div>
             <p className="font-semibold text-ink">All caught up!</p>
             <p className="text-sm text-ink-light mt-1">No pending applications at the moment.</p>
@@ -137,7 +137,7 @@ export default function PendingTeachersPage() {
                       {t.profile_photo_url
                         ? <img src={t.profile_photo_url} className="w-full h-full object-cover" alt={name} />
                         : <div className="w-full h-full flex items-center justify-center text-xl font-bold"
-                            style={{ background: 'linear-gradient(135deg,#1B5E37,#097434)', color: '#fff' }}>
+                            style={{ background: 'linear-gradient(135deg,#B8952A,#1A1A1A)', color: '#fff' }}>
                             {(t.profiles?.first_name || 'T')[0]}
                           </div>}
                     </div>
@@ -151,7 +151,7 @@ export default function PendingTeachersPage() {
                         </span>
                         {t.ijazah_verified && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                            style={{ background: '#E8F5EE', color: '#1B5E37' }}>
+                            style={{ background: '#F7F1E2', color: '#B8952A' }}>
                             ✓ Ijazah
                           </span>
                         )}
@@ -178,7 +178,7 @@ export default function PendingTeachersPage() {
                       <button onClick={() => handleAction(t, 'approved')}
                         disabled={actionLoading === t.id}
                         className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-                        style={{ background: 'linear-gradient(135deg,#1B5E37,#097434)' }}>
+                        style={{ background: 'linear-gradient(135deg,#B8952A,#1A1A1A)' }}>
                         <CheckCircle size={13} />
                         {actionLoading === t.id ? '...' : 'Approve'}
                       </button>

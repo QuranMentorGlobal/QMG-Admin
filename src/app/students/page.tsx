@@ -78,7 +78,7 @@ export default function StudentManagementPage() {
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#1B5E37' }}>{toast}</div>
+            style={{ background: '#B8952A' }}>{toast}</div>
         )}
 
         {loading ? (
@@ -113,7 +113,7 @@ export default function StudentManagementPage() {
                   className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50 flex-shrink-0"
                   style={s.is_active
                     ? { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }
-                    : { background: '#E8F5EE', color: '#1B5E37', borderColor: '#C6E6D1' }}>
+                    : { background: '#F7F1E2', color: '#B8952A', borderColor: '#C6E6D1' }}>
                   {actionLoading === s.id ? '...' : s.is_active ? 'Deactivate' : 'Reactivate'}
                 </button>
               </div>

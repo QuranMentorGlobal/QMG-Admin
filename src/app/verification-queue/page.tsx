@@ -41,7 +41,7 @@ type TierKey = 'identity' | 'quran_mentor' | 'ijazah' | 'phone'
 const TIER_CONFIG: { key: TierKey; label: string; icon: string; color: string }[] = [
   { key: 'phone',        label: 'Phone Verified',        icon: '📱', color: '#6B7280' },
   { key: 'identity',     label: 'Identity Verified',     icon: '🛡️', color: '#1E40AF' },
-  { key: 'quran_mentor', label: 'Quran Mentor Verified', icon: '📖', color: '#1B5E37' },
+  { key: 'quran_mentor', label: 'Quran Mentor Verified', icon: '📖', color: '#B8952A' },
   { key: 'ijazah',       label: 'Ijazah Verified',       icon: '🏅', color: '#92710A' },
 ]
 
@@ -180,7 +180,7 @@ export default function VerificationQueuePage() {
       {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 200,
-            background: toast.startsWith('✅') ? '#1B5E37' : '#DC2626',
+            background: toast.startsWith('✅') ? '#B8952A' : '#DC2626',
             color: '#fff', padding: '12px 20px', borderRadius: 12,
             fontSize: 14, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           }}>
@@ -191,7 +191,7 @@ export default function VerificationQueuePage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 800, color: '#097434', margin: 0 }}>
+            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>
               Verification Queue
             </h1>
             <p style={{ fontSize: 13, color: '#6B7280', margin: '4px 0 0' }}>
@@ -210,8 +210,8 @@ export default function VerificationQueuePage() {
                 style={{
                   padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
                   border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
-                  borderColor: filter === f.key ? '#1B5E37' : '#E5E7EB',
-                  background: filter === f.key ? '#1B5E37' : '#fff',
+                  borderColor: filter === f.key ? '#B8952A' : '#E5E7EB',
+                  background: filter === f.key ? '#B8952A' : '#fff',
                   color: filter === f.key ? '#fff' : '#6B7280',
                 }}>
                 {f.label}
@@ -229,7 +229,7 @@ export default function VerificationQueuePage() {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px dashed #E5E7EB' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-            <p style={{ fontWeight: 700, color: '#097434', fontSize: 16 }}>Queue is clear!</p>
+            <p style={{ fontWeight: 700, color: '#1A1A1A', fontSize: 16 }}>Queue is clear!</p>
             <p style={{ color: '#9CA3AF', fontSize: 13, marginTop: 4 }}>No pending items in this category.</p>
           </div>
         ) : (
@@ -256,7 +256,7 @@ export default function VerificationQueuePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                       <div style={{
                         width: 42, height: 42, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
-                        background: teacher.profile_photo_url ? undefined : 'linear-gradient(135deg, #1B5E37, #097434)',
+                        background: teacher.profile_photo_url ? undefined : 'linear-gradient(135deg, #B8952A, #1A1A1A)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', fontWeight: 700, fontSize: 16,
                       }}>
@@ -287,7 +287,7 @@ export default function VerificationQueuePage() {
                         <>
                           <span title="Basic" style={{ width: 10, height: 10, borderRadius: '50%', background: (teacher.email_verified && teacher.phone_verified) ? '#22C55E' : '#E5E7EB' }} />
                           <span title="Identity" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.identity_verified ? '#3B82F6' : teacher.identity_document_url ? '#FCD34D' : '#E5E7EB' }} />
-                          <span title="QM" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.quran_mentor_verified ? '#1B5E37' : '#E5E7EB' }} />
+                          <span title="QM" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.quran_mentor_verified ? '#B8952A' : '#E5E7EB' }} />
                           <span title="Ijazah" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.ijazah_verified ? '#B8952A' : teacher.ijazah_document_url ? '#FCD34D' : '#E5E7EB' }} />
                         </>
                       )}
@@ -344,7 +344,7 @@ export default function VerificationQueuePage() {
                             <button onClick={() => setPlayingVideo(teacher.id)}
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10,
-                                border: '1.5px solid #1B5E37', background: '#E8F5EE', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#1B5E37',
+                                border: '1.5px solid #B8952A', background: '#F7F1E2', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#B8952A',
                               }}>
                               <Play size={16} /> Watch Introduction Video
                             </button>
@@ -383,7 +383,7 @@ export default function VerificationQueuePage() {
                               style={{
                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                                 padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                                border: 'none', color: '#fff', background: '#1B5E37', cursor: 'pointer',
+                                border: 'none', color: '#fff', background: '#B8952A', cursor: 'pointer',
                                 opacity: actionLoading ? 0.6 : 1,
                               }}>
                               <CheckCircle size={16} />
@@ -453,7 +453,7 @@ export default function VerificationQueuePage() {
                                           disabled={actionLoading !== null}
                                           style={{
                                             display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
-                                            fontSize: 12, fontWeight: 600, border: 'none', color: '#fff', background: '#1B5E37', cursor: 'pointer',
+                                            fontSize: 12, fontWeight: 600, border: 'none', color: '#fff', background: '#B8952A', cursor: 'pointer',
                                             opacity: actionLoading ? 0.6 : 1,
                                           }}>
                                           <CheckCircle size={14} />

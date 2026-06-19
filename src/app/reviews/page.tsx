@@ -59,7 +59,7 @@ export default function ReviewsModerationPage() {
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#1B5E37' }}>{toast}</div>
+            style={{ background: '#B8952A' }}>{toast}</div>
         )}
 
         {loading ? (
@@ -105,7 +105,7 @@ export default function ReviewsModerationPage() {
                       onClick={() => handleReview(r.id, true)}
                       disabled={actionLoading === r.id}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ background: '#1B5E37' }}>
+                      style={{ background: '#B8952A' }}>
                       <CheckCircle size={15} /> Approve
                     </button>
                     <button

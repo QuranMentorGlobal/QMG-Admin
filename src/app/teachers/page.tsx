@@ -88,7 +88,7 @@ export default function TeacherManagementPage() {
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#1B5E37' }}>{toast}</div>
+            style={{ background: '#B8952A' }}>{toast}</div>
         )}
 
         {loading ? (
@@ -99,7 +99,7 @@ export default function TeacherManagementPage() {
               <div key={t.id}
                 className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
-                  style={{ background: t.status === 'suspended' ? '#9CA3AF' : 'linear-gradient(135deg, #1B5E37, #0D3D20)' }}>
+                  style={{ background: t.status === 'suspended' ? '#9CA3AF' : 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
                   {(t.profiles?.first_name || 'T')[0]}
                 </div>
                 <div className="flex-1">
@@ -123,7 +123,7 @@ export default function TeacherManagementPage() {
                   disabled={actionLoading === t.id}
                   className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50 flex-shrink-0"
                   style={t.status === 'suspended'
-                    ? { background: '#1B5E37', color: '#fff', borderColor: '#1B5E37' }
+                    ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
                     : { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }}>
                   {actionLoading === t.id ? '...' : t.status === 'suspended' ? 'Reinstate' : 'Suspend'}
                 </button>

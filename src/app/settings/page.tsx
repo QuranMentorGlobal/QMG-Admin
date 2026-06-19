@@ -58,18 +58,18 @@ export default function SettingsPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '11px 16px', borderRadius: 12,
     border: '1.5px solid #E8E4DA', fontSize: 14, outline: 'none',
-    fontFamily: "'DM Sans', sans-serif", color: '#1A1A1A', background: '#fff',
+    fontFamily: "'Inter', sans-serif", color: '#1A1A1A', background: '#fff',
     transition: 'border-color 0.15s',
   }
 
   const labelStyle: React.CSSProperties = {
     display: 'block', fontSize: 13, fontWeight: 700,
-    color: '#097434', marginBottom: 4, fontFamily: "'DM Sans', sans-serif",
+    color: '#1A1A1A', marginBottom: 4, fontFamily: "'Inter', sans-serif",
   }
 
   const hintStyle: React.CSSProperties = {
     fontSize: 12, color: '#9A9A8A', marginBottom: 10,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   }
 
   if (loading) return (
@@ -84,14 +84,14 @@ export default function SettingsPage() {
   return (
     <AdminLayout>
       {toast && (
-        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 20px', borderRadius: 12, background: '#1B5E37', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 20px', borderRadius: 12, background: '#B8952A', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
           {toast}
         </div>
       )}
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 800, color: '#097434', margin: 0 }}>Platform Settings</h1>
-        <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 4 }}>Configure global platform settings</p>
+        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>Platform Settings</h1>
+        <p style={{ fontSize: 13, color: '#6B6B6B', marginTop: 4 }}>Configure global platform settings</p>
       </div>
 
       {/* Two-column layout on wide screens, single column on mobile */}
@@ -107,9 +107,9 @@ export default function SettingsPage() {
               type="number" min="0" max="50"
               value={settings.commission_rate}
               onChange={e => setSettings({ ...settings, commission_rate: Number(e.target.value) })}
-              style={{ ...inputStyle, width: 120, textAlign: 'center', fontWeight: 800, fontSize: 20, color: '#1B5E37' }}
+              style={{ ...inputStyle, width: 120, textAlign: 'center', fontWeight: 800, fontSize: 20, color: '#B8952A' }}
             />
-            <span style={{ fontSize: 14, color: '#6B7A6B', fontWeight: 600 }}>% per lesson</span>
+            <span style={{ fontSize: 14, color: '#6B6B6B', fontWeight: 600 }}>% per lesson</span>
           </div>
         </div>
 
@@ -122,7 +122,7 @@ export default function SettingsPage() {
             value={settings.platform_name}
             onChange={e => setSettings({ ...settings, platform_name: e.target.value })}
             style={inputStyle}
-            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#B8952A'}
             onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
           />
         </div>
@@ -136,7 +136,7 @@ export default function SettingsPage() {
             value={settings.contact_email}
             onChange={e => setSettings({ ...settings, contact_email: e.target.value })}
             style={inputStyle}
-            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#B8952A'}
             onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
           />
         </div>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
             onChange={e => setSettings({ ...settings, support_whatsapp: e.target.value })}
             style={inputStyle}
             placeholder="+92-300-0000000"
-            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#1B5E37'}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#B8952A'}
             onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#E8E4DA'}
           />
         </div>
@@ -161,14 +161,14 @@ export default function SettingsPage() {
       <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: 0, fontFamily: "'DM Sans',sans-serif" }}>Trial Lessons</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', margin: 0, fontFamily: "'Inter',sans-serif" }}>Trial Lessons</p>
             <p style={{ fontSize: 12, color: '#9A9A8A', margin: '4px 0 0' }}>Allow students to book free trial lessons with teachers</p>
           </div>
           <button
             onClick={() => setSettings({ ...settings, trial_enabled: !settings.trial_enabled })}
             style={{
               width: 52, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer',
-              background: settings.trial_enabled ? '#1B5E37' : '#D1D5DB',
+              background: settings.trial_enabled ? '#B8952A' : '#D1D5DB',
               position: 'relative', flexShrink: 0, transition: 'background 0.2s',
             }}>
             <div style={{
@@ -188,8 +188,8 @@ export default function SettingsPage() {
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           padding: '14px', borderRadius: 14, border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
-          background: 'linear-gradient(135deg, rgb(0,87,34), rgb(15,137,61))',
-          color: '#ffffff', fontWeight: 800, fontSize: 15, fontFamily: "'DM Sans',sans-serif",
+          background: 'linear-gradient(135deg, rgb(184,149,42), rgb(212,175,80))',
+          color: '#ffffff', fontWeight: 800, fontSize: 15, fontFamily: "'Inter',sans-serif",
           opacity: saving ? 0.7 : 1, transition: 'opacity 0.15s', marginBottom: 14,
         }}>
         <Save size={17} />
@@ -197,7 +197,7 @@ export default function SettingsPage() {
       </button>
 
       {/* Note */}
-      <div style={{ padding: '14px 18px', borderRadius: 12, background: '#F0E4B8', fontSize: 12, color: '#6B5A1E', fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6 }}>
+      <div style={{ padding: '14px 18px', borderRadius: 12, background: '#F0E4B8', fontSize: 12, color: '#6B5A1E', fontFamily: "'Inter',sans-serif", lineHeight: 1.6 }}>
         💡 <strong>Note:</strong> The Settings page requires a <code>platform_settings</code> table in Supabase with columns:{' '}
         <code>id, commission_rate, platform_name, contact_email, support_whatsapp, trial_enabled</code>.
       </div>

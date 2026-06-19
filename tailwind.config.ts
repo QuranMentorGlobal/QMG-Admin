@@ -10,10 +10,10 @@ const config: Config = {
     extend: {
       colors: {
         green: {
-          DEFAULT: '#1B5E37',
-          dark:    '#0D3D20',
-          mid:     '#2A7A4A',
-          light:   '#E8F5EE',
+          DEFAULT: '#B8952A',
+          dark:    '#0B0B0B',
+          mid:     '#D4AF50',
+          light:   '#F7F1E2',
         },
         gold: {
           DEFAULT: '#B8952A',
@@ -31,8 +31,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
-        body:    ['DM Sans', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        body:    ['Inter', 'sans-serif'],
       },
     },
   },

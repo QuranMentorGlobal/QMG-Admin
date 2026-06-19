@@ -32,29 +32,29 @@ export default function DashboardPage() {
   }, [])
 
   const cards = [
-    { label: 'Total Students',   value: stats.totalStudents,                 icon: Users,         bg: '#E8F5EE', color: '#1B5E37', urgent: false },
+    { label: 'Total Students',   value: stats.totalStudents,                 icon: Users,         bg: '#F7F1E2', color: '#B8952A', urgent: false },
     { label: 'Total Teachers',   value: stats.totalTeachers,                 icon: GraduationCap, bg: '#F0E4B8', color: '#B8952A', urgent: false },
-    { label: 'Total Bookings',   value: stats.totalBookings,                 icon: BookOpen,      bg: '#EDE6D6', color: '#097434', urgent: false },
-    { label: 'Platform Revenue', value: `$${stats.totalRevenue.toFixed(0)}`, icon: DollarSign,    bg: '#E8F5EE', color: '#1B5E37', urgent: false },
+    { label: 'Total Bookings',   value: stats.totalBookings,                 icon: BookOpen,      bg: '#EDE6D6', color: '#1A1A1A', urgent: false },
+    { label: 'Platform Revenue', value: `$${stats.totalRevenue.toFixed(0)}`, icon: DollarSign,    bg: '#F7F1E2', color: '#B8952A', urgent: false },
     { label: 'Pending Teachers', value: stats.pendingTeachers, icon: Clock, bg: stats.pendingTeachers > 0 ? '#FEF3C7' : '#F5F0E8', color: stats.pendingTeachers > 0 ? '#B8952A' : '#9A9A8A', urgent: stats.pendingTeachers > 0 },
     { label: 'Pending Reviews',  value: stats.pendingReviews,  icon: Star,  bg: stats.pendingReviews  > 0 ? '#FEE2E2' : '#F5F0E8', color: stats.pendingReviews  > 0 ? '#DC2626' : '#9A9A8A', urgent: stats.pendingReviews  > 0 },
   ]
 
   const quickActions = [
-    { label: 'Review Applications', href: '/teachers/pending', emoji: '📋', color: '#1B5E37', bg: '#E8F5EE' },
+    { label: 'Review Applications', href: '/teachers/pending', emoji: '📋', color: '#B8952A', bg: '#F7F1E2' },
     { label: 'Moderate Reviews',    href: '/reviews',          emoji: '⭐', color: '#B8952A', bg: '#F0E4B8' },
-    { label: 'View Bookings',       href: '/bookings',         emoji: '📅', color: '#097434', bg: '#EDE6D6' },
-    { label: 'Platform Settings',   href: '/settings',         emoji: '⚙️', color: '#1B5E37', bg: '#E8F5EE' },
+    { label: 'View Bookings',       href: '/bookings',         emoji: '📅', color: '#1A1A1A', bg: '#EDE6D6' },
+    { label: 'Platform Settings',   href: '/settings',         emoji: '⚙️', color: '#B8952A', bg: '#F7F1E2' },
   ]
 
   return (
     <AdminLayout adminName={adminName}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 800, color: '#097434', margin: 0 }}>
+        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>
           Welcome back, {adminName} 👋
         </h1>
-        <p style={{ fontSize: 13, color: '#6B7A6B', marginTop: 6, margin: '6px 0 0' }}>
+        <p style={{ fontSize: 13, color: '#6B6B6B', marginTop: 6, margin: '6px 0 0' }}>
           Here's what's happening on QuranMentorGlobal today.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions — 4 equal columns, full width */}
       <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: '1px solid #E8E4DA', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#097434', margin: '0 0 14px' }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', margin: '0 0 14px' }}>
           Quick Actions
         </h2>
         {/* 4 equal columns — no auto-fill, always exactly 4 */}
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 8, padding: '20px 12px', borderRadius: 12, textAlign: 'center',
               textDecoration: 'none', fontSize: 13, fontWeight: 700, color, background: bg,
-              transition: 'all 0.15s', fontFamily: "'DM Sans',sans-serif", minHeight: 90,
+              transition: 'all 0.15s', fontFamily: "'Inter',sans-serif", minHeight: 90,
             }}
             onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)' }}
             onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = ''; el.style.boxShadow = '' }}>

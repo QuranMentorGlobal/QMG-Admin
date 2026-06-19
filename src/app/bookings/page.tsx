@@ -20,7 +20,7 @@ type Booking = {
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   pending:   { bg: '#FEF3C7', color: '#D97706' },
-  confirmed: { bg: '#E8F5EE', color: '#1B5E37' },
+  confirmed: { bg: '#F7F1E2', color: '#B8952A' },
   completed: { bg: '#E0F2FE', color: '#0369A1' },
   cancelled: { bg: '#FEE2E2', color: '#DC2626' },
 }
@@ -71,7 +71,7 @@ export default function BookingsPage() {
               onClick={() => setStatusFilter(s)}
               className="px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all"
               style={statusFilter === s
-                ? { background: '#1B5E37', color: '#fff' }
+                ? { background: '#B8952A', color: '#fff' }
                 : { background: '#fff', color: '#6B6B6B', border: '1px solid #E5E7EB' }}>
               {s}
             </button>
