@@ -57,9 +57,9 @@ const ADMINX_STYLES = `
 @keyframes adminxrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .adminx-rise{animation:adminxrise .5s cubic-bezier(.4,0,.2,1) both}
 .adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}
-.adminx-stat:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06);border-color:rgba(184,149,42,.4)}
+.adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.55)!important}
 .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.adminx-row:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06);border-color:rgba(184,149,42,.45)}
+.adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.5)!important}
 .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
 @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .adminx-iconbtn{position:relative;width:38px;height:38px;border-radius:11px;border:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease}

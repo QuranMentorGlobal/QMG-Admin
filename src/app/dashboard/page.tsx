@@ -492,9 +492,9 @@ export default function DashboardPage() {
         @keyframes qmgrise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         .adminx-rise{animation:qmgrise .5s cubic-bezier(.4,0,.2,1) both}
         .adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}
-        .adminx-stat:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06);border-color:rgba(184,149,42,.4)}
+        .adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.55)!important}
         .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-        .adminx-row:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06);border-color:rgba(184,149,42,.45)}
+        .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.5)!important}
         @media(max-width:1100px){ .qmg-kpi-grid{grid-template-columns:repeat(3,1fr)!important} .qmg-two{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:repeat(2,1fr)!important} }
         @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2,1fr)!important} .qmg-qa{grid-template-columns:repeat(3,1fr)!important} }
         @media(max-width:380px){ .qmg-kpi-grid{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:1fr!important} }

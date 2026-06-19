@@ -119,15 +119,23 @@ export default function TeacherManagementPage() {
                     <span className="flex items-center gap-1"><DollarSign size={11} /> ${t.hourly_rate_usd}/hr</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggleSuspend(t)}
-                  disabled={actionLoading === t.id}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50 flex-shrink-0"
-                  style={t.status === 'suspended'
-                    ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
-                    : { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }}>
-                  {actionLoading === t.id ? '...' : t.status === 'suspended' ? 'Reinstate' : 'Suspend'}
-                </button>
+                <div className="flex gap-2 flex-shrink-0">
+                  <a
+                    href={`/teachers/${t.id}`}
+                    className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 text-center"
+                    style={{ background: '#fff', color: '#1A1A1A', borderColor: '#E8E4DA' }}>
+                    View
+                  </a>
+                  <button
+                    onClick={() => toggleSuspend(t)}
+                    disabled={actionLoading === t.id}
+                    className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50"
+                    style={t.status === 'suspended'
+                      ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
+                      : { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }}>
+                    {actionLoading === t.id ? '...' : t.status === 'suspended' ? 'Reinstate' : 'Suspend'}
+                  </button>
+                </div>
               </div>
             ))}
             {filtered.length === 0 && (
