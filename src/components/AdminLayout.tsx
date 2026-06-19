@@ -5,13 +5,14 @@
 //  Nav items, routes and sign-out logic are UNCHANGED.)
 // ============================================================
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight,
-  CreditCard, MessageSquare, ShieldCheck, BarChart3,
+  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: '/payments',             label: 'Payments & Revenue',   icon: CreditCard      },
   { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
+  { href: '/admin-management',     label: 'Sub Admin Management',  icon: UserCog         },
 ]
 
 const LOGO_SRC = '/logo.png'
@@ -62,6 +64,33 @@ export default function AdminLayout({
   const router   = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [ctx, setCtx] = useState<(AdminCtx & { roleLabel?: string }) | null>(null)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sb = createClient()
+        const { data: { user } } = await sb.auth.getUser()
+        if (!user) return
+        const { data: p } = await sb.from('profiles')
+          .select('role, admin_role, admin_permissions, admin_status, admin_role_label')
+          .eq('id', user.id).single()
+        const prof = (p as any) || {}
+        setCtx({
+          role: prof.role ?? null,
+          adminRole: prof.admin_role ?? null,
+          permissions: Array.isArray(prof.admin_permissions) ? prof.admin_permissions : [],
+          status: prof.admin_status ?? 'active',
+          roleLabel: prof.admin_role_label ?? undefined,
+        })
+      } catch {}
+    })()
+  }, [])
+
+  const isSuper = ctx?.adminRole === 'super'
+  const visibleNav = ctx
+    ? NAV_ITEMS.filter(n => canAccessRoute(n.href, ctx))
+    : NAV_ITEMS.filter(n => n.href === '/dashboard')
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -86,7 +115,7 @@ export default function AdminLayout({
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {visibleNav.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
             return (
               <button
@@ -172,7 +201,7 @@ export default function AdminLayout({
               <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.2 }}>
                 {adminName || 'Admin'}
               </p>
-              <p style={{ fontSize: 11, color: '#D4AF50', margin: 0 }}>Super Admin</p>
+              <p style={{ fontSize: 11, color: '#D4AF50', margin: 0 }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
             </div>
             <div className="adminx-avatar" style={{
               width: 38, height: 38, borderRadius: '50%',

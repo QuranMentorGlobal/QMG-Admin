@@ -168,7 +168,7 @@ export default function DashboardPage() {
   ] : []
 
   const ops = [
-    { label: 'Pending Verifications', value: data?.totals?.pendingTeachers ?? 0, href: '/teachers/pending', icon: Clock },
+    { label: 'Pending Verifications', value: data?.totals?.pendingTeachers ?? 0, href: '/verification-queue', icon: Clock },
     { label: 'Open Support Tickets', value: data?.totals?.openTickets ?? 0, href: '/support', icon: MessageSquare },
     { label: 'Total Students', value: data?.totals?.totalStudents ?? 0, href: '/students', icon: Users },
     { label: 'Total Teachers', value: data?.totals?.totalTeachers ?? 0, href: '/teachers', icon: GraduationCap },
