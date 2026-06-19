@@ -23,16 +23,13 @@ export default function AdminLoginPage() {
       return
     }
 
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single()
-
-    if (!profile || profile.role !== 'admin') {
+    // Authoritative admin check via the service role (RLS-proof). Only accounts
+    // with role='admin' and an active admin_status may enter the panel.
+    let ok = false
+    try { const res = await fetch('/api/auth-check'); const j = await res.json(); ok = !!j.ok } catch {}
+    if (!ok) {
       await supabase.auth.signOut()
-      setError('Access denied. Admin accounts only.')
+      setError('Access denied. This panel is for administrators only.')
       setLoading(false)
       return
     }

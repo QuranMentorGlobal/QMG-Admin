@@ -7,17 +7,22 @@ export async function GET() {
   const g = await guard(['support.view']); if ('error' in g) return g.error
   const svc = service()
 
-  const { data: raw, error } = await svc.from('support_tickets')
+  // Resilient fetch: try with the profiles join, fall back to a plain select if the
+  // FK/embed isn't available in this schema (prevents a 500 → blank page).
+  let raw: any[] = []
+  let r: any = await svc.from('support_tickets')
     .select('*, profiles!support_tickets_user_id_fkey(first_name, last_name, email)')
     .order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (r.error) r = await svc.from('support_tickets').select('*').order('created_at', { ascending: false })
+  if (r.error) return NextResponse.json({ metrics: { total: 0, open: 0, inProgress: 0, resolved: 0, urgentOpen: 0, responded: 0, responseRate: 0, resolutionRate: 0, avgResolutionHours: 0 }, byCategory: [], byPriority: [], tickets: [] })
+  raw = r.data || []
 
-  const tickets = (raw || []).map((t: any) => ({
+  const tickets = raw.map((t: any) => ({
     id: t.id, subject: t.subject || t.title || 'Support request', message: t.message || t.body || '',
     status: t.status || 'open', priority: t.priority || 'normal', category: t.category || 'general',
     role: t.role || '', adminReply: t.admin_reply || null,
     createdAt: t.created_at, updatedAt: t.updated_at || t.created_at, resolvedAt: t.resolved_at || null,
-    userName: t.profiles ? `${t.profiles.first_name || ''} ${t.profiles.last_name || ''}`.trim() : 'Unknown',
+    userName: t.profiles ? `${t.profiles.first_name || ''} ${t.profiles.last_name || ''}`.trim() || 'Unknown' : 'Unknown',
     userEmail: t.profiles?.email || '', userId: t.user_id,
   }))
 
@@ -30,7 +35,6 @@ export async function GET() {
   const responseRate = total ? Math.round((responded / total) * 100) : 0
   const resolutionRate = total ? Math.round((resolved / total) * 100) : 0
 
-  // Avg resolution time (hours) — use resolved_at when present, else updated_at as proxy
   const resolvedTk = tickets.filter((t: any) => (t.status === 'resolved' || t.status === 'closed'))
   let avgResolutionHours = 0
   if (resolvedTk.length) {
@@ -49,7 +53,6 @@ export async function GET() {
 
   return NextResponse.json({
     metrics: { total, open, inProgress, resolved, urgentOpen, responded, responseRate, resolutionRate, avgResolutionHours },
-    byCategory: tally('category'), byPriority: tally('priority'),
-    tickets,
+    byCategory: tally('category'), byPriority: tally('priority'), tickets,
   })
 }

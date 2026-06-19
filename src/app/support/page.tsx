@@ -80,7 +80,7 @@ export default function AdminSupportPage() {
     setSending(false)
   }
 
-  const m = d?.metrics
+  const m = d?.metrics || { total: 0, open: 0, inProgress: 0, resolved: 0, urgentOpen: 0, responded: 0, responseRate: 0, resolutionRate: 0, avgResolutionHours: 0 }
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return (d?.tickets || []).filter((t: any) => {

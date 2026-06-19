@@ -78,7 +78,11 @@ export default function AdminPaymentsPage() {
     fetch('/api/payments-finance').then(r => r.ok ? r.json() : null).then(j => { setD(j); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const t = d?.totals
+  const t = d?.totals || { gross: 0, commission: 0, payout: 0, aov: 0, succeeded: 0, failed: 0, refunded: 0, pending: 0, total: 0 }
+  const monthly = d?.monthly || { thisMonth: 0, lastMonth: 0, growth: 0 }
+  const forecast = d?.forecast || 0
+  const topPayouts = d?.topPayouts || []
+  const typeBreakdown = d?.typeBreakdown || []
   const trend = (d?.byMonth || []).map((x: any) => ({ ...x, label: monthLabel(x.m) }))
   const splitData = d ? [{ name: 'Platform Commission', value: t.commission }, { name: 'Teacher Payout', value: t.payout }] : []
 
@@ -115,7 +119,7 @@ export default function AdminPaymentsPage() {
           <Kpi icon={DollarSign} label="Total Revenue (GTV)" value={money(t.gross)} accent sub={`${t.succeeded} successful payments`} />
           <Kpi icon={Landmark} label="Platform Commission" value={money(t.commission)} accent sub="Net to platform" />
           <Kpi icon={Wallet} label="Teacher Payouts" value={money(t.payout)} sub="Total disbursed" />
-          <Kpi icon={CreditCard} label="This Month" value={money(d.monthly.thisMonth)} chip={d.monthly.growth} sub={`Avg order ${money(t.aov)}`} />
+          <Kpi icon={CreditCard} label="This Month" value={money(monthly.thisMonth)} chip={monthly.growth} sub={`Avg order ${money(t.aov)}`} />
         </>}
       </div>
 
@@ -158,18 +162,18 @@ export default function AdminPaymentsPage() {
           {loading ? <Skel h={230} /> : (
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: 230, textAlign: 'center', gap: 8 }}>
               <p style={{ fontSize: 12, color: MUTED, margin: 0 }}>Projected next month</p>
-              <p style={{ fontSize: 40, fontWeight: 800, color: GOLD, margin: 0, fontFamily: "'Fraunces',serif" }}>{money(d.forecast)}</p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center', fontSize: 12, color: d.monthly.growth >= 0 ? GREEN : RED, fontWeight: 700 }}>
-                {d.monthly.growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {d.monthly.growth > 0 ? '+' : ''}{d.monthly.growth}% vs last month
+              <p style={{ fontSize: 40, fontWeight: 800, color: GOLD, margin: 0, fontFamily: "'Fraunces',serif" }}>{money(forecast)}</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center', fontSize: 12, color: monthly.growth >= 0 ? GREEN : RED, fontWeight: 700 }}>
+                {monthly.growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {monthly.growth > 0 ? '+' : ''}{monthly.growth}% vs last month
               </div>
               <p style={{ fontSize: 10.5, color: MUTED, margin: '6px 0 0' }}>Linear projection over the last 12 months</p>
             </div>
           )}
         </Panel>
         <Panel title="By Payment Type" icon={CreditCard}>
-          {loading ? <Skel h={230} /> : (d.typeBreakdown.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No data.</p> :
+          {loading ? <Skel h={230} /> : (typeBreakdown.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No data.</p> :
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {d.typeBreakdown.map((x: any) => { const pct = t.gross > 0 ? Math.round((x.gross / t.gross) * 100) : 0; return (
+              {typeBreakdown.map((x: any) => { const pct = t.gross > 0 ? Math.round((x.gross / t.gross) * 100) : 0; return (
                 <div key={x.name}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5 }}>
                     <span style={{ color: INK, fontWeight: 600, textTransform: 'capitalize' }}>{x.name} <span style={{ color: MUTED, fontWeight: 400 }}>· {x.count}</span></span>
@@ -186,10 +190,10 @@ export default function AdminPaymentsPage() {
       {/* Top payouts + monthly bars */}
       <div className="qmg-fin-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 18, marginBottom: 18 }}>
         <Panel title="Top Teacher Payouts" icon={Users}>
-          {loading ? <Skel h={240} /> : (d.topPayouts.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No payouts yet.</p> :
+          {loading ? <Skel h={240} /> : (topPayouts.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No payouts yet.</p> :
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {d.topPayouts.map((tp: any, i: number) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < d.topPayouts.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
+              {topPayouts.map((tp: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < topPayouts.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tp.name}</span>
                   <span style={{ fontSize: 11, color: MUTED }}>{tp.count}×</span>

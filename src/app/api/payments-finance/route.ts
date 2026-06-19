@@ -9,10 +9,11 @@ export async function GET() {
   const g = await guard(['payments.view']); if ('error' in g) return g.error
   const svc = service()
 
-  const { data: pays, error } = await svc.from('payments')
-    .select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at, teacher_id')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  const all: any[] = pays || []
+  // Resilient: drop optional columns (provider/payment_type) if they don't exist.
+  let pres: any = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at, teacher_id')
+  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, created_at, teacher_id')
+  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, status, created_at')
+  const all: any[] = pres.data || []
   const ok = all.filter(p => p.status === 'succeeded')
 
   // Totals
@@ -68,11 +69,15 @@ export async function GET() {
   }
 
   // Recent transactions (with names)
-  const { data: recentRaw } = await svc.from('payments')
+  let rcRes: any = await svc.from('payments')
     .select(`id, gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at,
       student:profiles!payments_student_id_fkey(first_name, last_name),
       teacher:profiles!payments_teacher_id_fkey(first_name, last_name)`)
     .order('created_at', { ascending: false }).limit(60)
+  if (rcRes.error) rcRes = await svc.from('payments')
+    .select('id, gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at')
+    .order('created_at', { ascending: false }).limit(60)
+  const recentRaw = rcRes.data || []
   const recent = (recentRaw || []).map((p: any) => ({
     id: p.id, gross: Number(p.gross_amount_usd) || 0, commission: Number(p.platform_fee_usd) || 0, payout: Number(p.teacher_payout_usd) || 0,
     status: p.status, provider: p.provider, type: p.payment_type, createdAt: p.created_at,

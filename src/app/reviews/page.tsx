@@ -65,8 +65,12 @@ export default function ReviewsPage() {
     await load(); setActionLoading(null)
   }
 
-  const t = d?.totals
-  const maxDist = d ? Math.max(1, ...d.dist.map((x: any) => x.count)) : 1
+  const t = d?.totals || { total: 0, publishedCount: 0, pendingCount: 0, avgRating: 0 }
+  const dist = d?.dist || []
+  const topRated = d?.topRated || []
+  const lowRated = d?.lowRated || []
+  const pending = d?.pending || []
+  const maxDist = Math.max(1, ...(dist.length ? dist.map((x: any) => x.count) : [1]))
   const trend = (d?.trend || []).map((x: any) => ({ ...x, label: format(new Date(x.m + '-01'), 'MMM') }))
 
   return (
@@ -93,7 +97,7 @@ export default function ReviewsPage() {
         <Panel title="Rating Distribution" icon={Star}>
           {loading ? <Skel h={210} /> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-              {[...d.dist].reverse().map((x: any) => {
+              {[...dist].reverse().map((x: any) => {
                 const pct = t.publishedCount > 0 ? Math.round((x.count / t.publishedCount) * 100) : 0
                 return (
                   <div key={x.star} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -124,10 +128,10 @@ export default function ReviewsPage() {
       {/* Reputation */}
       <div className="qmg-rv-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
         <Panel title="Top-Rated Teachers" icon={Award}>
-          {loading ? <Skel h={200} /> : (d.topRated.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No published reviews yet.</p> :
+          {loading ? <Skel h={200} /> : (topRated.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No published reviews yet.</p> :
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {d.topRated.map((tr: any, i: number) => (
-                <a key={tr.id} href={`/teachers/${tr.id}`} className="adminx-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, textDecoration: 'none', borderBottom: i < d.topRated.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
+              {topRated.map((tr: any, i: number) => (
+                <a key={tr.id} href={`/teachers/${tr.id}`} className="adminx-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, textDecoration: 'none', borderBottom: i < topRated.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tr.name}</span>
                   <Stars n={tr.avg} size={12} />
@@ -138,15 +142,15 @@ export default function ReviewsPage() {
           )}
         </Panel>
         <Panel title="Reputation — Needs Attention" icon={AlertTriangle}>
-          {loading ? <Skel h={200} /> : (d.lowRated.length === 0 ? (
+          {loading ? <Skel h={200} /> : (lowRated.length === 0 ? (
             <div style={{ padding: '24px 8px', textAlign: 'center' }}>
               <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(22,163,74,0.1)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}><CheckCircle2 size={18} style={{ color: GREEN }} /></div>
               <p style={{ fontSize: 12.5, color: MUTED, margin: 0 }}>No teachers below 4.0 — reputation is healthy.</p>
             </div>
           ) :
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {d.lowRated.map((tr: any, i: number) => (
-                <a key={tr.id} href={`/teachers/${tr.id}`} className="adminx-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, textDecoration: 'none', borderBottom: i < d.lowRated.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
+              {lowRated.map((tr: any, i: number) => (
+                <a key={tr.id} href={`/teachers/${tr.id}`} className="adminx-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, textDecoration: 'none', borderBottom: i < lowRated.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <AlertTriangle size={15} style={{ color: tr.avg < 3 ? RED : GOLD }} />
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tr.name}</span>
                   <Stars n={tr.avg} size={12} />
@@ -159,8 +163,8 @@ export default function ReviewsPage() {
       </div>
 
       {/* Moderation queue */}
-      <Panel title={`Moderation Queue${d ? ` · ${d.pending.length}` : ''}`} icon={MessageSquare}>
-        {loading ? <Skel h={160} /> : d.pending.length === 0 ? (
+      <Panel title={`Moderation Queue${pending.length ? ` · ${pending.length}` : ''}`} icon={MessageSquare}>
+        {loading ? <Skel h={160} /> : pending.length === 0 ? (
           <div style={{ padding: '36px 8px', textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>⭐</div>
             <p style={{ fontSize: 14, fontWeight: 700, color: INK, margin: 0 }}>All reviews moderated!</p>
@@ -168,7 +172,7 @@ export default function ReviewsPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {d.pending.map((r: any) => (
+            {pending.map((r: any) => (
               <div key={r.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 13, padding: 16, background: '#FCFAF5' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <Stars n={r.rating} />

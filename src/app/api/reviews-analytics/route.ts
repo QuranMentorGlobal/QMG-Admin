@@ -8,9 +8,10 @@ export async function GET() {
   const g = await guard(['reviews.view']); if ('error' in g) return g.error
   const svc = service()
 
-  const { data: rows, error } = await svc.from('reviews').select('id, rating, is_published, created_at, teacher_id')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  const all: any[] = rows || []
+  let rres: any = await svc.from('reviews').select('id, rating, is_published, created_at, teacher_id')
+  if (rres.error) rres = await svc.from('reviews').select('id, rating, is_published, created_at')
+  if (rres.error) return NextResponse.json({ totals: { total: 0, publishedCount: 0, pendingCount: 0, avgRating: 0 }, dist: [1,2,3,4,5].map(star => ({ star, count: 0 })), trend: [], topRated: [], lowRated: [], pending: [] })
+  const all: any[] = rres.data || []
   const pub = all.filter(r => r.is_published)
 
   const total = all.length, publishedCount = pub.length, pendingCount = total - publishedCount
@@ -41,11 +42,15 @@ export async function GET() {
   const lowRated = [...repList].filter(t => t.avg < 4).sort((a, b) => a.avg - b.avg).slice(0, 5)
 
   // Pending moderation queue (with names)
-  const { data: pendRaw } = await svc.from('reviews')
+  let pendRes: any = await svc.from('reviews')
     .select(`id, rating, title, body, created_at,
       student:profiles!reviews_student_id_fkey(first_name, last_name),
       teacher:profiles!reviews_teacher_id_fkey(first_name, last_name)`)
     .eq('is_published', false).order('created_at', { ascending: false }).limit(100)
+  if (pendRes.error) pendRes = await svc.from('reviews')
+    .select('id, rating, title, body, created_at')
+    .eq('is_published', false).order('created_at', { ascending: false }).limit(100)
+  const pendRaw = pendRes.data || []
   const pending = (pendRaw || []).map((r: any) => ({
     id: r.id, rating: r.rating, title: r.title || '', body: r.body || '', createdAt: r.created_at,
     student: r.student ? `${r.student.first_name || ''} ${r.student.last_name || ''}`.trim() : 'Unknown',
