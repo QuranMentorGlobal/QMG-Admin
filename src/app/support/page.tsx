@@ -1,340 +1,209 @@
+// ============================================================
+// PASTE THIS WHOLE FILE INTO:  src/app/support/page.tsx
+// Support — ticketing workspace: priority, categories, response & resolution
+// metrics, filters + search, two-pane list/detail with reply + status/priority
+// controls. Reads /api/support-metrics; updates via /api/support-ticket.
+// ============================================================
 'use client'
-
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import { format } from 'date-fns'
+import { Search, Inbox, AlertTriangle, CheckCircle2, Clock, MessageSquare, Send, Tag, Flag } from 'lucide-react'
 
-interface Ticket {
-  id: string
-  user_id: string
-  role: string
-  subject: string
-  category: string
-  message: string
-  priority: string
-  status: string
-  admin_reply: string | null
-  created_at: string
-  updated_at: string
-  user_name?: string
-  user_email?: string
+const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+
+const PRIORITY: Record<string, { bg: string; color: string }> = {
+  urgent: { bg: 'rgba(239,68,68,0.12)', color: RED }, high: { bg: 'rgba(249,115,22,0.12)', color: '#EA580C' },
+  normal: { bg: 'rgba(99,102,241,0.1)', color: '#6366F1' }, low: { bg: 'rgba(0,0,0,0.06)', color: '#666' },
 }
+const STATUS: Record<string, { bg: string; color: string; label: string }> = {
+  open: { bg: CREAM, color: GOLD, label: 'Open' }, in_progress: { bg: 'rgba(99,102,241,0.1)', color: '#6366F1', label: 'In progress' },
+  resolved: { bg: 'rgba(22,163,74,0.1)', color: GREEN, label: 'Resolved' }, closed: { bg: 'rgba(0,0,0,0.06)', color: '#666', label: 'Closed' },
+}
+const STATUSES = ['all', 'open', 'in_progress', 'resolved', 'closed']
+const PRIORITIES = ['low', 'normal', 'high', 'urgent']
+const CATEGORIES = ['general', 'billing', 'technical', 'account']
 
-function PriorityBadge({ priority }: { priority: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    urgent: { bg: 'rgba(239,68,68,0.12)',  color: '#DC2626' },
-    high:   { bg: 'rgba(249,115,22,0.12)', color: '#EA580C' },
-    normal: { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
-    low:    { bg: 'rgba(0,0,0,0.06)',      color: '#666'    },
-  }
-  const s = map[priority] ?? map.normal
+function Kpi({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: boolean }) {
   return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase"
-      style={{ background: s.bg, color: s.color }}>{priority}</span>
+    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={14} style={{ color: GOLD }} /></div>
+        <p style={{ fontSize: 11, color: MUTED, margin: 0, fontWeight: 600 }}>{label}</p>
+      </div>
+      <p style={{ fontSize: 20, fontWeight: 800, color: accent ? GOLD : INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>{value}</p>
+    </div>
   )
 }
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    open:        { bg: 'rgba(184,149,42,0.12)', color: '#B8952A' },
-    in_progress: { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
-    resolved:    { bg: 'rgba(184,149,42,0.1)',    color: '#B8952A' },
-    closed:      { bg: 'rgba(0,0,0,0.06)',      color: '#666'    },
-  }
-  const s = map[status] ?? map.open
-  return (
-    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase"
-      style={{ background: s.bg, color: s.color }}>{status.replace('_', ' ')}</span>
-  )
+function Badge({ map, k }: { map: Record<string, { bg: string; color: string; label?: string }>; k: string }) {
+  const s = map[k] || { bg: '#F3F4F6', color: MUTED }
+  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, textTransform: 'capitalize', background: s.bg, color: s.color }}>{(s as any).label || k.replace('_', ' ')}</span>
 }
-
-function RoleBadge({ role }: { role: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    student: { bg: 'rgba(184,149,42,0.1)',    color: '#B8952A' },
-    teacher: { bg: 'rgba(184,149,42,0.12)', color: '#B8952A' },
-    parent:  { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
-  }
-  const s = map[role] ?? { bg: 'rgba(0,0,0,0.06)', color: '#666' }
-  return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg capitalize"
-      style={{ background: s.bg, color: s.color }}>{role}</span>
-  )
-}
+function Skel({ h }: { h: number }) { return <div className="qmg-skel" style={{ width: '100%', height: h }} /> }
 
 export default function AdminSupportPage() {
-  const supabase = createClient()
-  const [tickets, setTickets]     = useState<Ticket[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [selected, setSelected]   = useState<Ticket | null>(null)
-  const [reply, setReply]         = useState('')
+  const [adminName, setAdminName] = useState('Admin')
+  const [d, setD] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<any>(null)
+  const [reply, setReply] = useState('')
   const [replyStatus, setReplyStatus] = useState('resolved')
-  const [sending, setSending]     = useState(false)
-  const [toast, setToast]         = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterRole, setFilterRole]     = useState('all')
+  const [replyPriority, setReplyPriority] = useState('normal')
+  const [sending, setSending] = useState(false)
+  const [toast, setToast] = useState('')
+  const [fStatus, setFStatus] = useState('all')
+  const [fCat, setFCat] = useState('all')
+  const [search, setSearch] = useState('')
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
+  }, [])
 
   async function load() {
-    const { data } = await (supabase as any)
-      .from('support_tickets')
-      .select(`
-        *,
-        profiles!support_tickets_user_id_fkey(first_name, last_name, email)
-      `)
-      .order('created_at', { ascending: false })
-
-    const enriched = (data ?? []).map((t: any) => ({
-      ...t,
-      user_name: t.profiles ? `${t.profiles.first_name} ${t.profiles.last_name}` : 'Unknown',
-      user_email: t.profiles?.email ?? '',
-    }))
-    setTickets(enriched)
+    setLoading(true)
+    try { const res = await fetch('/api/support-metrics'); if (res.ok) setD(await res.json()) } catch {}
     setLoading(false)
   }
+  useEffect(() => { load() }, [])
 
-  async function sendReply() {
-    if (!selected || !reply.trim()) return
+  function openTicket(t: any) { setSelected(t); setReply(t.adminReply || ''); setReplyStatus(t.status === 'open' ? 'resolved' : t.status); setReplyPriority(t.priority || 'normal') }
+
+  async function save() {
+    if (!selected) return
     setSending(true)
-
-    const res = await fetch('/api/support-ticket', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ticketId: selected.id, status: replyStatus, reply: reply.trim() }),
-    })
-
-    if (res.ok) {
-      setTickets(prev => prev.map(t =>
-        t.id === selected.id
-          ? { ...t, admin_reply: reply.trim(), status: replyStatus }
-          : t
-      ))
-      setSelected(prev => prev ? { ...prev, admin_reply: reply.trim(), status: replyStatus } : null)
-      setReply('')
-      showToast('✅ Reply sent successfully!')
-    } else {
-      const d = await res.json().catch(() => ({}))
-      showToast('❌ Failed to send reply: ' + (d.error || 'Not permitted'))
-    }
+    const res = await fetch('/api/support-ticket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: selected.id, status: replyStatus, reply: reply.trim(), priority: replyPriority }) })
+    const ok = res.ok
+    setToast(ok ? '✅ Ticket updated' : '❌ ' + ((await res.json().catch(() => ({}))).error || 'Not permitted'))
+    setTimeout(() => setToast(''), 3000)
+    if (ok) { await load(); setSelected((s: any) => s ? { ...s, status: replyStatus, priority: replyPriority, adminReply: reply.trim() } : null) }
     setSending(false)
   }
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3500)
-  }
-
-  const filtered = tickets.filter(t => {
-    if (filterStatus !== 'all' && t.status !== filterStatus) return false
-    if (filterRole !== 'all' && t.role !== filterRole) return false
-    return true
-  })
-
-  const openCount = tickets.filter(t => t.status === 'open').length
-  const urgentCount = tickets.filter(t => t.priority === 'urgent' && t.status === 'open').length
+  const m = d?.metrics
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return (d?.tickets || []).filter((t: any) => {
+      if (fStatus !== 'all' && t.status !== fStatus) return false
+      if (fCat !== 'all' && t.category !== fCat) return false
+      if (q && !`${t.subject} ${t.message} ${t.userName} ${t.userEmail}`.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [d, fStatus, fCat, search])
 
   return (
-    <AdminLayout>
-      <div className="w-full">
-        {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: toast.startsWith('✅') ? '#B8952A' : '#DC2626' }}>
-            {toast}
-          </div>
-        )}
+    <AdminLayout adminName={adminName}>
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? GOLD : RED, color: toast.startsWith('✅') ? '#1A1400' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: '#0B0B0B', fontFamily: "'Fraunces', serif" }}>
-            Support Tickets
-          </h1>
-          <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
-            Manage and reply to user support requests
-          </p>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Support</h1>
+        <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ticketing workspace — respond, prioritise and resolve.</p>
+      </div>
+
+      {/* Metrics */}
+      <div className="qmg-sp-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 18 }}>
+        {loading ? [...Array(6)].map((_, i) => <Skel key={i} h={84} />) : <>
+          <Kpi icon={Inbox} label="Total" value={String(m.total)} />
+          <Kpi icon={Clock} label="Open" value={String(m.open)} accent />
+          <Kpi icon={AlertTriangle} label="Urgent open" value={String(m.urgentOpen)} />
+          <Kpi icon={MessageSquare} label="Response rate" value={`${m.responseRate}%`} />
+          <Kpi icon={CheckCircle2} label="Resolution rate" value={`${m.resolutionRate}%`} />
+          <Kpi icon={Clock} label="Avg resolution" value={m.avgResolutionHours >= 24 ? `${(m.avgResolutionHours / 24).toFixed(1)}d` : `${m.avgResolutionHours}h`} />
+        </>}
+      </div>
+
+      {/* Breakdown */}
+      {!loading && d && (
+        <div className="qmg-sp-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+          <div className="adminx-rise" style={{ background: '#fff', borderRadius: 14, padding: '14px 18px', border: `1px solid ${BORDER}` }}>
+            <p style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: INK, margin: '0 0 10px' }}><Tag size={14} style={{ color: GOLD }} /> By Category</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{d.byCategory.map((c: any) => <span key={c.name} style={{ fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 9, background: CREAM, color: INK, textTransform: 'capitalize' }}>{c.name} · <strong style={{ color: GOLD }}>{c.count}</strong></span>)}</div>
+          </div>
+          <div className="adminx-rise" style={{ background: '#fff', borderRadius: 14, padding: '14px 18px', border: `1px solid ${BORDER}` }}>
+            <p style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: INK, margin: '0 0 10px' }}><Flag size={14} style={{ color: GOLD }} /> By Priority</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{d.byPriority.map((c: any) => { const s = PRIORITY[c.name] || { bg: CREAM, color: INK }; return <span key={c.name} style={{ fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 9, background: s.bg, color: s.color, textTransform: 'capitalize' }}>{c.name} · {c.count}</span> })}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {STATUSES.map(s => <button key={s} onClick={() => setFStatus(s)} style={{ padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: fStatus === s ? 'none' : `1px solid ${BORDER}`, background: fStatus === s ? GOLD : '#fff', color: fStatus === s ? '#1A1400' : '#6B6B6B' }}>{s.replace('_', ' ')}</button>)}
+        </div>
+        <select value={fCat} onChange={e => setFCat(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600 }}>
+          <option value="all">All categories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>)}
+        </select>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 300 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: 10, color: MUTED }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tickets…" style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
+        </div>
+      </div>
+
+      {/* Two-pane workspace */}
+      <div className="qmg-sp-work" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 18 }}>
+        {/* List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 620, overflowY: 'auto' }}>
+          {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={76} />)
+            : filtered.length === 0 ? <div style={{ background: '#fff', borderRadius: 14, padding: 40, textAlign: 'center', border: `1px solid ${BORDER}` }}><p style={{ fontSize: 13, color: MUTED, margin: 0 }}>No tickets match.</p></div>
+              : filtered.map((t: any) => (
+                <button key={t.id} onClick={() => openTicket(t)} className="adminx-row" style={{ textAlign: 'left', background: selected?.id === t.id ? CREAM : '#fff', borderRadius: 13, padding: 14, border: `1px solid ${selected?.id === t.id ? GOLD : BORDER}`, cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6, flexWrap: 'wrap' }}>
+                    <Badge map={PRIORITY} k={t.priority} /><Badge map={STATUS} k={t.status} />
+                    <span style={{ fontSize: 10.5, color: MUTED, marginLeft: 'auto' }}>{t.createdAt ? format(new Date(t.createdAt), 'dd MMM') : ''}</span>
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.subject}</p>
+                  <p style={{ fontSize: 11.5, color: MUTED, margin: '3px 0 0' }}>{t.userName}{t.category ? ` · ${t.category}` : ''}</p>
+                </button>
+              ))}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: 'Total',    value: tickets.length,  color: '#0B0B0B' },
-            { label: 'Open',     value: openCount,        color: '#B8952A' },
-            { label: 'Urgent',   value: urgentCount,      color: '#DC2626' },
-            { label: 'Resolved', value: tickets.filter(t => t.status === 'resolved').length, color: '#B8952A' },
-          ].map(s => (
-            <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+        {/* Detail */}
+        <div className="adminx-rise" style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, padding: 20, minHeight: 320 }}>
+          {!selected ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 280, gap: 10 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageSquare size={22} style={{ color: GOLD }} /></div>
+              <p style={{ fontSize: 13.5, fontWeight: 700, color: INK, margin: 0 }}>Select a ticket</p>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: 0 }}>Choose a ticket from the list to view and respond.</p>
             </div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <div className="flex gap-1 rounded-xl p-1 bg-gray-100">
-            {['all', 'open', 'in_progress', 'resolved', 'closed'].map(s => (
-              <button key={s} onClick={() => setFilterStatus(s)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={filterStatus === s ? { background: '#B8952A', color: '#fff' } : { color: '#666' }}>
-                {s.replace('_', ' ')}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1 rounded-xl p-1 bg-gray-100">
-            {['all', 'student', 'teacher', 'parent'].map(r => (
-              <button key={r} onClick={() => setFilterRole(r)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={filterRole === r ? { background: '#B8952A', color: '#fff' } : { color: '#666' }}>
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          {/* Ticket list */}
-          <div className={`${selected ? 'lg:col-span-2' : 'lg:col-span-5'}`}>
-            {loading ? (
-              <div className="space-y-3">
-                {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl h-20 animate-pulse" />)}
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                <Badge map={PRIORITY} k={selected.priority} /><Badge map={STATUS} k={selected.status} />
+                {selected.category && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, background: '#F1F1ED', color: MUTED, textTransform: 'capitalize' }}>{selected.category}</span>}
+                <span style={{ fontSize: 11, color: MUTED, marginLeft: 'auto' }}>{selected.createdAt ? format(new Date(selected.createdAt), 'dd MMM yyyy, HH:mm') : ''}</span>
               </div>
-            ) : filtered.length === 0 ? (
-              <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-                <div className="text-4xl mb-3">🎫</div>
-                <p className="font-semibold text-gray-700">No tickets found</p>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: INK, margin: '0 0 4px', fontFamily: "'Fraunces',serif" }}>{selected.subject}</h2>
+              <p style={{ fontSize: 12, color: MUTED, margin: '0 0 12px' }}>From {selected.userName} · {selected.userEmail}</p>
+              {selected.message && <p style={{ fontSize: 13.5, color: '#444', lineHeight: 1.6, margin: '0 0 14px', padding: '12px 14px', background: '#FBF8F1', borderRadius: 11, border: `1px solid ${BORDER}` }}>{selected.message}</p>}
+              {selected.adminReply && <div style={{ margin: '0 0 14px', padding: '12px 14px', background: 'rgba(184,149,42,0.06)', borderRadius: 11, border: '1px solid rgba(184,149,42,0.25)' }}><p style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Previous reply</p><p style={{ fontSize: 13, color: '#444', margin: 0, lineHeight: 1.55 }}>{selected.adminReply}</p></div>}
+
+              <textarea value={reply} onChange={e => setReply(e.target.value)} placeholder="Write a reply…" rows={4} style={{ width: '100%', padding: 12, borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13.5, fontFamily: "'Inter',sans-serif", color: INK, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 12 }}>
+                <label style={{ fontSize: 11.5, color: MUTED, fontWeight: 600 }}>Status
+                  <select value={replyStatus} onChange={e => setReplyStatus(e.target.value)} style={{ marginLeft: 6, padding: '6px 10px', borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600 }}>
+                    {['open', 'in_progress', 'resolved', 'closed'].map(s => <option key={s} value={s}>{STATUS[s]?.label || s}</option>)}
+                  </select>
+                </label>
+                <label style={{ fontSize: 11.5, color: MUTED, fontWeight: 600 }}>Priority
+                  <select value={replyPriority} onChange={e => setReplyPriority(e.target.value)} style={{ marginLeft: 6, padding: '6px 10px', borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600 }}>
+                    {PRIORITIES.map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+                  </select>
+                </label>
+                <button onClick={save} disabled={sending} style={{ display: 'flex', alignItems: 'center', gap: 7, marginLeft: 'auto', padding: '9px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 700, opacity: sending ? 0.6 : 1 }}><Send size={14} /> {sending ? 'Saving…' : 'Send & Update'}</button>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {filtered.map(ticket => (
-                  <button
-                    key={ticket.id}
-                    onClick={() => { setSelected(ticket); setReply(ticket.admin_reply || '') }}
-                    className="w-full text-left bg-white rounded-2xl p-4 shadow-sm border transition-all hover:shadow-md"
-                    style={{ borderColor: selected?.id === ticket.id ? '#B8952A' : '#F0EDE6', borderWidth: selected?.id === ticket.id ? 1.5 : 1 }}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <p className="font-semibold text-sm" style={{ color: '#0B0B0B' }}>{ticket.subject}</p>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <PriorityBadge priority={ticket.priority} />
-                        <StatusBadge status={ticket.status} />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <RoleBadge role={ticket.role} />
-                      <span className="text-xs" style={{ color: '#9A9A8A' }}>{ticket.user_name}</span>
-                      <span className="text-xs" style={{ color: '#B8B8A8' }}>·</span>
-                      <span className="text-xs" style={{ color: '#9A9A8A' }}>{ticket.category}</span>
-                      <span className="text-xs" style={{ color: '#B8B8A8' }}>·</span>
-                      <span className="text-xs" style={{ color: '#9A9A8A' }}>
-                        {new Date(ticket.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                    {!ticket.admin_reply && ticket.status === 'open' && (
-                      <div className="mt-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(239,68,68,0.1)', color: '#DC2626' }}>
-                          Awaiting reply
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reply panel */}
-          {selected && (
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 sticky top-4">
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <RoleBadge role={selected.role} />
-                      <p className="font-bold text-sm" style={{ color: '#0B0B0B' }}>{selected.user_name}</p>
-                    </div>
-                    <p className="text-xs text-gray-500">{selected.user_email}</p>
-                  </div>
-                  <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
-                </div>
-
-                <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-                  {/* Subject */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="font-bold" style={{ color: '#0B0B0B' }}>{selected.subject}</p>
-                      <PriorityBadge priority={selected.priority} />
-                    </div>
-                    <p className="text-xs text-gray-400">{selected.category}</p>
-                  </div>
-
-                  {/* Original message */}
-                  <div className="rounded-xl p-4" style={{ background: '#F9F7F4' }}>
-                    <p className="text-xs font-semibold mb-2 text-gray-500">User message:</p>
-                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#0B0B0B' }}>{selected.message}</p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {new Date(selected.created_at).toLocaleString('en-GB')}
-                    </p>
-                  </div>
-
-                  {/* Previous reply */}
-                  {selected.admin_reply && (
-                    <div className="rounded-xl p-4" style={{ background: 'rgba(184,149,42,0.06)', border: '1px solid rgba(184,149,42,0.1)' }}>
-                      <p className="text-xs font-semibold mb-2" style={{ color: '#B8952A' }}>Your previous reply:</p>
-                      <p className="text-sm whitespace-pre-wrap" style={{ color: '#0B0B0B' }}>{selected.admin_reply}</p>
-                    </div>
-                  )}
-
-                  {/* Reply form */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-gray-500">
-                      {selected.admin_reply ? 'Update reply' : 'Write reply'} *
-                    </label>
-                    <textarea
-                      value={reply}
-                      onChange={e => setReply(e.target.value)}
-                      rows={5}
-                      placeholder="Type your reply to the user..."
-                      className="w-full px-4 py-3 rounded-xl border text-sm outline-none resize-none"
-                      style={{ borderColor: '#E0DDD5', fontFamily: "'Inter', sans-serif" }}
-                      onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#B8952A' }}
-                      onBlur={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E0DDD5' }}
-                    />
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-gray-500">
-                      Update status
-                    </label>
-                    <div className="flex gap-2 flex-wrap">
-                      {['open', 'in_progress', 'resolved', 'closed'].map(s => (
-                        <button key={s} onClick={() => setReplyStatus(s)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold capitalize border transition-all"
-                          style={replyStatus === s
-                            ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
-                            : { background: '#fff', color: '#666', borderColor: '#E0DDD5' }}>
-                          {s.replace('_', ' ')}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={sendReply}
-                    disabled={sending || !reply.trim()}
-                    className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
-                    style={{ background: '#B8952A' }}
-                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLElement).style.background = '#0B0B0B' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#B8952A' }}
-                  >
-                    {sending ? 'Sending…' : selected.admin_reply ? '✓ Update Reply' : '✓ Send Reply'}
-                  </button>
-                </div>
-              </div>
-            </div>
+            </>
           )}
         </div>
       </div>
+
+      <style>{`
+        .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
+        @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @media(max-width:1000px){ .qmg-sp-kpi{grid-template-columns:repeat(3,1fr)!important} .qmg-sp-2{grid-template-columns:1fr!important} .qmg-sp-work{grid-template-columns:1fr!important} }
+        @media(max-width:520px){ .qmg-sp-kpi{grid-template-columns:repeat(2,1fr)!important} }
+      `}</style>
     </AdminLayout>
   )
 }

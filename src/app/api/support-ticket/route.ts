@@ -1,15 +1,30 @@
 import { NextResponse } from 'next/server'
 import { guard, service, logAudit } from '@/lib/admin-auth'
 export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   const g = await guard(['support.manage']); if ('error' in g) return g.error
-  const { ticketId, status, reply } = await req.json().catch(() => ({}))
+  const { ticketId, status, reply, priority, category } = await req.json().catch(() => ({}))
   if (!ticketId) return NextResponse.json({ error: 'Bad request' }, { status: 400 })
-  const patch: any = { updated_at: new Date().toISOString() }
-  if (status) patch.status = status
-  if (typeof reply === 'string') patch.admin_reply = reply
-  const { error } = await service().from('support_tickets').update(patch).eq('id', ticketId)
+
+  const svc = service()
+  const base: any = { updated_at: new Date().toISOString() }
+  if (status) base.status = status
+  if (typeof reply === 'string') base.admin_reply = reply
+
+  // Optional columns — set them, but retry without if the column doesn't exist
+  const optional: any = {}
+  if (priority) optional.priority = priority
+  if (category) optional.category = category
+  if (status === 'resolved' || status === 'closed') optional.resolved_at = new Date().toISOString()
+
+  let { error } = await svc.from('support_tickets').update({ ...base, ...optional }).eq('id', ticketId)
+  if (error && /column|does not exist|schema cache/i.test(error.message)) {
+    // Fall back to the columns we know exist
+    ;({ error } = await svc.from('support_tickets').update(base).eq('id', ticketId))
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  await logAudit(g.caller, 'ticket.update', 'ticket', ticketId, { status: status ?? null })
+
+  await logAudit(g.caller, 'ticket.update', 'ticket', ticketId, { status: status ?? null, priority: priority ?? null, category: category ?? null })
   return NextResponse.json({ ok: true })
 }
