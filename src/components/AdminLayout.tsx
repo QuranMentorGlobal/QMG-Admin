@@ -87,10 +87,11 @@ export default function AdminLayout({
     })()
   }, [])
 
-  const isSuper = ctx?.adminRole === 'super'
-  const visibleNav = ctx
+  const isSub = ctx?.adminRole === 'sub'
+  const isSuper = !isSub
+  const visibleNav = isSub
     ? NAV_ITEMS.filter(n => canAccessRoute(n.href, ctx))
-    : NAV_ITEMS.filter(n => n.href === '/dashboard')
+    : NAV_ITEMS
 
   async function handleSignOut() {
     const supabase = createClient()
