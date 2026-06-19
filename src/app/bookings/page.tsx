@@ -142,7 +142,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+        <div className="qmg-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {STATUSES.map(s => (
               <button key={s} onClick={() => setStatusFilter(s)} style={{ padding: '7px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: statusFilter === s ? 'none' : `1px solid ${BORDER}`, background: statusFilter === s ? GOLD : '#fff', color: statusFilter === s ? '#1A1400' : '#6B6B6B' }}>{s}</button>
