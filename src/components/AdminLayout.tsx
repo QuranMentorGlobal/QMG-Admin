@@ -11,11 +11,12 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight,
-  CreditCard, MessageSquare, ShieldCheck,
+  CreditCard, MessageSquare, ShieldCheck, BarChart3,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/dashboard',            label: 'Dashboard',            icon: LayoutDashboard },
+  { href: '/analytics',            label: 'Analytics',            icon: BarChart3       },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
   { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
   { href: '/students',             label: 'Student Management',   icon: Users           },
