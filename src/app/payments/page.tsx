@@ -1,160 +1,258 @@
+// ============================================================
+// PASTE THIS WHOLE FILE INTO:  src/app/payments/page.tsx
+// Payments & Revenue — finance dashboard: revenue/commission/payout breakdown,
+// monthly comparison + financial trends, payment-type & provider breakdown,
+// top teacher payouts, revenue forecast, recent transactions.
+// Reads /api/payments-finance (aggregates ALL payments, server-side).
+// ============================================================
 'use client'
-
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from 'recharts'
+import {
+  DollarSign, Wallet, Landmark, TrendingUp, TrendingDown, Search, Download,
+  Sparkles, CreditCard, Users, BarChart3,
+} from 'lucide-react'
 
-interface Payment {
-  id: string
-  gross_amount_usd: number
-  platform_fee_usd: number
-  teacher_payout_usd: number
-  status: string
-  provider: string
-  payment_type: string
-  created_at: string
-  student_name?: string
-  teacher_name?: string
+const GOLD = '#B8952A', GOLD_L = '#D4AF50', INK = '#1A1A1A', INK_MID = '#3D3D3D'
+const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+
+function money(n: number) { if (Math.abs(n) >= 1_000_000) return '$' + (n / 1e6).toFixed(1) + 'M'; if (Math.abs(n) >= 1000) return '$' + (n / 1000).toFixed(1) + 'k'; return '$' + Math.round(n).toLocaleString() }
+function full(n: number) { return '$' + (Number(n) || 0).toFixed(2) }
+function monthLabel(m: string) { const [y, mo] = m.split('-'); return new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString(undefined, { month: 'short' }) }
+function fmtDate(iso: string) { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
+
+const STATUS: Record<string, { bg: string; color: string }> = {
+  succeeded: { bg: 'rgba(22,163,74,0.1)', color: GREEN }, pending: { bg: CREAM, color: GOLD },
+  failed: { bg: 'rgba(239,68,68,0.1)', color: RED }, refunded: { bg: 'rgba(99,102,241,0.1)', color: '#6366F1' },
 }
 
-function fmt(n: number) { return `$${n.toFixed(2)}` }
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+function Kpi({ icon: Icon, label, value, accent, chip, sub }: { icon: any; label: string; value: string; accent?: boolean; chip?: number; sub?: string }) {
+  return (
+    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 16, padding: '16px 18px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={15} style={{ color: GOLD }} /></div>
+          <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600 }}>{label}</p>
+        </div>
+        {chip !== undefined && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: chip === 0 ? MUTED : chip > 0 ? GOLD : RED }}>
+            {chip >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{chip > 0 ? '+' : ''}{chip}%
+          </span>
+        )}
+      </div>
+      <p style={{ fontSize: 23, fontWeight: 800, color: accent ? GOLD : INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>{value}</p>
+      {sub && <p style={{ fontSize: 10.5, color: MUTED, margin: '5px 0 0' }}>{sub}</p>}
+    </div>
+  )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    succeeded: { bg: 'rgba(184,149,42,0.1)',    color: '#B8952A' },
-    pending:   { bg: 'rgba(184,149,42,0.12)', color: '#B8952A' },
-    failed:    { bg: 'rgba(239,68,68,0.1)',   color: '#DC2626' },
-    refunded:  { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
-  }
-  const s = map[status] ?? { bg: 'rgba(0,0,0,0.06)', color: '#666' }
-  return <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase" style={{ background: s.bg, color: s.color }}>{status}</span>
+function Panel({ title, icon: Icon, children, right }: { title: string; icon?: any; children: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <div className="adminx-rise" style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>{Icon && <Icon size={16} style={{ color: GOLD }} />}{title}</h2>
+        {right}
+      </div>
+      {children}
+    </div>
+  )
 }
+function Skel({ h }: { h: number }) { return <div className="qmg-skel" style={{ width: '100%', height: h }} /> }
 
 export default function AdminPaymentsPage() {
-  const supabase = createClient()
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [filter, setFilter]     = useState('all')
-  const [search, setSearch]     = useState('')
-  const [stats, setStats]       = useState({ totalRevenue: 0, totalCommission: 0, thisMonth: 0, totalPayments: 0, failedPayments: 0 })
+  const [adminName, setAdminName] = useState('Admin')
+  const [d, setD] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    (async () => {
+      try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {}
+    })()
+    fetch('/api/payments-finance').then(r => r.ok ? r.json() : null).then(j => { setD(j); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
 
-  async function load() {
-    const { data } = await (supabase as any)
-      .from('payments')
-      .select(`id, gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at,
-        student:profiles!payments_student_id_fkey(first_name, last_name),
-        teacher:profiles!payments_teacher_id_fkey(first_name, last_name)`)
-      .order('created_at', { ascending: false }).limit(300)
+  const t = d?.totals
+  const trend = (d?.byMonth || []).map((x: any) => ({ ...x, label: monthLabel(x.m) }))
+  const splitData = d ? [{ name: 'Platform Commission', value: t.commission }, { name: 'Teacher Payout', value: t.payout }] : []
 
-    const pmts: Payment[] = (data ?? []).map((p: any) => ({
-      ...p,
-      student_name: p.student ? `${p.student.first_name} ${p.student.last_name}` : 'Unknown',
-      teacher_name: p.teacher ? `${p.teacher.first_name} ${p.teacher.last_name}` : 'Unknown',
-    }))
-    setPayments(pmts)
-
-    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0)
-    const ok = pmts.filter(p => p.status === 'succeeded')
-    setStats({
-      totalRevenue:    ok.reduce((s, p) => s + p.gross_amount_usd, 0),
-      totalCommission: ok.reduce((s, p) => s + p.platform_fee_usd, 0),
-      thisMonth:       ok.filter(p => new Date(p.created_at) >= monthStart).reduce((s, p) => s + p.gross_amount_usd, 0),
-      totalPayments:   pmts.length,
-      failedPayments:  pmts.filter(p => p.status === 'failed').length,
+  const recent = useMemo(() => {
+    const q = search.toLowerCase()
+    return (d?.recent || []).filter((p: any) => {
+      if (filter !== 'all' && p.status !== filter) return false
+      if (q && !`${p.student} ${p.teacher} ${p.provider} ${p.type}`.toLowerCase().includes(q)) return false
+      return true
     })
-    setLoading(false)
+  }, [d, filter, search])
+
+  function exportCSV() {
+    if (!d) return
+    const lines = ['Date,Student,Teacher,Type,Provider,Status,Gross,Commission,Payout']
+    d.recent.forEach((p: any) => lines.push(`${fmtDate(p.createdAt)},"${p.student}","${p.teacher}",${p.type},${p.provider},${p.status},${p.gross},${p.commission},${p.payout}`))
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' }); const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = `qmg-payments-${new Date().toISOString().slice(0, 10)}.csv`; a.click()
   }
 
-  const filtered = payments.filter(p => {
-    if (filter !== 'all' && p.status !== filter) return false
-    if (search) {
-      const s = search.toLowerCase()
-      return p.student_name?.toLowerCase().includes(s) || p.teacher_name?.toLowerCase().includes(s)
-    }
-    return true
-  })
-
   return (
-    <AdminLayout>
-      <div className="w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: '#0B0B0B', fontFamily: "'Fraunces', serif" }}>Payments & Revenue</h1>
-          <p className="text-sm mt-1 text-gray-500">Full payment history, revenue and commission tracking</p>
+    <AdminLayout adminName={adminName}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+        <div>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Payments &amp; Revenue</h1>
+          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Financial overview across the platform.</p>
         </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          {[
-            { label: 'Total Revenue',    value: fmt(stats.totalRevenue),    icon: '💰', bg: '#F7F1E2' },
-            { label: 'Commission Earned',value: fmt(stats.totalCommission), icon: '📊', bg: '#FFF8E8' },
-            { label: 'This Month',       value: fmt(stats.thisMonth),       icon: '📅', bg: '#EEF2FF' },
-            { label: 'Total Payments',   value: stats.totalPayments,        icon: '🧾', bg: '#F5F0FF' },
-            { label: 'Failed',           value: stats.failedPayments,       icon: '❌', bg: '#FFF0F0' },
-          ].map(c => (
-            <div key={c.label} className="rounded-2xl p-4 shadow-sm border border-gray-100" style={{ background: c.bg }}>
-              {loading ? <div className="animate-pulse h-8 bg-gray-200 rounded" /> : (
-                <>
-                  <div className="text-xl mb-1">{c.icon}</div>
-                  <div className="text-lg font-bold" style={{ color: '#0B0B0B' }}>{c.value}</div>
-                  <div className="text-xs text-gray-500">{c.label}</div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-3 mb-4">
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search student or teacher…"
-            className="flex-1 px-4 py-2 rounded-xl border text-sm outline-none"
-            style={{ borderColor: '#E0DDD5', minWidth: 200 }} />
-          <div className="flex gap-1 rounded-xl p-1 bg-gray-100">
-            {['all', 'succeeded', 'pending', 'failed', 'refunded'].map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={filter === f ? { background: '#B8952A', color: '#fff' } : { color: '#666' }}>{f}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <p className="font-bold text-sm" style={{ color: '#0B0B0B' }}>Payment History ({filtered.length})</p>
-          </div>
-          {loading ? (
-            <div className="p-6 space-y-3">{[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />)}</div>
-          ) : filtered.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">No payments found</div>
-          ) : (
-            <>
-              <div className="grid grid-cols-6 px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-400 bg-gray-50">
-                <span className="col-span-2">Details</span><span>Student</span><span>Teacher</span><span>Amount</span><span>Status</span>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {filtered.map(p => (
-                  <div key={p.id} className="grid grid-cols-6 items-center px-6 py-3 hover:bg-gray-50">
-                    <div className="col-span-2">
-                      <p className="text-xs font-semibold capitalize" style={{ color: '#0B0B0B' }}>{p.payment_type?.replace('_',' ')}</p>
-                      <p className="text-[10px] text-gray-400">{fmtDate(p.created_at)} · {p.provider}</p>
-                    </div>
-                    <div className="text-xs text-gray-600 truncate">{p.student_name}</div>
-                    <div className="text-xs text-gray-600 truncate">{p.teacher_name}</div>
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: '#0B0B0B' }}>{fmt(p.gross_amount_usd)}</div>
-                      <div className="text-[10px] text-gray-400">fee: {fmt(p.platform_fee_usd)}</div>
-                    </div>
-                    <StatusBadge status={p.status} />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
       </div>
+
+      {/* KPIs */}
+      <div className="qmg-fin-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 18 }}>
+        {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={96} />) : <>
+          <Kpi icon={DollarSign} label="Total Revenue (GTV)" value={money(t.gross)} accent sub={`${t.succeeded} successful payments`} />
+          <Kpi icon={Landmark} label="Platform Commission" value={money(t.commission)} accent sub="Net to platform" />
+          <Kpi icon={Wallet} label="Teacher Payouts" value={money(t.payout)} sub="Total disbursed" />
+          <Kpi icon={CreditCard} label="This Month" value={money(d.monthly.thisMonth)} chip={d.monthly.growth} sub={`Avg order ${money(t.aov)}`} />
+        </>}
+      </div>
+
+      {/* Financial trends */}
+      <div style={{ marginBottom: 18 }}>
+        <Panel title="Financial Trends (12 months)" icon={BarChart3}>
+          {loading ? <Skel h={300} /> : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={trend} margin={{ top: 6, right: 8, left: -8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="fGross" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={GOLD} stopOpacity={0.32} /><stop offset="100%" stopColor={GOLD} stopOpacity={0.02} /></linearGradient>
+                  <linearGradient id="fCom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={INK} stopOpacity={0.2} /><stop offset="100%" stopColor={INK} stopOpacity={0.02} /></linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)} />
+                <Tooltip formatter={(v: any) => money(Number(v))} contentStyle={{ borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Area type="monotone" dataKey="gross" name="Gross Revenue" stroke={GOLD} strokeWidth={2.5} fill="url(#fGross)" />
+                <Area type="monotone" dataKey="commission" name="Commission" stroke={INK} strokeWidth={2} fill="url(#fCom)" />
+                <Area type="monotone" dataKey="payout" name="Payout" stroke={GOLD_L} strokeWidth={2} fillOpacity={0} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
+      </div>
+
+      {/* Split + forecast + type */}
+      <div className="qmg-fin-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18, marginBottom: 18 }}>
+        <Panel title="Commission vs Payout" icon={Landmark}>
+          {loading ? <Skel h={230} /> : (
+            <ResponsiveContainer width="100%" height={230}>
+              <PieChart><Pie data={splitData} dataKey="value" nameKey="name" innerRadius={54} outerRadius={84} paddingAngle={3}><Cell fill={GOLD} /><Cell fill={INK_MID} /></Pie>
+                <Tooltip formatter={(v: any) => money(Number(v))} contentStyle={{ borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
+        <Panel title="Revenue Forecast" icon={Sparkles}>
+          {loading ? <Skel h={230} /> : (
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: 230, textAlign: 'center', gap: 8 }}>
+              <p style={{ fontSize: 12, color: MUTED, margin: 0 }}>Projected next month</p>
+              <p style={{ fontSize: 40, fontWeight: 800, color: GOLD, margin: 0, fontFamily: "'Fraunces',serif" }}>{money(d.forecast)}</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center', fontSize: 12, color: d.monthly.growth >= 0 ? GREEN : RED, fontWeight: 700 }}>
+                {d.monthly.growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {d.monthly.growth > 0 ? '+' : ''}{d.monthly.growth}% vs last month
+              </div>
+              <p style={{ fontSize: 10.5, color: MUTED, margin: '6px 0 0' }}>Linear projection over the last 12 months</p>
+            </div>
+          )}
+        </Panel>
+        <Panel title="By Payment Type" icon={CreditCard}>
+          {loading ? <Skel h={230} /> : (d.typeBreakdown.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No data.</p> :
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {d.typeBreakdown.map((x: any) => { const pct = t.gross > 0 ? Math.round((x.gross / t.gross) * 100) : 0; return (
+                <div key={x.name}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5 }}>
+                    <span style={{ color: INK, fontWeight: 600, textTransform: 'capitalize' }}>{x.name} <span style={{ color: MUTED, fontWeight: 400 }}>· {x.count}</span></span>
+                    <span style={{ color: GOLD, fontWeight: 700 }}>{money(x.gross)}</span>
+                  </div>
+                  <div style={{ height: 7, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#C8A24A,#D4AF37)', borderRadius: 99 }} /></div>
+                </div>
+              )})}
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      {/* Top payouts + monthly bars */}
+      <div className="qmg-fin-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 18, marginBottom: 18 }}>
+        <Panel title="Top Teacher Payouts" icon={Users}>
+          {loading ? <Skel h={240} /> : (d.topPayouts.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No payouts yet.</p> :
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {d.topPayouts.map((tp: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < d.topPayouts.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tp.name}</span>
+                  <span style={{ fontSize: 11, color: MUTED }}>{tp.count}×</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: GOLD, fontFamily: "'Fraunces',serif" }}>{money(tp.payout)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+        <Panel title="Monthly Revenue" icon={BarChart3}>
+          {loading ? <Skel h={240} /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={trend} margin={{ top: 6, right: 8, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: MUTED }} axisLine={false} tickLine={false} width={42} tickFormatter={(v) => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)} />
+                <Tooltip formatter={(v: any) => money(Number(v))} contentStyle={{ borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 12 }} />
+                <Bar dataKey="gross" name="Gross" fill={GOLD} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
+      </div>
+
+      {/* Recent transactions */}
+      <Panel title="Recent Transactions" icon={DollarSign} right={
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 12, color: INK, background: '#fff', fontWeight: 600 }}>
+            {['all', 'succeeded', 'pending', 'failed', 'refunded'].map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+          </select>
+          <div style={{ position: 'relative' }}><Search size={14} style={{ position: 'absolute', left: 10, top: 8, color: MUTED }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ padding: '6px 10px 6px 30px', borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 12, color: INK, width: 160 }} /></div>
+        </div>
+      }>
+        {loading ? <Skel h={200} /> : recent.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED, padding: 16, textAlign: 'center' }}>No transactions match.</p> : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead><tr style={{ textAlign: 'left', color: MUTED, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', background: '#FBF8F1' }}>
+                <th style={{ padding: '10px 14px' }}>Date</th><th style={{ padding: '10px 14px' }}>Student → Teacher</th><th style={{ padding: '10px 14px' }}>Type</th><th style={{ padding: '10px 14px' }}>Status</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Gross</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Commission</th>
+              </tr></thead>
+              <tbody>
+                {recent.map((p: any) => { const s = STATUS[p.status] || { bg: '#F3F4F6', color: MUTED }; return (
+                  <tr key={p.id} style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: '10px 14px', color: '#555', whiteSpace: 'nowrap' }}>{fmtDate(p.createdAt)}</td>
+                    <td style={{ padding: '10px 14px', color: INK }}>{p.student} <span style={{ color: MUTED }}>→</span> {p.teacher}</td>
+                    <td style={{ padding: '10px 14px', color: MUTED, textTransform: 'capitalize' }}>{p.type || '—'}</td>
+                    <td style={{ padding: '10px 14px' }}><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, textTransform: 'uppercase', background: s.bg, color: s.color }}>{p.status}</span></td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: INK }}>{full(p.gross)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', color: GOLD, fontWeight: 700 }}>{full(p.commission)}</td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      <style>{`
+        .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
+        @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @media(max-width:1000px){ .qmg-fin-kpi{grid-template-columns:repeat(2,1fr)!important} .qmg-fin-3{grid-template-columns:1fr!important} .qmg-fin-2{grid-template-columns:1fr!important} }
+        @media(max-width:520px){ .qmg-fin-kpi{grid-template-columns:1fr!important} }
+      `}</style>
     </AdminLayout>
   )
 }
