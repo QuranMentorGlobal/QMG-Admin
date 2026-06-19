@@ -28,8 +28,8 @@ export async function GET(req: Request) {
   const inPrev = (d: string) => !!startISO && !!prevStartISO && d >= prevStartISO && d < startISO
 
   // profiles (id/role/country) for geography + funnel
-  const profQ = supabase.from('profiles').select('id, role, country, is_active, created_at')
-  const payQ = supabase.from('payments').select('gross_amount_usd, platform_fee_usd, status, created_at, student_id')
+  const profQ = supabase.from('profiles').select('id, role, country, is_active, created_at, first_name, last_name')
+  const payQ = supabase.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, created_at, student_id, teacher_id')
   const bookQ = supabase.from('bookings').select('status, is_trial, price_usd, created_at, course_id, courses(title)')
 
   const [profsRes, paysRes, booksRes] = await Promise.all([
@@ -139,6 +139,23 @@ export async function GET(req: Request) {
 
   // ── AI-insight inputs ────────────────────────────────────────────────────────
   const okCur = pays.filter(p => p.status === 'succeeded' && inCur(p.created_at))
+
+  // ── Top teachers (by payout) + failed payments ──────────────────────────────
+  const nameById: Record<string, string> = {}
+  profs.forEach(p => { if (p.role === 'teacher') nameById[p.id] = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || 'Teacher' })
+  const tAgg: Record<string, any> = {}
+  okCur.forEach(p => {
+    const id = p.teacher_id; if (!id) return
+    if (!tAgg[id]) tAgg[id] = { id, revenue: 0, payout: 0, lessons: 0 }
+    tAgg[id].revenue += Number(p.gross_amount_usd) || 0
+    tAgg[id].payout += Number(p.teacher_payout_usd) || 0
+    tAgg[id].lessons++
+  })
+  const topTeachers = Object.values(tAgg).map((t: any) => ({
+    name: nameById[t.id] || 'Teacher', revenue: round1(t.revenue), payout: round1(t.payout), lessons: t.lessons,
+  })).sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5)
+  const failedPayments = pays.filter(p => p.status === 'failed' && inCur(p.created_at)).length
+
   const okPrev = pays.filter(p => p.status === 'succeeded' && inPrev(p.created_at))
   const gC = okCur.reduce((s, p) => s + (Number(p.gross_amount_usd) || 0), 0)
   const gP = okPrev.reduce((s, p) => s + (Number(p.gross_amount_usd) || 0), 0)
@@ -154,6 +171,8 @@ export async function GET(req: Request) {
     funnel,
     geography: geography.slice(0, 20),
     courses,
+    topTeachers,
+    attention: { failedPayments, openTickets: support.open },
     support,
     monthly,
     insights: { revenueGrowth, topStudentCountry, topRevenueCountry, topCourse, conversionRate, trialBooked, paidEnroll, activeStudents, openTickets: support.open, avgResponseHrs: support.avgResponseHrs },

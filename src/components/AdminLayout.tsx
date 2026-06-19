@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
-  Star, Settings, LogOut, Menu, X, ChevronRight,
+  Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
   CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog, ScrollText,
 } from 'lucide-react'
 
@@ -53,6 +53,26 @@ const ADMINX_STYLES = `
 .adminx-avatar{transition:transform .2s ease,box-shadow .2s ease}
 .adminx-avatar:hover{transform:scale(1.05)}
 @media(min-width:1024px){.adminx-panel{border-top-left-radius:22px;border-top-right-radius:22px}}
+.adminx-page{animation:adminxrise .42s cubic-bezier(.4,0,.2,1) both}
+@keyframes adminxrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.adminx-rise{animation:adminxrise .5s cubic-bezier(.4,0,.2,1) both}
+.adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}
+.adminx-stat:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06);border-color:rgba(184,149,42,.4)}
+.adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.adminx-row:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06);border-color:rgba(184,149,42,.45)}
+.qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
+@keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.adminx-iconbtn{position:relative;width:38px;height:38px;border-radius:11px;border:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease}
+.adminx-iconbtn:hover{background:rgba(255,255,255,.13)}
+.adminx-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#D4AF50;box-shadow:0 0 0 2px #141414}
+.adminx-bell{position:absolute;top:46px;right:0;width:272px;background:#fff;border:1px solid #ECECEC;border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.18);padding:14px;z-index:60;animation:adminxrise .2s ease both}
+.adminx-bellrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:9px;text-decoration:none;transition:background .15s ease}
+.adminx-bellrow:hover{background:#F7F1E2}
+.adminx-overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding-top:14vh;z-index:80;animation:adminxfade .15s ease both}
+@keyframes adminxfade{from{opacity:0}to{opacity:1}}
+.adminx-palette{width:min(560px,92vw);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}
+.adminx-palrow{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:none;background:transparent;border-radius:10px;cursor:pointer;text-align:left;transition:background .14s ease}
+.adminx-palrow:hover{background:#F7F1E2}
 `
 
 export default function AdminLayout({
@@ -66,6 +86,10 @@ export default function AdminLayout({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [ctx, setCtx] = useState<(AdminCtx & { roleLabel?: string }) | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [bellOpen, setBellOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [stats, setStats] = useState<any>(null)
 
   useEffect(() => {
     (async () => {
@@ -93,6 +117,23 @@ export default function AdminLayout({
   const visibleNav = isSub
     ? NAV_ITEMS.filter(n => canAccessRoute(n.href, ctx))
     : NAV_ITEMS
+
+  useEffect(() => { fetch('/api/stats').then(r => r.ok ? r.json() : null).then(setStats).catch(() => {}) }, [])
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(o => !o) }
+      if (e.key === 'Escape') { setSearchOpen(false); setBellOpen(false) }
+    }
+    window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
+  const bellItems = [
+    (can('verification.access') || can('teachers.view')) && stats?.pendingTeachers ? { label: 'Pending teacher verifications', value: stats.pendingTeachers, href: '/verification-queue' } : null,
+    can('reviews.view') && stats?.pendingReviews ? { label: 'Reviews awaiting moderation', value: stats.pendingReviews, href: '/reviews' } : null,
+  ].filter(Boolean) as any[]
+  const bellCount = bellItems.reduce((sum, b) => sum + (b.value || 0), 0)
+  const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -181,14 +222,12 @@ export default function AdminLayout({
             {sidebarOpen ? <X size={20} color="#fff" /> : <Menu size={20} color="#fff" />}
           </button>
 
-          {/* Left: current page label */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#D4AF50', letterSpacing: '0.14em', textTransform: 'uppercase', margin: 0 }}>
-              Admin Panel
-            </p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#ffffff', margin: 0, fontFamily: "'Fraunces', serif" }}>
-              {activePage?.label || 'Dashboard'}
-            </p>
+          {/* Left: breadcrumb */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LayoutDashboard size={15} style={{ color: '#D4AF50', flexShrink: 0 }} />
+            <span className="hidden sm:inline" style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Admin</span>
+            <ChevronRight size={13} className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: '#fff', fontFamily: "'Fraunces',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activePage?.label || 'Dashboard'}</span>
           </div>
 
           {/* Center: brand (desktop) */}
@@ -197,8 +236,31 @@ export default function AdminLayout({
             <Wordmark size={20} light />
           </div>
 
-          {/* Right: admin identity + avatar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          {/* Right: search, notifications, identity + avatar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <button onClick={() => setSearchOpen(true)} title="Search (Ctrl/Cmd K)" className="adminx-iconbtn hidden sm:flex">
+              <Search size={18} color="#fff" />
+            </button>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setBellOpen(o => !o)} title="Notifications" className="adminx-iconbtn">
+                <Bell size={18} color="#fff" />
+                {bellCount > 0 && <span className="adminx-dot" />}
+              </button>
+              {bellOpen && <div onClick={() => setBellOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />}
+              {bellOpen && (
+                <div className="adminx-bell">
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#1A1A1A', margin: '0 0 8px' }}>Notifications</p>
+                  {bellItems.length === 0
+                    ? <p style={{ fontSize: 12, color: '#9A9A8A', margin: 0 }}>You&apos;re all caught up ✨</p>
+                    : bellItems.map((b, i) => (
+                      <a key={i} href={b.href} onClick={() => setBellOpen(false)} className="adminx-bellrow">
+                        <span style={{ fontSize: 12.5, color: '#1A1A1A', fontWeight: 600 }}>{b.label}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#B8952A' }}>{b.value}</span>
+                      </a>
+                    ))}
+                </div>
+              )}
+            </div>
             <div className="hidden sm:block" style={{ textAlign: 'right' }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.2 }}>
                 {adminName || 'Admin'}
@@ -224,9 +286,34 @@ export default function AdminLayout({
           width: '100%', boxSizing: 'border-box',
           background: '#F5F0E8',
         }}>
-          {children}
+          <div className="adminx-page" key={pathname}>{children}</div>
         </main>
       </div>
+
+      {searchOpen && (
+        <div className="adminx-overlay" onClick={() => setSearchOpen(false)}>
+          <div className="adminx-palette" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid #ECECEC' }}>
+              <Search size={18} color="#9A9A8A" />
+              <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && paletteResults[0]) { router.push(paletteResults[0].href); setSearchOpen(false); setQuery('') } }}
+                placeholder="Search pages…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#1A1A1A', background: 'transparent', fontFamily: "'Inter',sans-serif" }} />
+              <span style={{ fontSize: 10.5, color: '#B0B0B0', border: '1px solid #E2E2E2', borderRadius: 6, padding: '2px 6px' }}>ESC</span>
+            </div>
+            <div style={{ maxHeight: 320, overflowY: 'auto', padding: 8 }}>
+              {paletteResults.length === 0
+                ? <p style={{ fontSize: 13, color: '#9A9A8A', padding: 16, textAlign: 'center', margin: 0 }}>No matching pages.</p>
+                : paletteResults.map(({ href, label, icon: Icon }) => (
+                  <button key={href} onClick={() => { router.push(href); setSearchOpen(false); setQuery('') }} className="adminx-palrow">
+                    <Icon size={16} style={{ color: '#B8952A' }} />
+                    <span style={{ fontSize: 14, color: '#1A1A1A', fontWeight: 600 }}>{label}</span>
+                    <ChevronRight size={15} style={{ color: '#C8C8C8', marginLeft: 'auto' }} />
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
