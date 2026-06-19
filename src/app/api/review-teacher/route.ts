@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { guard, logAudit } from '@/lib/admin-auth'
 
 function getAdmin() {
   return createClient(
@@ -10,6 +11,8 @@ function getAdmin() {
 
 export async function POST(req: NextRequest) {
   try {
+    const g = await guard(['teachers.approve', 'teachers.reject', 'verification.approve', 'verification.reject'])
+    if ('error' in g) return g.error
     const { id, userId, action, reason } = await req.json()
 
     if (!id || !userId || !action) {
@@ -86,6 +89,8 @@ export async function POST(req: NextRequest) {
         console.error('[review-teacher] Email send failed (non-fatal):', emailErr)
       }
     }
+
+    await logAudit(g.caller, action === 'approved' ? 'teacher.approve' : 'teacher.reject', 'teacher', id, { userId, reason: reason || null })
 
     return NextResponse.json({ success: true })
   } catch (err: any) {

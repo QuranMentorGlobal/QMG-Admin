@@ -94,6 +94,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/support': ['support.view'],
   '/settings': ['settings.view'],
   '/admin-management': ['admin.create', 'admin.edit', 'admin.delete'],
+  '/audit-log': ['admin.create', 'admin.edit', 'admin.delete'],
 }
 
 // ── API path → permission(s) required (any-of). ──────────────────────────────

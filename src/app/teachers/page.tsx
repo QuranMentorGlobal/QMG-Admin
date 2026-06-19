@@ -51,13 +51,14 @@ export default function TeacherManagementPage() {
   }
 
   async function toggleSuspend(teacher: Teacher) {
-    const supabase = createClient()
     setActionLoading(teacher.id)
     const newStatus = teacher.status === 'suspended' ? 'approved' : 'suspended'
-    const isActive = newStatus === 'approved'
-    await (supabase.from('teacher_profiles') as any).update({ status: newStatus }).eq('id', teacher.id)
-    await (supabase.from('profiles') as any).update({ is_active: isActive }).eq('id', teacher.user_id)
-    showToast(isActive ? '✅ Teacher reinstated.' : '🚫 Teacher suspended.')
+    const res = await fetch('/api/teacher-status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacherProfileId: teacher.id, userId: teacher.user_id, status: newStatus }),
+    })
+    if (res.ok) showToast(newStatus === 'approved' ? '✅ Teacher reinstated.' : '🚫 Teacher suspended.')
+    else { const d = await res.json().catch(() => ({})); showToast('❌ ' + (d.error || 'Action not permitted')) }
     await fetchTeachers()
     setActionLoading(null)
   }

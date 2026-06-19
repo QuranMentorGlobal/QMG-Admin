@@ -97,16 +97,12 @@ export default function AdminSupportPage() {
     if (!selected || !reply.trim()) return
     setSending(true)
 
-    const { error } = await (supabase as any)
-      .from('support_tickets')
-      .update({
-        admin_reply: reply.trim(),
-        status: replyStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', selected.id)
+    const res = await fetch('/api/support-ticket', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId: selected.id, status: replyStatus, reply: reply.trim() }),
+    })
 
-    if (!error) {
+    if (res.ok) {
       setTickets(prev => prev.map(t =>
         t.id === selected.id
           ? { ...t, admin_reply: reply.trim(), status: replyStatus }
@@ -116,7 +112,8 @@ export default function AdminSupportPage() {
       setReply('')
       showToast('✅ Reply sent successfully!')
     } else {
-      showToast('❌ Failed to send reply: ' + error.message)
+      const d = await res.json().catch(() => ({}))
+      showToast('❌ Failed to send reply: ' + (d.error || 'Not permitted'))
     }
     setSending(false)
   }

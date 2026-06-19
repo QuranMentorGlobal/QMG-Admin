@@ -43,14 +43,11 @@ export default function SettingsPage() {
 
   async function saveSettings() {
     setSaving(true)
-    const supabase = createClient()
-    const { data: existing } = await supabase.from('platform_settings').select('id').single() as any
-    if (existing?.id) {
-      await (supabase.from('platform_settings') as any).update(settings).eq('id', existing.id)
-    } else {
-      await (supabase.from('platform_settings') as any).insert(settings)
-    }
-    setToast('✅ Settings saved!')
+    const res = await fetch('/api/platform-settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings }),
+    })
+    setToast(res.ok ? '✅ Settings saved!' : '❌ Action not permitted')
     setTimeout(() => setToast(''), 3000)
     setSaving(false)
   }

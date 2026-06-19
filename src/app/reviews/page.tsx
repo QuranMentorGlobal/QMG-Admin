@@ -40,10 +40,12 @@ export default function ReviewsModerationPage() {
   }
 
   async function handleReview(id: string, approve: boolean) {
-    const supabase = createClient()
     setActionLoading(id)
-    await (supabase.from('reviews') as any).update({ is_published: approve }).eq('id', id)
-    setToast(approve ? '✅ Review published!' : '🗑️ Review rejected.')
+    const res = await fetch('/api/review-moderate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewId: id, publish: approve }),
+    })
+    setToast(res.ok ? (approve ? '✅ Review published!' : '🗑️ Review rejected.') : '❌ Action not permitted')
     setTimeout(() => setToast(''), 3000)
     await fetchReviews()
     setActionLoading(null)

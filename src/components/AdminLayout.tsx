@@ -12,7 +12,7 @@ import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight,
-  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog,
+  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog, ScrollText,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
   { href: '/admin-management',     label: 'Sub Admin Management',  icon: UserCog         },
+  { href: '/audit-log',            label: 'Audit Log',             icon: ScrollText      },
 ]
 
 const LOGO_SRC = '/logo.png'

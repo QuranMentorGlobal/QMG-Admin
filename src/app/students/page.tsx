@@ -45,12 +45,12 @@ export default function StudentManagementPage() {
   }
 
   async function toggleActive(student: Student) {
-    const supabase = createClient()
     setActionLoading(student.id)
-    await (supabase.from('profiles') as any)
-      .update({ is_active: !student.is_active })
-      .eq('id', student.id)
-    const msg = student.is_active ? '🚫 Student deactivated.' : '✅ Student reactivated.'
+    const res = await fetch('/api/student-status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: student.id, isActive: !student.is_active }),
+    })
+    const msg = res.ok ? (student.is_active ? '🚫 Student deactivated.' : '✅ Student reactivated.') : '❌ Action not permitted'
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
     await fetchStudents()

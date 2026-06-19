@@ -1,6 +1,7 @@
 // qmg-admin: src/app/api/verification-action/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { guard, logAudit } from '@/lib/admin-auth'
 
 function getAdmin() {
   return createClient(
@@ -19,6 +20,8 @@ type TierAction = {
 
 export async function POST(req: NextRequest) {
   try {
+    const g = await guard(['verification.approve', 'verification.reject'])
+    if ('error' in g) return g.error
     const body: TierAction = await req.json()
     const { teacherProfileId, userId, tier, action, notes } = body
 
@@ -72,6 +75,8 @@ export async function POST(req: NextRequest) {
       .eq('id', teacherProfileId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await logAudit(g.caller, `verification.${tier}.${action}`, 'teacher', teacherProfileId, { userId, tier, action, notes: notes || null })
 
     // Send notification to teacher
     const tierLabels: Record<string, string> = {
