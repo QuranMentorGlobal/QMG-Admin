@@ -242,7 +242,7 @@ export default function VerificationQueuePage() {
               const verifiedCount = getVerifiedCount(teacher)
 
               return (
-                <div key={teacher.id} style={{
+                <div key={teacher.id} className="adminx-row" style={{
                   background: '#fff', borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s',
                   border: `1.5px solid ${isPending ? '#FDE68A' : '#E5E7EB'}`,
                 }}>

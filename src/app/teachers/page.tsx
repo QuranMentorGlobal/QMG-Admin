@@ -73,7 +73,7 @@ export default function TeacherManagementPage() {
       <div className="w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Teacher Management</h1>
+            <h1 className="text-2xl font-bold text-ink" style={{ fontFamily: "'Fraunces',serif" }}>Teacher Management</h1>
             <p className="text-sm text-ink-light mt-1">{teachers.length} approved teachers on platform</p>
           </div>
           <div className="relative">
@@ -82,7 +82,7 @@ export default function TeacherManagementPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search teachers..."
-              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-DEFAULT w-64"
+              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C8A24A] w-64"
             />
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function TeacherManagementPage() {
           <div className="space-y-3">
             {filtered.map(t => (
               <div key={t.id}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
+                className="adminx-row bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
                   style={{ background: t.status === 'suspended' ? '#9CA3AF' : 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
                   {(t.profiles?.first_name || 'T')[0]}
@@ -107,7 +107,7 @@ export default function TeacherManagementPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-ink">{t.profiles?.first_name} {t.profiles?.last_name}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      t.status === 'suspended' ? 'bg-red-100 text-red-600' : 'bg-green-light text-green-DEFAULT'
+                      t.status === 'suspended' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'
                     }`}>
                       {t.status === 'suspended' ? 'Suspended' : 'Active'}
                     </span>

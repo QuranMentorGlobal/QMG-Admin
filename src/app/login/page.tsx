@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-dark px-4"
+    <div className="min-h-screen flex items-center justify-center bg-[#0B0B0B] px-4"
       style={{ background: 'linear-gradient(135deg, #0B0B0B 0%, #B8952A 100%)' }}>
       
       {/* Decorative circles */}
@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
               style={{ background: 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
               <span className="text-2xl">🕌</span>
             </div>
-            <h1 className="font-display text-2xl font-bold text-green-dark">QuranMentor<span style={{ color: '#B8952A' }}>Global</span></h1>
+            <h1 className="font-display text-2xl font-bold text-[#141414]">QuranMentor<span style={{ color: '#B8952A' }}>Global</span></h1>
             <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase"
               style={{ background: '#F0E4B8', color: '#B8952A' }}>
               Admin Panel
@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@quranmentorglobal.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-green-DEFAULT focus:ring-2 focus:ring-green-light"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C8A24A] focus:ring-2 focus:ring-[#EFE2B5]"
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />
             </div>
@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-green-DEFAULT focus:ring-2 focus:ring-green-light"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C8A24A] focus:ring-2 focus:ring-[#EFE2B5]"
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />
             </div>

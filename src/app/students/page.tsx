@@ -62,7 +62,7 @@ export default function StudentManagementPage() {
       <div className="w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Student Management</h1>
+            <h1 className="text-2xl font-bold text-ink" style={{ fontFamily: "'Fraunces',serif" }}>Student Management</h1>
             <p className="text-sm text-ink-light mt-1">{students.length} registered students</p>
           </div>
           <div className="relative">
@@ -71,7 +71,7 @@ export default function StudentManagementPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search students..."
-              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-DEFAULT w-64"
+              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C8A24A] w-64"
             />
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function StudentManagementPage() {
           <div className="space-y-3">
             {filtered.map(s => (
               <div key={s.id}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
+                className="adminx-row bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
                   style={{ background: s.is_active ? 'linear-gradient(135deg, #B8952A, #D4AF50)' : '#9CA3AF' }}>
                   {(s.first_name || 'S')[0]}
@@ -96,7 +96,7 @@ export default function StudentManagementPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-ink">{s.first_name} {s.last_name}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      s.is_active ? 'bg-green-light text-green-DEFAULT' : 'bg-gray-100 text-gray-500'
+                      s.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                     }`}>
                       {s.is_active ? 'Active' : 'Inactive'}
                     </span>
