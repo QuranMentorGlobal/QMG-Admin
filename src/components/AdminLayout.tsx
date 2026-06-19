@@ -89,7 +89,7 @@ export default function AdminLayout({
   const [searchOpen, setSearchOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [stats, setStats] = useState<any>(null)
+  const [notes, setNotes] = useState<any[]>([])
 
   useEffect(() => {
     (async () => {
@@ -118,7 +118,7 @@ export default function AdminLayout({
     ? NAV_ITEMS.filter(n => canAccessRoute(n.href, ctx))
     : NAV_ITEMS
 
-  useEffect(() => { fetch('/api/stats').then(r => r.ok ? r.json() : null).then(setStats).catch(() => {}) }, [])
+  useEffect(() => { fetch('/api/notifications').then(r => r.ok ? r.json() : null).then(j => setNotes(j?.items || [])).catch(() => {}) }, [])
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(o => !o) }
@@ -128,11 +128,8 @@ export default function AdminLayout({
   }, [])
 
   const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
-  const bellItems = [
-    (can('verification.access') || can('teachers.view')) && stats?.pendingTeachers ? { label: 'Pending teacher verifications', value: stats.pendingTeachers, href: '/verification-queue' } : null,
-    can('reviews.view') && stats?.pendingReviews ? { label: 'Reviews awaiting moderation', value: stats.pendingReviews, href: '/reviews' } : null,
-  ].filter(Boolean) as any[]
-  const bellCount = bellItems.reduce((sum, b) => sum + (b.value || 0), 0)
+  const bellCount = notes.length
+  const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }
   const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
 
   async function handleSignOut() {
@@ -249,13 +246,17 @@ export default function AdminLayout({
               {bellOpen && <div onClick={() => setBellOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />}
               {bellOpen && (
                 <div className="adminx-bell">
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#1A1A1A', margin: '0 0 8px' }}>Notifications</p>
-                  {bellItems.length === 0
-                    ? <p style={{ fontSize: 12, color: '#9A9A8A', margin: 0 }}>You&apos;re all caught up ✨</p>
-                    : bellItems.map((b, i) => (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px' }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>Notifications</p>
+                    {bellCount > 0 && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B8952A', background: '#F7F1E2', borderRadius: 999, padding: '2px 8px' }}>{bellCount}</span>}
+                  </div>
+                  {notes.length === 0
+                    ? <p style={{ fontSize: 12, color: '#9A9A8A', margin: '8px 0 4px' }}>You&apos;re all caught up ✨</p>
+                    : notes.map((b, i) => (
                       <a key={i} href={b.href} onClick={() => setBellOpen(false)} className="adminx-bellrow">
-                        <span style={{ fontSize: 12.5, color: '#1A1A1A', fontWeight: 600 }}>{b.label}</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#B8952A' }}>{b.value}</span>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: SEV[b.severity] || '#B8952A', flexShrink: 0 }} />
+                        <span style={{ flex: 1, fontSize: 12.5, color: '#1A1A1A', fontWeight: 600, lineHeight: 1.3 }}>{b.label}</span>
+                        <span style={{ fontSize: 11.5, fontWeight: 800, color: SEV[b.severity] || '#B8952A', background: '#F7F1E2', borderRadius: 7, padding: '1px 7px', flexShrink: 0 }}>{b.count}</span>
                       </a>
                     ))}
                 </div>
