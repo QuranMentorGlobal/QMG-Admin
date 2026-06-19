@@ -10,7 +10,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const { data: tp, error } = await svc
     .from('teacher_profiles')
     .select('*, profiles(first_name, last_name, email, country, is_active, created_at)')
-    .eq('id', params.id).single()
+    .or(`id.eq.${params.id},user_id.eq.${params.id}`)
+    .limit(1).maybeSingle()
   if (error || !tp) return NextResponse.json({ error: 'Teacher not found' }, { status: 404 })
   const t: any = tp
   const userId = t.user_id
