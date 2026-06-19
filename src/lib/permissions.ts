@@ -136,18 +136,20 @@ export const ROLE_PRESETS: { key: string; label: string; description: string; pe
 export interface AdminCtx { role: string | null; adminRole: AdminRole; permissions: string[]; status: string }
 
 export function isSuper(ctx?: Partial<AdminCtx> | null) {
-  return ctx?.adminRole === 'super'
+  // Any admin who is NOT explicitly a sub-admin is full-access (Super).
+  // This keeps pre-existing / unmigrated admins fully working (fail-open for the owner).
+  return !!ctx && ctx.adminRole !== 'sub'
 }
 
 export function hasPerm(ctx: Partial<AdminCtx> | null | undefined, perm: string): boolean {
   if (!ctx) return false
-  if (ctx.adminRole === 'super') return true
+  if (ctx.adminRole !== 'sub') return true
   return Array.isArray(ctx.permissions) && ctx.permissions.includes(perm)
 }
 
 export function hasAnyPerm(ctx: Partial<AdminCtx> | null | undefined, perms: string[]): boolean {
   if (!ctx) return false
-  if (ctx.adminRole === 'super') return true
+  if (ctx.adminRole !== 'sub') return true
   return perms.some(p => hasPerm(ctx, p))
 }
 
@@ -165,7 +167,7 @@ function matchRoute(pathname: string, map: Record<string, string[]>): string[] |
 export function canAccessRoute(pathname: string, ctx: Partial<AdminCtx> | null | undefined): boolean {
   if (!ctx) return false
   if (ctx.status === 'suspended') return false
-  if (ctx.adminRole === 'super') return true
+  if (ctx.adminRole !== 'sub') return true
   const required = matchRoute(pathname, ROUTE_PERMISSIONS)
   if (!required) return true // unguarded route (e.g. /dashboard) — every admin may see it
   return required.some(p => (ctx.permissions || []).includes(p))
