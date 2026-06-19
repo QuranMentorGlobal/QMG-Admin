@@ -127,7 +127,7 @@ export default function AdminSupportPage() {
       )}
 
       {/* Filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+      <div className="qmg-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 14 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {STATUSES.map(s => <button key={s} onClick={() => setFStatus(s)} style={{ padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: fStatus === s ? 'none' : `1px solid ${BORDER}`, background: fStatus === s ? GOLD : '#fff', color: fStatus === s ? '#1A1400' : '#6B6B6B' }}>{s.replace('_', ' ')}</button>)}
         </div>

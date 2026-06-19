@@ -260,7 +260,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: INK, margin: 0 }}>Welcome back, {adminName} 👋</h1>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: INK, margin: 0 }}>Dashboard</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '6px 0 0' }}>{isSub ? 'Your workspace overview.' : 'Executive overview of QuranMentorGlobal.'}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>

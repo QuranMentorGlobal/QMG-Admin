@@ -73,6 +73,11 @@ const ADMINX_STYLES = `
 .adminx-palette{width:min(560px,92vw);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}
 .adminx-palrow{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:none;background:transparent;border-radius:10px;cursor:pointer;text-align:left;transition:background .14s ease}
 .adminx-palrow:hover{background:#F7F1E2}
+.adminx-menurow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;color:#1A1A1A;transition:background .15s ease}
+.adminx-menurow:hover{background:#F7F1E2}
+.adminx-panel{padding:28px}
+@media(max-width:640px){.adminx-panel{padding:16px 14px}}
+@media(max-width:640px){.qmg-bar{justify-content:center!important}}
 `
 
 export default function AdminLayout({
@@ -90,6 +95,8 @@ export default function AdminLayout({
   const [bellOpen, setBellOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [notes, setNotes] = useState<any[]>([])
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [name, setName] = useState(adminName || 'Admin')
 
   useEffect(() => {
     (async () => {
@@ -98,7 +105,7 @@ export default function AdminLayout({
         const { data: { user } } = await sb.auth.getUser()
         if (!user) return
         const { data: p } = await sb.from('profiles')
-          .select('role, admin_role, admin_permissions, admin_status, admin_role_label')
+          .select('role, admin_role, admin_permissions, admin_status, admin_role_label, first_name')
           .eq('id', user.id).single()
         const prof = (p as any) || {}
         setCtx({
@@ -108,6 +115,7 @@ export default function AdminLayout({
           status: prof.admin_status ?? 'active',
           roleLabel: prof.admin_role_label ?? undefined,
         })
+        setName(prof.first_name || adminName || 'Admin')
       } catch {}
     })()
   }, [])
@@ -122,7 +130,7 @@ export default function AdminLayout({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(o => !o) }
-      if (e.key === 'Escape') { setSearchOpen(false); setBellOpen(false) }
+      if (e.key === 'Escape') { setSearchOpen(false); setBellOpen(false); setUserMenuOpen(false) }
     }
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey)
   }, [])
@@ -219,12 +227,11 @@ export default function AdminLayout({
             {sidebarOpen ? <X size={20} color="#fff" /> : <Menu size={20} color="#fff" />}
           </button>
 
-          {/* Left: breadcrumb */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <LayoutDashboard size={15} style={{ color: '#D4AF50', flexShrink: 0 }} />
-            <span className="hidden sm:inline" style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Admin</span>
-            <ChevronRight size={13} className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: '#fff', fontFamily: "'Fraunces',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activePage?.label || 'Dashboard'}</span>
+          {/* Left: greeting */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Fraunces',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span className="hidden sm:inline">Welcome back, </span>{name} 👋
+            </p>
           </div>
 
           {/* Center: brand (desktop) */}
@@ -262,20 +269,29 @@ export default function AdminLayout({
                 </div>
               )}
             </div>
-            <div className="hidden sm:block" style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.2 }}>
-                {adminName || 'Admin'}
-              </p>
-              <p style={{ fontSize: 11, color: '#D4AF50', margin: 0 }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
-            </div>
-            <div className="adminx-avatar" style={{
-              width: 38, height: 38, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #C8A24A, #E0BE63)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#1A1400', fontSize: 15, fontWeight: 800, flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(184,149,42,0.35)',
-            }}>
-              {(adminName || 'A')[0].toUpperCase()}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setUserMenuOpen(o => !o)} title="Account" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <div className="hidden sm:block" style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.2 }}>{name}</p>
+                  <p style={{ fontSize: 11, color: '#D4AF50', margin: 0 }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
+                </div>
+                <div className="adminx-avatar" style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #C8A24A, #E0BE63)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1A1400', fontSize: 15, fontWeight: 800, flexShrink: 0, boxShadow: '0 2px 8px rgba(184,149,42,0.35)' }}>
+                  {(name || 'A')[0].toUpperCase()}
+                </div>
+              </button>
+              {userMenuOpen && <div onClick={() => setUserMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />}
+              {userMenuOpen && (
+                <div className="adminx-bell" style={{ width: 232 }}>
+                  <div style={{ padding: '2px 6px 10px', borderBottom: '1px solid #ECECEC', marginBottom: 8 }}>
+                    <p style={{ fontSize: 13.5, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>{name}</p>
+                    <p style={{ fontSize: 11.5, color: '#B8952A', fontWeight: 700, margin: '2px 0 0' }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
+                  </div>
+                  {can('settings.view') && (
+                    <a href="/settings" onClick={() => setUserMenuOpen(false)} className="adminx-menurow"><Settings size={15} style={{ color: '#9A9A8A' }} /> Platform Settings</a>
+                  )}
+                  <button onClick={handleSignOut} className="adminx-menurow" style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: '#DC2626' }}><LogOut size={15} /> Sign Out</button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -283,7 +299,6 @@ export default function AdminLayout({
         {/* Cream rounded content panel — full width, internal scroll */}
         <main className="adminx-panel" style={{
           flex: 1, overflowY: 'auto',
-          padding: '28px',
           width: '100%', boxSizing: 'border-box',
           background: '#F5F0E8',
         }}>
