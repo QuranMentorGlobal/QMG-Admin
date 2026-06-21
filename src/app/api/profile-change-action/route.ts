@@ -32,11 +32,18 @@ export async function POST(req: NextRequest) {
     const svc = service()
     const newReqStatus = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'changes_requested'
 
-    // 1) Update the change request
+    // 1) Update the change request status (critical — must succeed)
     const { error: rErr } = await svc.from('profile_change_requests')
-      .update({ status: newReqStatus, admin_notes: notes || null, reviewed_at: new Date().toISOString() })
+      .update({ status: newReqStatus })
       .eq('id', requestId)
     if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
+
+    // 1b) Best-effort: record admin notes + review timestamp.
+    // Skips silently if those columns don't exist yet (run the migration to enable).
+    const { error: noteErr } = await svc.from('profile_change_requests')
+      .update({ admin_notes: notes || null, reviewed_at: new Date().toISOString() })
+      .eq('id', requestId)
+    if (noteErr) console.warn('[reverification] notes/reviewed_at not saved:', noteErr.message)
 
     // 2) On approve, re-list the teacher (status back to approved)
     if (action === 'approve' && teacherProfileId) {
