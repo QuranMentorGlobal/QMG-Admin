@@ -2,7 +2,7 @@
 // PASTE THIS WHOLE FILE INTO:  src/components/AdminLayout.tsx
 // (Admin chrome — charcoal-gold redesign to match the platform portal.
 //  Solid #141414 sidebar + top bar, gold nav, rounded cream content panel.
-//  Nav items, routes and sign-out logic are UNCHANGED.)
+//  Nav items + routes UNCHANGED; added pending/ticket count badges.)
 // ============================================================
 'use client'
 import { useState, useEffect } from 'react'
@@ -46,6 +46,9 @@ const ADMINX_STYLES = `
 .adminx-nav{display:flex;align-items:center;gap:11px;width:100%;padding:10px 13px;border-radius:12px;margin-bottom:2px;background:transparent;border:none;border-left:3px solid transparent;color:#fff;font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;text-align:left;cursor:pointer;transition:background .2s ease,transform .2s cubic-bezier(.4,0,.2,1),color .2s ease,border-color .2s ease}
 .adminx-nav:hover{background:rgba(255,255,255,.06);transform:translateX(3px)}
 .adminx-nav-active{background:linear-gradient(90deg,rgba(200,162,74,.24),rgba(200,162,74,.07));color:#E8C766;border-left:3px solid #C8A24A;font-weight:700;box-shadow:inset 0 0 0 1px rgba(200,162,74,.12)}
+.adminx-badge{flex-shrink:0;min-width:20px;height:20px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:linear-gradient(135deg,#D4AF50,#B8952A);color:#141414;font-size:11px;font-weight:800;font-family:'Inter',sans-serif;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35);animation:adminxpop .25s cubic-bezier(.34,1.56,.64,1) both}
+.adminx-badge-urgent{background:linear-gradient(135deg,#F87171,#DC2626);color:#fff}
+@keyframes adminxpop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
 .adminx-signout{display:flex;align-items:center;gap:11px;width:100%;padding:10px 13px;border-radius:12px;background:transparent;border:none;border-left:3px solid transparent;color:rgba(255,255,255,.62);font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;text-align:left;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease}
 .adminx-signout:hover{background:rgba(239,68,68,.1);color:#FCA5A5;transform:translateX(3px)}
 .adminx-portal-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8C766;background:rgba(200,162,74,.12);border:1px solid rgba(200,162,74,.28)}
@@ -137,6 +140,17 @@ export default function AdminLayout({
 
   const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
   const bellCount = notes.length
+
+  // ── Sidebar badge counts (reuse the data already fetched for the bell) ──
+  // Verification Queue → pending teacher applications.
+  // Support Tickets   → open tickets (red if any are urgent).
+  const findCount = (type: string) => (notes.find((n: any) => n?.type === type)?.count as number) || 0
+  const urgentTickets = findCount('urgent')
+  const badgeForHref = (href: string): { count: number; urgent: boolean } | null => {
+    if (href === '/verification-queue') { const c = findCount('verification'); return c > 0 ? { count: c, urgent: false } : null }
+    if (href === '/support')            { const c = findCount('ticket');       return c > 0 ? { count: c, urgent: urgentTickets > 0 } : null }
+    return null
+  }
   const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }
   const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
 
@@ -165,6 +179,7 @@ export default function AdminLayout({
         <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
           {visibleNav.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
+            const badge = badgeForHref(href)
             return (
               <button
                 key={href}
@@ -173,6 +188,11 @@ export default function AdminLayout({
               >
                 <Icon size={16} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1 }}>{label}</span>
+                {badge && (
+                  <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
+                    {badge.count > 99 ? '99+' : badge.count}
+                  </span>
+                )}
                 {active && <ChevronRight size={13} style={{ color: '#E8C766', flexShrink: 0 }} />}
               </button>
             )
