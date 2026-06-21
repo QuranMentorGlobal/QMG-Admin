@@ -50,14 +50,20 @@ export async function getCaller(): Promise<Caller> {
 // Returns the Caller if authorized, otherwise a NextResponse to return immediately.
 export async function guard(perms: string[]): Promise<{ caller: Caller } | { error: NextResponse }> {
   const caller = await getCaller()
-  if (!caller.userId || caller.role !== 'admin') {
-    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  // Distinct messages so the cause is obvious in the UI toast:
+  //  • no session  → cookie/auth wasn't read in this route (sign out & back in)
+  //  • wrong role  → the signed-in account's profiles.role isn't 'admin'
+  if (!caller.userId) {
+    return { error: NextResponse.json({ error: 'Unauthorized — no active admin session. Please sign out and sign in again.' }, { status: 401 }) }
+  }
+  if (caller.role !== 'admin') {
+    return { error: NextResponse.json({ error: `Access denied — this account's role is '${caller.role ?? 'none'}', not 'admin'.` }, { status: 403 }) }
   }
   if (caller.status === 'suspended') {
     return { error: NextResponse.json({ error: 'Account suspended' }, { status: 403 }) }
   }
   if (!hasAnyPerm(caller, perms)) {
-    return { error: NextResponse.json({ error: 'Forbidden — missing permission' }, { status: 403 }) }
+    return { error: NextResponse.json({ error: 'Forbidden — your sub-admin role is missing the required permission.' }, { status: 403 }) }
   }
   return { caller }
 }
