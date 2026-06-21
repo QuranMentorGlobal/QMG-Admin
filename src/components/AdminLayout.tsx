@@ -16,18 +16,18 @@ import {
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',            label: 'Dashboard',            icon: LayoutDashboard },
-  { href: '/analytics',            label: 'Analytics',            icon: BarChart3       },
+  { href: '/dashboard',            label: 'Admin Dashboard',      icon: LayoutDashboard },
+  { href: '/analytics',            label: 'Admin Analytics',      icon: BarChart3       },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
+  { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
   { href: '/students',             label: 'Student Management',   icon: Users           },
   { href: '/bookings',             label: 'Bookings Overview',    icon: BookOpen        },
   { href: '/reviews',              label: 'Reviews Moderation',   icon: Star            },
   { href: '/payments',             label: 'Payments & Revenue',   icon: CreditCard      },
-  { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
-  { href: '/admin-management',     label: 'Sub Admin',             icon: UserCog         },
-  { href: '/audit-log',            label: 'Audit Log',             icon: ScrollText      },
+  { href: '/admin-management',     label: 'Admin Management',     icon: UserCog         },
+  { href: '/audit-log',            label: 'Audit Logs',           icon: ScrollText      },
 ]
 
 const LOGO_SRC = '/logo.png'
