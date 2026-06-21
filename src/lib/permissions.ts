@@ -88,6 +88,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/teachers': ['teachers.view'],
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],
+  '/moderation': ['support.view'],
   '/students': ['students.view'],
   '/bookings': ['bookings.view'],
   '/reviews': ['reviews.view'],

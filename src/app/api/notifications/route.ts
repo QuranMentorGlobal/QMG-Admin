@@ -25,6 +25,13 @@ export async function GET() {
     try { const { count: u } = await svc.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open').eq('priority', 'urgent'); urgent = u ?? 0 } catch {}
     if (urgent > 0) items.push({ type: 'urgent', label: 'Urgent tickets need attention', count: urgent, href: '/support', severity: 'red' })
   }
+  if (can('support.view')) {
+    const openFlags = await count(() => svc.from('conversation_flags').select('id', { count: 'exact', head: true }).eq('status', 'open'))
+    if (openFlags > 0) {
+      const high = await count(() => svc.from('conversation_flags').select('id', { count: 'exact', head: true }).eq('status', 'open').eq('risk', 'high'))
+      items.push({ type: 'moderation', label: high > 0 ? 'High-risk conversations flagged' : 'Conversations flagged for review', count: openFlags, href: '/moderation', severity: high > 0 ? 'red' : 'gold' })
+    }
+  }
   if (can('payments.view')) {
     const n = await count(() => svc.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'failed'))
     if (n > 0) items.push({ type: 'payment', label: 'Failed payments', count: n, href: '/payments', severity: 'red' })

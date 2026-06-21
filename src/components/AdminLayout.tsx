@@ -12,7 +12,7 @@ import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
-  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog, ScrollText, GitCompareArrows,
+  CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, UserCog, ScrollText, GitCompareArrows,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/analytics',            label: 'Admin Analytics',      icon: BarChart3       },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
   { href: '/re-verification',      label: 'Re-Verification',      icon: GitCompareArrows },
+  { href: '/moderation',           label: 'Trust & Safety',       icon: ShieldAlert     },
   { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
   { href: '/students',             label: 'Student Management',   icon: Users           },
@@ -151,6 +152,7 @@ export default function AdminLayout({
     if (href === '/verification-queue') { const c = findCount('verification'); return c > 0 ? { count: c, urgent: false } : null }
     if (href === '/re-verification')    { const c = findCount('reverification'); return c > 0 ? { count: c, urgent: false } : null }
     if (href === '/support')            { const c = findCount('ticket');       return c > 0 ? { count: c, urgent: urgentTickets > 0 } : null }
+    if (href === '/moderation')         { const c = findCount('moderation');   return c > 0 ? { count: c, urgent: (notes.find((n: any) => n?.type === 'moderation')?.severity === 'red') } : null }
     return null
   }
   const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }
