@@ -63,7 +63,12 @@ export default function VerificationQueuePage() {
     try {
       const res = await fetch('/api/verification-queue')
       const data = await res.json()
-      setTeachers(Array.isArray(data) ? data : [])
+      if (Array.isArray(data)) {
+        setTeachers(data)
+      } else {
+        setTeachers([])
+        showToast('❌ Queue error: ' + (data?.error || 'unexpected response'))
+      }
     } catch {
       showToast('❌ Failed to load verification queue')
     }
