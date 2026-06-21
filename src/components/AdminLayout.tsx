@@ -12,13 +12,14 @@ import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
-  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog, ScrollText,
+  CreditCard, MessageSquare, ShieldCheck, BarChart3, UserCog, ScrollText, GitCompareArrows,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/dashboard',            label: 'Admin Dashboard',      icon: LayoutDashboard },
   { href: '/analytics',            label: 'Admin Analytics',      icon: BarChart3       },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
+  { href: '/re-verification',      label: 'Re-Verification',      icon: GitCompareArrows },
   { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
   { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
   { href: '/students',             label: 'Student Management',   icon: Users           },
@@ -148,6 +149,7 @@ export default function AdminLayout({
   const urgentTickets = findCount('urgent')
   const badgeForHref = (href: string): { count: number; urgent: boolean } | null => {
     if (href === '/verification-queue') { const c = findCount('verification'); return c > 0 ? { count: c, urgent: false } : null }
+    if (href === '/re-verification')    { const c = findCount('reverification'); return c > 0 ? { count: c, urgent: false } : null }
     if (href === '/support')            { const c = findCount('ticket');       return c > 0 ? { count: c, urgent: urgentTickets > 0 } : null }
     return null
   }

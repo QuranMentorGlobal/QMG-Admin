@@ -15,6 +15,8 @@ export async function GET() {
   if (can('verification.access') || can('teachers.view')) {
     const n = await count(() => svc.from('teacher_profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending'))
     if (n > 0) items.push({ type: 'verification', label: 'Teacher applications pending review', count: n, href: '/verification-queue', severity: 'gold' })
+    const rv = await count(() => svc.from('profile_change_requests').select('id', { count: 'exact', head: true }).in('status', ['pending', 'changes_requested']))
+    if (rv > 0) items.push({ type: 'reverification', label: 'Profile changes need re-verification', count: rv, href: '/re-verification', severity: 'gold' })
   }
   if (can('support.view')) {
     const open = await count(() => svc.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'))

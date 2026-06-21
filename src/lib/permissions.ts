@@ -87,6 +87,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/analytics': ['analytics.deep'],
   '/teachers': ['teachers.view'],
   '/verification-queue': ['verification.access'],
+  '/re-verification': ['verification.access'],
   '/students': ['students.view'],
   '/bookings': ['bookings.view'],
   '/reviews': ['reviews.view'],
