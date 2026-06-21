@@ -57,6 +57,20 @@ export async function GET() {
       ;(tps ?? []).forEach((t: any) => { statusMap[t.id] = t.status })
     } catch {}
 
+    // Verification history: past resolved requests per teacher (most recent first).
+    const historyMap: Record<string, any[]> = {}
+    try {
+      const { data: hist } = await supabase
+        .from('profile_change_requests')
+        .select('id, teacher_user_id, status, change_type, created_at, reviewed_at, admin_notes')
+        .in('status', ['approved', 'rejected'])
+        .in('teacher_user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000'])
+        .order('reviewed_at', { ascending: false })
+      ;(hist ?? []).forEach((h: any) => {
+        (historyMap[h.teacher_user_id] = historyMap[h.teacher_user_id] || []).push(h)
+      })
+    } catch {}
+
     const enriched = rows.map((r: any) => {
       const p = profMap[r.teacher_user_id] || {}
       return {
@@ -71,6 +85,8 @@ export async function GET() {
         teacher_name: `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || 'Teacher',
         teacher_email: p.email || '',
         current_status: statusMap[r.teacher_profile_id] || null,
+        previous_status: 'approved', // by definition: only an approved teacher can trigger re-verification
+        history: (historyMap[r.teacher_user_id] || []).slice(0, 8),
       }
     })
 

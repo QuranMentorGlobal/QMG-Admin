@@ -26,6 +26,8 @@ type ChangeReq = {
   teacher_name: string
   teacher_email: string
   current_status: string | null
+  previous_status?: string | null
+  history?: { id: string; status: string; change_type: string; created_at: string; reviewed_at: string | null; admin_notes: string | null }[]
 }
 
 const fmt = (v: any) => Array.isArray(v) ? (v.length ? v.join(', ') : '—') : (v === null || v === undefined || v === '' ? '—' : String(v))
@@ -107,7 +109,21 @@ export default function ReVerificationPage() {
                       <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}>{r.change_type === 'sensitive' ? 'Re-verify' : 'Update'}</span>
                       {r.status === 'changes_requested' && <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px' }}>Changes requested</span>}
                     </div>
-                    <p style={{ fontSize: 12.5, color: MUTED, margin: '3px 0 0' }}>{r.teacher_email} · submitted {fmtDate(r.created_at)} · currently <b style={{ color: r.current_status === 'approved' ? '#16A34A' : '#B45309' }}>{r.current_status || 'unknown'}</b></p>
+                    <p style={{ fontSize: 12.5, color: MUTED, margin: '3px 0 0' }}>{r.teacher_email} · submitted {fmtDate(r.created_at)} · previously <b style={{ color: '#16A34A' }}>{r.previous_status || 'approved'}</b> · currently <b style={{ color: r.current_status === 'approved' ? '#16A34A' : '#B45309' }}>{r.current_status || 'unknown'}</b></p>
+                    {r.history && r.history.length > 0 && (
+                      <details style={{ marginTop: 6 }}>
+                        <summary style={{ fontSize: 11.5, fontWeight: 700, color: GOLD, cursor: 'pointer' }}>Verification history ({r.history.length})</summary>
+                        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {r.history.map(h => (
+                            <div key={h.id} style={{ fontSize: 11.5, color: MUTED, display: 'flex', gap: 8, alignItems: 'center' }}>
+                              <span style={{ fontWeight: 800, color: h.status === 'approved' ? '#16A34A' : '#B91C1C', textTransform: 'capitalize' }}>{h.status}</span>
+                              <span>{fmtDate(h.reviewed_at || h.created_at)}</span>
+                              {h.admin_notes && <span style={{ fontStyle: 'italic' }}>· {h.admin_notes}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '4px 11px' }}><Clock size={13} /> Hidden from students</span>
                 </div>
