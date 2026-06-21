@@ -38,19 +38,28 @@ type Teacher = {
 
 type TierKey = 'identity' | 'quran_mentor' | 'ijazah' | 'phone'
 
-const TIER_CONFIG: { key: TierKey; label: string; icon: string; color: string }[] = [
-  { key: 'phone',        label: 'Phone Verified',        icon: '📱', color: '#6B7280' },
-  { key: 'identity',     label: 'Identity Verified',     icon: '🛡️', color: '#1E40AF' },
-  { key: 'quran_mentor', label: 'Quran Mentor Verified', icon: '📖', color: '#B8952A' },
-  { key: 'ijazah',       label: 'Ijazah Verified',       icon: '🏅', color: '#92710A' },
+const TIER_CONFIG: { key: TierKey; label: string; color: string }[] = [
+  { key: 'phone',        label: 'Phone Verified',        color: '#6B7280' },
+  { key: 'identity',     label: 'Identity Verified',     color: '#1E40AF' },
+  { key: 'quran_mentor', label: 'Quran Mentor Verified', color: '#B8952A' },
+  { key: 'ijazah',       label: 'Ijazah Verified',       color: '#92710A' },
 ]
+
+function TierIcon({ k, color, size = 18 }: { k: string; color: string; size?: number }) {
+  const c = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (k === 'phone')        return (<svg {...c}><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>)
+  if (k === 'identity')     return (<svg {...c}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>)
+  if (k === 'quran_mentor') return (<svg {...c}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>)
+  if (k === 'ijazah')       return (<svg {...c}><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"/></svg>)
+  return null
+}
 
 export default function VerificationQueuePage() {
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [docUrls, setDocUrls] = useState<Record<string, string>>({})
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
@@ -67,18 +76,19 @@ export default function VerificationQueuePage() {
         setTeachers(data)
       } else {
         setTeachers([])
-        showToast('❌ Queue error: ' + (data?.error || 'unexpected response'))
+        showToastErr('Queue error: ' + (data?.error || 'unexpected response'))
       }
     } catch {
-      showToast('❌ Failed to load verification queue')
+      showToastErr('Failed to load verification queue')
     }
     setLoading(false)
   }
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 4000)
+  function showToast(msg: string, kind: 'success' | 'error' = 'success') {
+    setToast({ m: msg, k: kind })
+    setTimeout(() => setToast(null), 4000)
   }
+  const showToastErr = (m: string) => showToast(m, 'error')
 
   async function loadSignedUrl(docUrl: string) {
     if (!docUrl) return
@@ -93,17 +103,17 @@ export default function VerificationQueuePage() {
         setDocUrls(prev => ({ ...prev, [docUrl]: data.signedUrl }))
         window.open(data.signedUrl, '_blank')
       } else {
-        showToast('❌ Failed to load document')
+        showToastErr('Failed to load document')
       }
     } catch {
-      showToast('❌ Failed to load document')
+      showToastErr('Failed to load document')
     }
   }
 
   // ── Initial application approve/reject ──
   async function handleApplicationAction(teacher: Teacher, action: 'approved' | 'rejected') {
     if (action === 'rejected' && !notes[`${teacher.id}-app`]?.trim()) {
-      showToast('❌ Please provide a rejection reason')
+      showToastErr('Please provide a rejection reason')
       return
     }
     setActionLoading(`${teacher.id}-app-${action}`)
@@ -120,10 +130,10 @@ export default function VerificationQueuePage() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      showToast(action === 'approved' ? '✅ Teacher approved and now live!' : '✅ Application rejected')
+      showToast(action === 'approved' ? 'Teacher approved and now live!' : 'Application rejected')
       fetchQueue()
     } catch (err: any) {
-      showToast(`❌ Error: ${err.message}`)
+      showToastErr(`Error: ${err.message}`)
     }
     setActionLoading(null)
   }
@@ -146,10 +156,10 @@ export default function VerificationQueuePage() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      showToast(`✅ ${tier.replace('_', ' ')} ${action}d successfully`)
+      showToast(`${tier.replace('_', ' ')} ${action}d successfully`)
       fetchQueue()
     } catch (err: any) {
-      showToast(`❌ Error: ${err.message}`)
+      showToastErr(`Error: ${err.message}`)
     }
     setActionLoading(null)
   }
@@ -185,11 +195,15 @@ export default function VerificationQueuePage() {
       {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 200,
-            background: toast.startsWith('✅') ? '#B8952A' : '#DC2626',
-            color: '#fff', padding: '12px 20px', borderRadius: 12,
+            background: toast.k === 'error' ? '#DC2626' : '#B8952A',
+            color: '#fff', padding: '12px 18px', borderRadius: 12,
             fontSize: 14, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', gap: 8,
           }}>
-            {toast}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              {toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}
+            </svg>
+            {toast.m}
           </div>
         )}
 
@@ -207,9 +221,9 @@ export default function VerificationQueuePage() {
             {([
               { key: 'all', label: 'All' },
               { key: 'pending', label: `New Applications${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
-              { key: 'identity', label: '🛡️ ID Pending' },
-              { key: 'quran_mentor', label: '📖 QM Pending' },
-              { key: 'ijazah', label: '🏅 Ijazah Pending' },
+              { key: 'identity', label: 'ID Pending' },
+              { key: 'quran_mentor', label: 'QM Pending' },
+              { key: 'ijazah', label: 'Ijazah Pending' },
             ] as const).map(f => (
               <button key={f.key} onClick={() => setFilter(f.key as any)}
                 style={{
@@ -228,12 +242,12 @@ export default function VerificationQueuePage() {
         {/* Loading / Empty */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B8952A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
             Loading verification queue…
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px dashed #E5E7EB' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 9 11 14 8 11"/></svg></div>
             <p style={{ fontWeight: 700, color: '#1A1A1A', fontSize: 16 }}>Queue is clear!</p>
             <p style={{ color: '#9CA3AF', fontSize: 13, marginTop: 4 }}>No pending items in this category.</p>
           </div>
@@ -434,11 +448,11 @@ export default function VerificationQueuePage() {
                               }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <span style={{ fontSize: 20 }}>{tierCfg.icon}</span>
+                                    <TierIcon k={tierCfg.key} color={tierCfg.color} size={18} />
                                     <div>
                                       <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1A1A' }}>{tierCfg.label}</span>
-                                      {isVerified && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#16A34A' }}>✓ Verified</span>}
-                                      {!isVerified && needsReview && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#D97706' }}>⏳ Needs review</span>}
+                                      {isVerified && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#16A34A', display: 'inline-flex', alignItems: 'center', gap: 4 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>}
+                                      {!isVerified && needsReview && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#D97706', display: 'inline-flex', alignItems: 'center', gap: 4 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Needs review</span>}
                                       {!isVerified && !needsReview && <span style={{ marginLeft: 8, fontSize: 11, color: '#9CA3AF' }}>Not submitted</span>}
                                     </div>
                                   </div>

@@ -27,7 +27,7 @@ export default function TeacherManagementPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
 
   useEffect(() => { fetchTeachers() }, [])
 
@@ -57,16 +57,17 @@ export default function TeacherManagementPage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ teacherProfileId: teacher.id, userId: teacher.user_id, status: newStatus }),
     })
-    if (res.ok) showToast(newStatus === 'approved' ? '✅ Teacher reinstated.' : '🚫 Teacher suspended.')
-    else { const d = await res.json().catch(() => ({})); showToast('❌ ' + (d.error || 'Action not permitted')) }
+    if (res.ok) showToast(newStatus === 'approved' ? 'Teacher reinstated.' : 'Teacher suspended.')
+    else { const d = await res.json().catch(() => ({})); showToastErr('' + (d.error || 'Action not permitted')) }
     await fetchTeachers()
     setActionLoading(null)
   }
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3000)
+  function showToast(msg: string, kind: 'success' | 'error' = 'success') {
+    setToast({ m: msg, k: kind })
+    setTimeout(() => setToast(null), 3000)
   }
+  const showToastErr = (m: string) => showToast(m, 'error')
 
   return (
     <AdminLayout>
@@ -88,8 +89,13 @@ export default function TeacherManagementPage() {
         </div>
 
         {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#B8952A' }}>{toast}</div>
+          <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold flex items-center gap-2"
+            style={{ background: toast.k === 'error' ? '#DC2626' : '#B8952A' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              {toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}
+            </svg>
+            {toast.m}
+          </div>
         )}
 
         {loading ? (

@@ -39,7 +39,7 @@ export default function ReVerificationPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -52,11 +52,12 @@ export default function ReVerificationPage() {
       const res = await fetch('/api/profile-change-requests')
       const data = await res.json()
       setReqs(Array.isArray(data) ? data : [])
-    } catch { showToast('❌ Failed to load re-verification queue') }
+    } catch { showToastErr('Failed to load re-verification queue') }
     setLoading(false)
   }
 
-  function showToast(m: string) { setToast(m); setTimeout(() => setToast(''), 3500) }
+  function showToast(m: string, k: 'success' | 'error' = 'success') { setToast({ m, k }); setTimeout(() => setToast(null), 3500) }
+  const showToastErr = (m: string) => showToast(m, 'error')
 
   async function act(r: ChangeReq, action: 'approve' | 'reject' | 'request_changes') {
     if ((action === 'reject' || action === 'request_changes') && !(notes[r.id] || '').trim()) {
@@ -70,15 +71,15 @@ export default function ReVerificationPage() {
       })
       const j = await res.json()
       if (!res.ok || j.error) throw new Error(j.error || 'Action failed')
-      showToast(action === 'approve' ? '✅ Approved — teacher re-listed' : action === 'reject' ? 'Request rejected' : 'Changes requested')
+      showToast(action === 'approve' ? 'Approved — teacher re-listed' : action === 'reject' ? 'Request rejected' : 'Changes requested')
       setReqs(prev => prev.filter(x => x.id !== r.id))
-    } catch (e: any) { showToast('❌ ' + (e.message || 'Action failed')) }
+    } catch (e: any) { showToastErr('' + (e.message || 'Action failed')) }
     setBusy(null)
   }
 
   return (
     <AdminLayout adminName={adminName}>
-      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? GOLD : toast.startsWith('❌') ? '#DC2626' : INK, color: toast.startsWith('✅') ? '#1A1400' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 16px', borderRadius: 12, background: toast.k === 'error' ? '#DC2626' : GOLD, color: toast.k === 'error' ? '#fff' : '#1A1400', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', gap: 8 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">{toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}</svg>{toast.m}</div>}
 
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
