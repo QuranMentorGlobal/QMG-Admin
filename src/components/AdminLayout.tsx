@@ -13,25 +13,40 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
   CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows,
+  SlidersHorizontal, Briefcase,
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { href: '/dashboard',            label: 'Admin Dashboard',      icon: LayoutDashboard },
-  { href: '/analytics',            label: 'Admin Analytics',      icon: BarChart3       },
-  { href: '/attendance',           label: 'Attendance Center',    icon: CalendarCheck   },
-  { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
-  { href: '/re-verification',      label: 'Re-Verification',      icon: GitCompareArrows },
-  { href: '/moderation',           label: 'Trust & Safety',       icon: ShieldAlert     },
-  { href: '/support',              label: 'Support Tickets',      icon: MessageSquare   },
-  { href: '/teachers',             label: 'Teacher Management',   icon: GraduationCap   },
-  { href: '/students',             label: 'Student Management',   icon: Users           },
-  { href: '/bookings',             label: 'Bookings Overview',    icon: BookOpen        },
-  { href: '/reviews',              label: 'Reviews Moderation',   icon: Star            },
-  { href: '/payments',             label: 'Payments & Revenue',   icon: CreditCard      },
-  { href: '/settings',             label: 'Platform Settings',    icon: Settings        },
-  { href: '/admin-management',     label: 'Admin Management',     icon: UserCog         },
-  { href: '/audit-log',            label: 'Audit Logs',           icon: ScrollText      },
+// Two-level nav: primary rail = categories; clicking a category opens a drawer
+// listing its pages (sub-items). New pages slot into a category here — the rail
+// never grows. NAV_ITEMS is derived flat for the search palette + active logic.
+const CATEGORIES = [
+  { key: 'overview', label: 'Admin Overview', icon: LayoutDashboard, items: [
+    { href: '/dashboard',  label: 'Admin Dashboard',   icon: LayoutDashboard },
+    { href: '/analytics',  label: 'Admin Analytics',   icon: BarChart3       },
+    { href: '/attendance', label: 'Attendance Center', icon: CalendarCheck   },
+  ] },
+  { key: 'system', label: 'System & Access', icon: SlidersHorizontal, items: [
+    { href: '/settings',         label: 'Platform Settings', icon: Settings   },
+    { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
+    { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
+  ] },
+  { key: 'trust', label: 'Verification & Trust', icon: ShieldCheck, items: [
+    { href: '/verification-queue', label: 'Verification Queue', icon: ShieldCheck      },
+    { href: '/re-verification',    label: 'Re-Verification',    icon: GitCompareArrows },
+    { href: '/moderation',         label: 'Trust & Safety',     icon: ShieldAlert      },
+    { href: '/reviews',            label: 'Reviews Moderation', icon: Star             },
+  ] },
+  { key: 'people', label: 'People Management', icon: Users, items: [
+    { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },
+    { href: '/students', label: 'Student Management', icon: Users         },
+  ] },
+  { key: 'ops', label: 'Operations Management', icon: Briefcase, items: [
+    { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
+    { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
+    { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
+  ] },
 ]
+const NAV_ITEMS = CATEGORIES.flatMap(c => c.items)
 
 const LOGO_SRC = '/logo.png'
 
@@ -85,6 +100,11 @@ const ADMINX_STYLES = `
 .adminx-panel{padding:28px}
 @media(max-width:640px){.adminx-panel{padding:16px 14px}}
 @media(max-width:640px){.qmg-bar{justify-content:center!important}}
+.adminx-drawer{position:fixed;top:0;bottom:0;left:0;width:min(284px,86vw);z-index:55;background:#181818;border-right:1px solid rgba(255,255,255,.08);box-shadow:10px 0 40px rgba(0,0,0,.5);display:flex;flex-direction:column;animation:adminxslide .2s cubic-bezier(.4,0,.2,1) both}
+@media(min-width:1024px){.adminx-drawer{left:240px;width:250px}}
+@keyframes adminxslide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.adminx-drawer-bd{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.2)}
+.adminx-chev{transition:transform .2s ease}
 `
 
 export default function AdminLayout({
@@ -97,6 +117,7 @@ export default function AdminLayout({
   const router   = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [openCat, setOpenCat] = useState<string | null>(null)
   const [ctx, setCtx] = useState<(AdminCtx & { roleLabel?: string }) | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
@@ -137,10 +158,12 @@ export default function AdminLayout({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(o => !o) }
-      if (e.key === 'Escape') { setSearchOpen(false); setBellOpen(false); setUserMenuOpen(false) }
+      if (e.key === 'Escape') { setSearchOpen(false); setBellOpen(false); setUserMenuOpen(false); setOpenCat(null) }
     }
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => { setOpenCat(null); setSidebarOpen(false) }, [pathname])
 
   const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
   const bellCount = notes.length
@@ -160,6 +183,19 @@ export default function AdminLayout({
   }
   const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }
   const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
+
+  // ── Category derivation (two-level nav) ──
+  const visibleCategories = CATEGORIES
+    .map(c => ({ ...c, items: isSub ? c.items.filter(n => canAccessRoute(n.href, ctx)) : c.items }))
+    .filter(c => c.items.length > 0)
+  const catBadge = (items: { href: string }[]) => {
+    let count = 0, urgent = false
+    items.forEach(it => { const b = badgeForHref(it.href); if (b) { count += b.count; if (b.urgent) urgent = true } })
+    return count > 0 ? { count, urgent } : null
+  }
+  const activeCatKey = visibleCategories.find(c => c.items.some(it => isActive(it.href)))?.key || null
+  const openCategory = visibleCategories.find(c => c.key === openCat) || null
+  const DrawerIcon = (openCategory?.icon || LayoutDashboard) as any
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -182,25 +218,28 @@ export default function AdminLayout({
           <span className="adminx-portal-pill"><span className="adminx-portal-dot" />Admin Panel</span>
         </div>
 
-        {/* Nav */}
+        {/* Nav — categories (click opens a drawer of sub-pages) */}
         <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
-          {visibleNav.map(({ href, label, icon: Icon }) => {
-            const active = isActive(href)
-            const badge = badgeForHref(href)
+          {visibleCategories.map((cat) => {
+            const Icon = cat.icon
+            const active = cat.key === activeCatKey
+            const isOpen = cat.key === openCat
+            const badge = catBadge(cat.items)
             return (
               <button
-                key={href}
-                onClick={() => { router.push(href); setSidebarOpen(false) }}
+                key={cat.key}
+                onClick={() => setOpenCat(o => (o === cat.key ? null : cat.key))}
                 className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
+                aria-expanded={isOpen}
               >
                 <Icon size={16} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{label}</span>
+                <span style={{ flex: 1 }}>{cat.label}</span>
                 {badge && (
                   <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
                     {badge.count > 99 ? '99+' : badge.count}
                   </span>
                 )}
-                {active && <ChevronRight size={13} style={{ color: '#E8C766', flexShrink: 0 }} />}
+                <ChevronRight size={14} className="adminx-chev" style={{ flexShrink: 0, color: active ? '#E8C766' : 'rgba(255,255,255,0.42)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
               </button>
             )
           })}
@@ -227,7 +266,7 @@ export default function AdminLayout({
       <style>{ADMINX_STYLES}</style>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-col" style={{ width: 240, flexShrink: 0, height: '100%' }}>
+      <div className="hidden lg:flex lg:flex-col" style={{ width: 240, flexShrink: 0, height: '100%', position: 'relative', zIndex: 50 }}>
         <SidebarContent />
       </div>
 
@@ -237,6 +276,44 @@ export default function AdminLayout({
           <div style={{ width: 240, flexShrink: 0, height: '100%', boxShadow: '6px 0 30px rgba(0,0,0,0.5)' }}><SidebarContent /></div>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.55)' }} onClick={() => setSidebarOpen(false)} />
         </div>
+      )}
+
+      {/* Category drawer — sub-pages of the clicked category */}
+      {openCategory && (
+        <>
+          <div className="adminx-drawer-bd" onClick={() => setOpenCat(null)} />
+          <aside className="adminx-drawer">
+            <div style={{ padding: '17px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              <DrawerIcon size={17} color="#E8C766" style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1, color: '#fff', fontWeight: 800, fontSize: 14.5, fontFamily: "'Fraunces',serif" }}>{openCategory.label}</span>
+              <button onClick={() => setOpenCat(null)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
+                <X size={16} color="#fff" />
+              </button>
+            </div>
+            <nav style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+              {openCategory.items.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href)
+                const badge = badgeForHref(href)
+                return (
+                  <button
+                    key={href}
+                    onClick={() => { router.push(href); setOpenCat(null); setSidebarOpen(false) }}
+                    className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
+                  >
+                    <Icon size={16} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{label}</span>
+                    {badge && (
+                      <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
+                        {badge.count > 99 ? '99+' : badge.count}
+                      </span>
+                    )}
+                    {active && <ChevronRight size={13} style={{ color: '#E8C766', flexShrink: 0 }} />}
+                  </button>
+                )
+              })}
+            </nav>
+          </aside>
+        </>
       )}
 
       {/* Right side (dark frame so the rounded panel corners read clean) */}
