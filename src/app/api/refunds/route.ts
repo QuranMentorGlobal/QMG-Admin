@@ -21,7 +21,7 @@ export async function GET() {
   const svc = service()
 
   // Pull all refunds (resilient to a missing table / missing columns).
-  let res: any = await svc.from('refunds')
+  let res: any = await svc.from('booking_refunds')
     .select('id, booking_id, payment_id, student_id, teacher_id, amount_usd, currency, reason, initiated_by, provider, status, created_at')
     .order('created_at', { ascending: false })
   if (res.error) {

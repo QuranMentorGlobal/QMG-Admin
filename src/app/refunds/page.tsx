@@ -105,7 +105,7 @@ export default function AdminRefundsPage() {
 
       {d?.tableMissing && (
         <div style={{ background: 'rgba(184,149,42,0.08)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', marginBottom: 18, fontSize: 12.5, color: INK }}>
-          The <strong>refunds</strong> table isn&apos;t present yet. Run <code>migration_marketplace_integrity.sql</code> in Supabase — this view populates automatically once refunds start flowing.
+          The <strong>booking_refunds</strong> table isn&apos;t present yet. Run <code>migration_marketplace_integrity.sql</code> in Supabase — this view populates automatically once refunds start flowing.
         </div>
       )}
 

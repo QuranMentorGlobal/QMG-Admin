@@ -16,7 +16,7 @@ import {
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, Download, Users, GraduationCap, Clock, MessageSquare,
-  AlertTriangle, CreditCard, Award, BookOpen, Activity, ArrowUpRight, ShieldCheck, Zap,
+  AlertTriangle, CreditCard, Award, BookOpen, Activity, ArrowUpRight, ShieldCheck, Zap, RotateCcw,
 } from 'lucide-react'
 
 const GOLD = '#B8952A', GOLD_L = '#D4AF50', INK = '#1A1A1A', INK_MID = '#3D3D3D'
@@ -142,6 +142,7 @@ export default function DashboardPage() {
   const [range, setRange] = useState('30')
   const [data, setData] = useState<any>(null)
   const [deep, setDeep] = useState<any>(null)
+  const [refunds, setRefunds] = useState<{ total: number; count: number } | null>(null)
   const [activity, setActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [gran, setGran] = useState<'day' | 'week' | 'month'>('day')
@@ -174,11 +175,21 @@ export default function DashboardPage() {
   }, [range])
 
   useEffect(() => {
+    fetch('/api/refunds').then(r => r.ok ? r.json() : null)
+      .then(j => { if (j?.totals) setRefunds({ total: j.totals.total || 0, count: j.totals.count || 0 }) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     if (!ctx || !canAudit) return
     fetch('/api/audit-log').then(r => r.ok ? r.json() : null).then(d => setActivity((d?.logs || []).slice(0, 6))).catch(() => {})
   }, [ctx, canAudit])
 
-  const k = data?.kpis || {}
+  const k: any = { ...(data?.kpis || {}) }
+  if (refunds) {
+    k.totalRefunded = { value: refunds.total, note: 'Returned to students' }
+    k.refundCount   = { value: refunds.count, note: 'Cancellations & declines' }
+  }
   const revenueSeries = useMemo(() => aggregate(data?.series?.revenue || [], gran, ['gross', 'commission']), [data, gran])
 
   function exportCSV() {
@@ -216,6 +227,8 @@ export default function DashboardPage() {
     { label: 'Avg Revenue / Teacher', key: 'arpt', fmt: fmtMoney, perm: 'analytics.dashboard' },
     { label: 'Student Retention', key: 'studentRetention', fmt: fmtNum, perm: 'analytics.dashboard' },
     { label: 'Teacher Retention', key: 'teacherRetention', fmt: fmtNum, perm: 'analytics.dashboard' },
+    { label: 'Total Refunded', key: 'totalRefunded', fmt: fmtMoney, perm: 'payments.view' },
+    { label: 'Refunds Issued', key: 'refundCount', fmt: fmtNum, perm: 'payments.view' },
   ]
   const kpiCards = ALL_KPIS.filter(c => can(c.perm))
   const showCharts = can('analytics.dashboard')
