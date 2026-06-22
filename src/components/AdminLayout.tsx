@@ -20,27 +20,27 @@ import {
 // listing its pages (sub-items). New pages slot into a category here — the rail
 // never grows. NAV_ITEMS is derived flat for the search palette + active logic.
 const CATEGORIES = [
-  { key: 'overview', label: 'Admin Overview', icon: LayoutDashboard, items: [
+  { key: 'overview', label: 'Admin Overview', l1: 'Admin', l2: 'Overview', icon: LayoutDashboard, items: [
     { href: '/dashboard',  label: 'Admin Dashboard',   icon: LayoutDashboard },
     { href: '/analytics',  label: 'Admin Analytics',   icon: BarChart3       },
     { href: '/attendance', label: 'Attendance Center', icon: CalendarCheck   },
   ] },
-  { key: 'system', label: 'System & Access', icon: SlidersHorizontal, items: [
+  { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [
     { href: '/settings',         label: 'Platform Settings', icon: Settings   },
     { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
     { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
   ] },
-  { key: 'trust', label: 'Verification & Trust', icon: ShieldCheck, items: [
+  { key: 'trust', label: 'Verification & Trust', l1: 'Verification', l2: '& Trust', icon: ShieldCheck, items: [
     { href: '/verification-queue', label: 'Verification Queue', icon: ShieldCheck      },
     { href: '/re-verification',    label: 'Re-Verification',    icon: GitCompareArrows },
     { href: '/moderation',         label: 'Trust & Safety',     icon: ShieldAlert      },
     { href: '/reviews',            label: 'Reviews Moderation', icon: Star             },
   ] },
-  { key: 'people', label: 'People Management', icon: Users, items: [
+  { key: 'people', label: 'People Management', l1: 'People', l2: 'Management', icon: Users, items: [
     { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },
     { href: '/students', label: 'Student Management', icon: Users         },
   ] },
-  { key: 'ops', label: 'Operations Management', icon: Briefcase, items: [
+  { key: 'ops', label: 'Operations Management', l1: 'Operations', l2: 'Management', icon: Briefcase, items: [
     { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
     { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
     { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
@@ -233,7 +233,7 @@ export default function AdminLayout({
                 aria-expanded={isOpen}
               >
                 <Icon size={16} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{cat.label}</span>
+                <span style={{ flex: 1, lineHeight: 1.16 }}>{cat.l1}<br />{cat.l2}</span>
                 {badge && (
                   <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
                     {badge.count > 99 ? '99+' : badge.count}
