@@ -85,6 +85,7 @@ export const ALL_PERMISSIONS: string[] = PERMISSION_GROUPS.flatMap(g => g.perms.
 // /dashboard and / are intentionally absent: every admin gets an (adaptive) home.
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/analytics': ['analytics.deep'],
+  '/attendance': ['analytics.deep'],
   '/teachers': ['teachers.view'],
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],

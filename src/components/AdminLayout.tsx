@@ -12,12 +12,13 @@ import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
-  CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, UserCog, ScrollText, GitCompareArrows,
+  CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/dashboard',            label: 'Admin Dashboard',      icon: LayoutDashboard },
   { href: '/analytics',            label: 'Admin Analytics',      icon: BarChart3       },
+  { href: '/attendance',           label: 'Attendance Center',    icon: CalendarCheck   },
   { href: '/verification-queue',   label: 'Verification Queue',   icon: ShieldCheck     },
   { href: '/re-verification',      label: 'Re-Verification',      icon: GitCompareArrows },
   { href: '/moderation',           label: 'Trust & Safety',       icon: ShieldAlert     },
