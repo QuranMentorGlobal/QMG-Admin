@@ -59,7 +59,8 @@ const ADMINX_STYLES = `
 .adminx-avatar{transition:transform .2s ease,box-shadow .2s ease}
 .adminx-avatar:hover{transform:scale(1.05)}
 @media(min-width:1024px){.adminx-panel{border-top-left-radius:22px;border-top-right-radius:22px}}
-.adminx-page{animation:adminxrise .42s cubic-bezier(.4,0,.2,1) both}
+.adminx-page{animation:adminxpagein .42s cubic-bezier(.4,0,.2,1) both}
+@keyframes adminxpagein{from{opacity:0}to{opacity:1}}
 @keyframes adminxrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .adminx-rise{animation:adminxrise .5s cubic-bezier(.4,0,.2,1) both}
 .adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}

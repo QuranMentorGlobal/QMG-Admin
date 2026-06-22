@@ -58,7 +58,7 @@ export default function AdminAttendance() {
 
   return (
     <AdminLayout adminName={adminName}>
-      <div style={{ maxWidth: 1100 }}>
+      <div style={{ width: '100%' }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
           <TrendingUp size={24} color={GOLD} /> Attendance Center
         </h1>
