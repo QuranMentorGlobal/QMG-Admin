@@ -154,6 +154,7 @@ export default function AdminLayout({
     if (href === '/re-verification')    { const c = findCount('reverification'); return c > 0 ? { count: c, urgent: false } : null }
     if (href === '/support')            { const c = findCount('ticket');       return c > 0 ? { count: c, urgent: urgentTickets > 0 } : null }
     if (href === '/moderation')         { const c = findCount('moderation');   return c > 0 ? { count: c, urgent: (notes.find((n: any) => n?.type === 'moderation')?.severity === 'red') } : null }
+    if (href === '/attendance')         { const c = findCount('attendance_anomaly'); return c > 0 ? { count: c, urgent: true } : null }
     return null
   }
   const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }

@@ -32,6 +32,16 @@ export async function GET() {
       items.push({ type: 'moderation', label: high > 0 ? 'High-risk conversations flagged' : 'Conversations flagged for review', count: openFlags, href: '/moderation', severity: high > 0 ? 'red' : 'gold' })
     }
   }
+  if (can('analytics.deep')) {
+    // Attendance anomaly: students with repeated absences (>= 3).
+    try {
+      const { data: rows } = await svc.from('lesson_attendance').select('student_id, status').eq('status', 'absent').limit(5000)
+      const per: Record<string, number> = {}
+      ;((rows as any[]) || []).forEach(r => { if (r.student_id) per[r.student_id] = (per[r.student_id] || 0) + 1 })
+      const flagged = Object.values(per).filter(n => n >= 3).length
+      if (flagged > 0) items.push({ type: 'attendance_anomaly', label: 'Students with repeated absences', count: flagged, href: '/attendance', severity: 'red' })
+    } catch {}
+  }
   if (can('payments.view')) {
     const n = await count(() => svc.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'failed'))
     if (n > 0) items.push({ type: 'payment', label: 'Failed payments', count: n, href: '/payments', severity: 'red' })
