@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
   CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows,
-  SlidersHorizontal, Briefcase,
+  SlidersHorizontal, Briefcase, RotateCcw,
 } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
@@ -43,6 +43,7 @@ const CATEGORIES = [
   { key: 'ops', label: 'Operations Management', l1: 'Operations', l2: 'Management', icon: Briefcase, items: [
     { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
     { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
+    { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
     { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
   ] },
 ]

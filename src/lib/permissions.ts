@@ -94,6 +94,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/bookings': ['bookings.view'],
   '/reviews': ['reviews.view'],
   '/payments': ['payments.view'],
+  '/refunds': ['payments.view'],
   '/support': ['support.view'],
   '/settings': ['settings.view'],
   '/admin-management': ['admin.create', 'admin.edit', 'admin.delete'],
