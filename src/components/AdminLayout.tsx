@@ -118,6 +118,7 @@ export default function AdminLayout({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [openCat, setOpenCat] = useState<string | null>(null)
+  const [ctxReady, setCtxReady] = useState(false)
   const [ctx, setCtx] = useState<(AdminCtx & { roleLabel?: string }) | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
@@ -145,6 +146,7 @@ export default function AdminLayout({
         })
         setName(prof.first_name || adminName || 'Admin')
       } catch {}
+      finally { setCtxReady(true) }
     })()
   }, [])
 
@@ -220,7 +222,11 @@ export default function AdminLayout({
 
         {/* Nav — categories (click opens a drawer of sub-pages) */}
         <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
-          {visibleCategories.map((cat) => {
+          {!ctxReady ? (
+            [0, 1, 2, 3, 4].map(i => (
+              <div key={i} style={{ height: 42, margin: '4px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)' }} />
+            ))
+          ) : visibleCategories.map((cat) => {
             const Icon = cat.icon
             const active = cat.key === activeCatKey
             const isOpen = cat.key === openCat
