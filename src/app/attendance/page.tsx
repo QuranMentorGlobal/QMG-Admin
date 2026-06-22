@@ -45,6 +45,17 @@ export default function AdminAttendance() {
 
   const card: React.CSSProperties = { background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }
 
+  const health = !o ? null
+    : o.rate >= 80 ? { label: 'Healthy', color: '#16A34A', desc: 'Platform attendance is strong across teachers and courses.' }
+    : o.rate >= 60 ? { label: 'Watch', color: GOLD, desc: 'Attendance is moderate — keep an eye on at-risk students and low-rate courses.' }
+    : { label: 'Needs Attention', color: '#DC2626', desc: 'Platform attendance is low — consider teacher check-ins and student outreach.' }
+  const trend = (() => {
+    const m = d?.monthly || []
+    if (m.length < 2) return null
+    const last = m[m.length - 1].rate, prev = m[m.length - 2].rate
+    return last > prev + 3 ? { arrow: '↑', label: 'up vs last month', color: '#16A34A' } : last < prev - 3 ? { arrow: '↓', label: 'down vs last month', color: '#DC2626' } : { arrow: '→', label: 'steady vs last month', color: GOLD }
+  })()
+
   return (
     <AdminLayout adminName={adminName}>
       <div style={{ maxWidth: 1100 }}>
@@ -62,6 +73,18 @@ export default function AdminAttendance() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* Platform health */}
+            {health && (
+              <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', borderLeft: `4px solid ${health.color}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 13, color: MUTED, fontWeight: 600 }}>Platform Attendance Health</span>
+                  <span style={{ background: health.color, color: '#fff', fontSize: 13, fontWeight: 800, padding: '5px 14px', borderRadius: 999 }}>{health.label} · {o!.rate}%</span>
+                  {trend && <span style={{ color: trend.color, fontSize: 13, fontWeight: 700 }}>{trend.arrow} {trend.label}</span>}
+                </div>
+                <span style={{ color: MUTED, fontSize: 13, flex: 1, minWidth: 200 }}>{health.desc}</span>
+              </div>
+            )}
+
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
               {kpis.map(k => (
