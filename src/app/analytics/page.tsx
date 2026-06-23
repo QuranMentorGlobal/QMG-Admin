@@ -32,7 +32,7 @@ const KEY_MARKETS = [
   { name: 'Pakistan', flag: '🇵🇰', match: ['pakistan'] },
 ]
 
-const fmtMoney = (n: number) => Math.abs(n) >= 1000 ? '$' + (n / 1000).toFixed(1) + 'k' : '$' + Math.round(n)
+const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtNum = (n: number) => Math.round(n).toLocaleString()
 
 function Panel({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) {

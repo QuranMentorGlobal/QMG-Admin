@@ -30,9 +30,7 @@ const RANGES = [
 type KPI = { value: number; growth?: number; suffix?: string; note?: string }
 
 function fmtMoney(n: number) {
-  if (Math.abs(n) >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M'
-  if (Math.abs(n) >= 1_000) return '$' + (n / 1_000).toFixed(1) + 'k'
-  return '$' + Math.round(n).toLocaleString()
+  return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 function fmtNum(n: number) { return Math.round(n).toLocaleString() }
 function fmtShortDate(d: string) { const x = new Date(d); return `${x.getDate()}/${x.getMonth() + 1}` }
