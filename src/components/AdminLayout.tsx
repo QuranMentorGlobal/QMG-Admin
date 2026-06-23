@@ -348,7 +348,7 @@ export default function AdminLayout({
 
           {/* Center: brand (desktop) */}
           <div className="hidden lg:flex" style={{ alignItems: 'center', gap: 9, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-            <img src={LOGO_SRC} alt="QMG" style={{ width: 38, height: 38, objectFit: 'contain' }} />
+            <img src={LOGO_SRC} alt="QMG" style={{ width: 60, height: 60, objectFit: 'contain' }} />
             <Wordmark size={20} light />
           </div>
 
