@@ -13,7 +13,7 @@ const dayKey = (d: string | Date) => new Date(d).toISOString().slice(0, 10)
 const round1 = (n: number) => Math.round(n * 10) / 10
 function growth(cur: number, prev: number) {
   if (prev > 0) return round1(((cur - prev) / prev) * 100)
-  return cur > 0 ? 100 : 0
+  return 0   // [5.9] no false +100% when the prior period had no baseline
 }
 
 export async function GET(req: Request) {
@@ -54,9 +54,9 @@ export async function GET(req: Request) {
   const profQ = supabase.from('profiles').select('role, created_at, country')
 
   const [paysRes, booksRes, profsRes] = await Promise.all([
-    (prevStartISO ? payQ.gte('created_at', prevStartISO) : payQ).limit(20000),
-    (prevStartISO ? bookQ.gte('created_at', prevStartISO) : bookQ).limit(20000),
-    (prevStartISO ? profQ.gte('created_at', prevStartISO) : profQ).limit(20000),
+    (prevStartISO ? payQ.gte('created_at', prevStartISO) : payQ).limit(100000),
+    (prevStartISO ? bookQ.gte('created_at', prevStartISO) : bookQ).limit(100000),
+    (prevStartISO ? profQ.gte('created_at', prevStartISO) : profQ).limit(100000),
   ])
 
   const pays = (paysRes.data as any[]) || []
@@ -71,13 +71,41 @@ export async function GET(req: Request) {
   const okPrev = pays.filter(p => p.status === 'succeeded' && inPrev(p.created_at))
   const sum = (arr: any[], k: string) => arr.reduce((s, x) => s + (Number(x[k]) || 0), 0)
 
+  // [5.1] A *paid* payment is a real, non-trial transaction with money on it.
+  // Free $0 trials create succeeded rows; excluding them keeps conversion,
+  // retention and "paid student" sets honest.
+  const isPaid = (p: any) => (Number(p.gross_amount_usd) || 0) > 0 && p.payment_type !== 'trial'
+  const paidCurRows  = okCur.filter(isPaid)
+  const paidPrevRows = okPrev.filter(isPaid)
+
   const gtvCur = sum(okCur, 'gross_amount_usd'),   gtvPrev = sum(okPrev, 'gross_amount_usd')
   const comCur = sum(okCur, 'platform_fee_usd'),   comPrev = sum(okPrev, 'platform_fee_usd')
   const payoutCur = sum(okCur, 'teacher_payout_usd')
 
-  // MRR proxy: succeeded revenue in the last 30 days
-  const mrrCutoff = new Date(now.getTime() - 30 * DAY).toISOString()
-  const mrr = sum(pays.filter(p => p.status === 'succeeded' && p.created_at >= mrrCutoff), 'gross_amount_usd')
+  // [5.3] MRR: real recurring revenue from ACTIVE subscriptions, normalized to a
+  // month. Computed in its own query so it never depends on the range filter.
+  let mrr = 0
+  try {
+    const { data: subs } = await supabase
+      .from('subscriptions')
+      .select('amount_usd, monthly_price_usd, price_usd, billing_interval, status')
+      .eq('status', 'active')
+      .limit(100000)
+    const monthly = (per: any) => {
+      const amt = Number(per.monthly_price_usd ?? per.amount_usd ?? per.price_usd) || 0
+      switch ((per.billing_interval || 'monthly')) {
+        case 'annual':      return amt / 12
+        case 'semi_annual': return amt / 6
+        case 'quarterly':   return amt / 3
+        default:            return amt
+      }
+    }
+    mrr = (subs || []).reduce((s: number, x: any) => s + monthly(x), 0)
+  } catch {
+    // Fallback proxy: last-30-day PAID (non-trial) revenue, range-independent.
+    const cutoff = new Date(now.getTime() - 30 * DAY).toISOString()
+    mrr = sum(pays.filter(p => p.status === 'succeeded' && isPaid(p) && p.created_at >= cutoff), 'gross_amount_usd')
+  }
 
   // ── Bookings-derived metrics ──────────────────────────────────────────────
   const bCur  = books.filter(b => inCur(b.created_at))
@@ -88,31 +116,35 @@ export async function GET(req: Request) {
   const cancelledCur = bCur.filter(b => b.status === 'cancelled').length
   const upcomingCur  = bCur.filter(b => b.status === 'confirmed' || b.status === 'pending').length
 
-  // Trial -> paid conversion (distinct students)
+  // [5.1] Trial -> paid conversion (distinct students; "paid" excludes $0 trials)
   const trialStudents = new Set(bCur.filter(b => b.is_trial).map((b: any) => b.student_id))
-  const paidStudents  = new Set(okCur.map(p => p.student_id))
+  const paidStudents  = new Set(paidCurRows.map(p => p.student_id))
   const convBase = trialStudents.size
   let converted = 0; trialStudents.forEach(s => { if (paidStudents.has(s)) converted++ })
   const conversionRate = convBase > 0 ? round1((converted / convBase) * 100) : 0
 
   // ARPU / ARPT
-  const earningTeachers = new Set(okCur.map(p => p.teacher_id)).size
-  const baseStudents = (activeStudents.count ?? 0) || new Set(okCur.map(p => p.student_id)).size
-  const arpu = baseStudents ? round1(gtvCur / baseStudents) : 0
+  const earningTeachers = new Set(paidCurRows.map(p => p.teacher_id)).size
+  // [5.5] Period-consistent ARPU: period GTV ÷ students active in the SAME period
+  // (anyone who paid or booked in the window), not the all-time active count.
+  const periodActiveStudents = new Set<string>()
+  paidCurRows.forEach(p => { if (p.student_id) periodActiveStudents.add(p.student_id) })
+  bCur.forEach(b => { if (b.student_id) periodActiveStudents.add(b.student_id) })
+  const arpu = periodActiveStudents.size ? round1(gtvCur / periodActiveStudents.size) : 0
   const arpt = earningTeachers ? round1(payoutCur / earningTeachers) : 0
 
-  // Repeat-purchase retention (distinct students/teachers active in BOTH windows)
-  const curTeachers = new Set(okCur.map(p => p.teacher_id))
-  const prevPayStudents = new Set(okPrev.map(p => p.student_id))
-  const prevPayTeachers = new Set(okPrev.map(p => p.teacher_id))
+  // [5.2] Repeat-purchase retention (distinct PAID students/teachers in both windows)
+  const curTeachers = new Set(paidCurRows.map(p => p.teacher_id))
+  const prevPayStudents = new Set(paidPrevRows.map(p => p.student_id))
+  const prevPayTeachers = new Set(paidPrevRows.map(p => p.teacher_id))
   let sRet = 0; prevPayStudents.forEach(s => { if (paidStudents.has(s)) sRet++ })
   let tRet = 0; prevPayTeachers.forEach(t => { if (curTeachers.has(t)) tRet++ })
   const studentRetention = prevPayStudents.size ? round1((sRet / prevPayStudents.size) * 100) : 0
   const teacherRetention = prevPayTeachers.size ? round1((tRet / prevPayTeachers.size) * 100) : 0
 
-  // New registrations in window
-  const newStudCur  = profs.filter(p => p.role === 'student' && inCur(p.created_at)).length
-  const newStudPrev = profs.filter(p => p.role === 'student' && inPrev(p.created_at)).length
+  // [5.8] New registrations in window — ALL roles, not just students.
+  const newStudCur  = profs.filter(p => inCur(p.created_at)).length
+  const newStudPrev = profs.filter(p => inPrev(p.created_at)).length
 
   // ── Daily series for the current window ───────────────────────────────────
   const allDates = [...okCur.map(p => p.created_at), ...bCur.map(b => b.created_at), ...profs.filter(p => inCur(p.created_at)).map(p => p.created_at)]
@@ -141,7 +173,7 @@ export async function GET(req: Request) {
       totalRevenue:    { value: round1(gtvCur),  growth: growth(gtvCur, gtvPrev) },
       commission:      { value: round1(comCur),  growth: growth(comCur, comPrev) },
       gtv:             { value: round1(gtvCur),  growth: growth(gtvCur, gtvPrev) },
-      mrr:             { value: round1(mrr),     growth: 0, note: 'Last 30 days (proxy)' },
+      mrr:             { value: round1(mrr),     growth: 0, note: 'Active subscriptions, monthly-normalized' },
       activeStudents:  { value: activeStudents.count ?? 0, growth: 0 },
       activeTeachers:  { value: approvedTeachers.count ?? 0, growth: 0 },
       newToday:        { value: newToday.count ?? 0 },

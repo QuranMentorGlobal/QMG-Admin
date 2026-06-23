@@ -10,9 +10,10 @@ export async function GET() {
   const svc = service()
 
   // Resilient: drop optional columns (provider/payment_type) if they don't exist.
-  let pres: any = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at, teacher_id')
-  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, created_at, teacher_id')
-  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, status, created_at')
+  // [6.1] Explicit high limit on every variant — Supabase silently caps at 1000.
+  let pres: any = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at, teacher_id').limit(100000)
+  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, created_at, teacher_id').limit(100000)
+  if (pres.error) pres = await svc.from('payments').select('gross_amount_usd, platform_fee_usd, status, created_at').limit(100000)
   const all: any[] = pres.data || []
   const ok = all.filter(p => p.status === 'succeeded')
 
@@ -21,7 +22,10 @@ export async function GET() {
   const commission = ok.reduce((s, p) => s + (Number(p.platform_fee_usd) || 0), 0)
   const payout = ok.reduce((s, p) => s + (Number(p.teacher_payout_usd) || 0), 0)
   const counts = { succeeded: ok.length, failed: all.filter(p => p.status === 'failed').length, refunded: all.filter(p => p.status === 'refunded').length, pending: all.filter(p => p.status === 'pending').length, total: all.length }
-  const aov = ok.length ? r1(gross / ok.length) : 0
+  // [6.2] AOV over PAID orders only (exclude $0 / trial rows that deflate it).
+  const paidOrders = ok.filter(p => (Number(p.gross_amount_usd) || 0) > 0 && p.payment_type !== 'trial')
+  const paidGross = paidOrders.reduce((s, p) => s + (Number(p.gross_amount_usd) || 0), 0)
+  const aov = paidOrders.length ? r1(paidGross / paidOrders.length) : 0
 
   // Last 12 months series
   const now = new Date(); const keys: string[] = []

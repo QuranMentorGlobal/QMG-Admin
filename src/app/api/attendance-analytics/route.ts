@@ -16,7 +16,7 @@ function getAdmin() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-const MAX_ROWS = 8000
+const MAX_ROWS = 100000
 const rate = (p: number, l: number, a: number) => { const d = p + l + a; return d > 0 ? Math.round(((p + l) / d) * 100) : 0 }
 type Bucket = { present: number; late: number; absent: number; excused: number }
 const newBucket = (): Bucket => ({ present: 0, late: 0, absent: 0, excused: 0 })
