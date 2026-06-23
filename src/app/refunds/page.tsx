@@ -15,8 +15,8 @@ import {
   RotateCcw, DollarSign, CalendarClock, Users, GraduationCap, Search, Download, MessageSquareWarning,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A'
-const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626', INDIGO = '#6366F1'
+const GOLD = '#C9A227', INK = '#111111'
+const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626', INDIGO = '#6366F1'
 
 function money(n: number) { if (Math.abs(n) >= 1_000_000) return '$' + (n / 1e6).toFixed(1) + 'M'; if (Math.abs(n) >= 1000) return '$' + (n / 1000).toFixed(1) + 'k'; return '$' + Math.round(n).toLocaleString() }
 function full(n: number) { return '$' + (Number(n) || 0).toFixed(2) }
@@ -25,7 +25,7 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleDateString('en-GB',
 
 const INITIATOR: Record<string, { bg: string; color: string; label: string }> = {
   student: { bg: 'rgba(99,102,241,0.1)', color: INDIGO, label: 'Student cancelled' },
-  teacher: { bg: 'rgba(184,149,42,0.12)', color: GOLD, label: 'Teacher declined' },
+  teacher: { bg: 'rgba(201,162,39,0.12)', color: GOLD, label: 'Teacher declined' },
   admin: { bg: 'rgba(22,163,74,0.1)', color: GREEN, label: 'Admin' },
   system: { bg: '#F3F4F6', color: MUTED, label: 'System' },
 }
@@ -100,11 +100,11 @@ export default function AdminRefundsPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Refunds &amp; Cancellations</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Every refund issued when a paid booking is cancelled or declined.</p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
       </div>
 
       {d?.tableMissing && (
-        <div style={{ background: 'rgba(184,149,42,0.08)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', marginBottom: 18, fontSize: 12.5, color: INK }}>
+        <div style={{ background: 'rgba(201,162,39,0.08)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', marginBottom: 18, fontSize: 12.5, color: INK }}>
           The <strong>booking_refunds</strong> table isn&apos;t present yet. Run <code>migration_marketplace_integrity.sql</code> in Supabase — this view populates automatically once refunds start flowing.
         </div>
       )}
@@ -166,7 +166,7 @@ export default function AdminRefundsPage() {
               {topReasons.map((r: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ flex: '0 0 200px', fontSize: 12.5, color: INK, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.reason}</span>
-                  <div style={{ flex: 1, height: 8, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.round((r.count / maxReason) * 100)}%`, background: 'linear-gradient(90deg,#C8A24A,#D4AF37)', borderRadius: 99 }} /></div>
+                  <div style={{ flex: 1, height: 8, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.round((r.count / maxReason) * 100)}%`, background: 'linear-gradient(90deg,#166534,#C9A227)', borderRadius: 99 }} /></div>
                   <span style={{ flex: '0 0 32px', textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: GOLD }}>{r.count}</span>
                 </div>
               ))}

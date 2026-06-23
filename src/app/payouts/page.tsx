@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 // Charcoal-gold admin palette
-const GOLD = '#C8A24A'
-const DARK = '#0B0B0B'
+const GOLD = '#C9A227'
+const DARK = '#111111'
 const INK  = '#111111'
 const MUTED = '#6B7280'
 
@@ -31,7 +31,7 @@ interface PayoutRow {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string }> = {
-    pending:    { bg: 'rgba(200,162,74,0.14)', color: '#C8A24A' },
+    pending:    { bg: 'rgba(201,162,39,0.14)', color: '#C9A227' },
     approved:   { bg: 'rgba(99,102,241,0.12)', color: '#6366F1' },
     processing: { bg: 'rgba(99,102,241,0.12)', color: '#6366F1' },
     completed:  { bg: 'rgba(22,163,74,0.12)',  color: '#16A34A' },
@@ -106,7 +106,7 @@ export default function AdminPayoutsPage() {
           { label: 'Approved (unpaid)', value: fmt(totals.approved), color: '#6366F1' },
           { label: 'Total Paid Out', value: fmt(totals.completed), color: '#16A34A' },
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: 16, padding: 18, border: '1px solid rgba(200,162,74,0.12)' }}>
+          <div key={s.label} style={{ background: '#fff', borderRadius: 16, padding: 18, border: '1px solid rgba(201,162,39,0.12)' }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{s.label}</div>
           </div>
@@ -118,14 +118,14 @@ export default function AdminPayoutsPage() {
         {(['pending','approved','completed','rejected','all'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
-              background: filter === f ? GOLD : '#fff', color: filter === f ? '#1A1400' : MUTED, border: `1px solid ${filter === f ? GOLD : '#E5E7EB'}` }}>
+              background: filter === f ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: filter === f ? '#111111' : MUTED, border: `1px solid ${filter === f ? GOLD : '#E5E7EB'}` }}>
             {f} {f !== 'all' && `(${rows.filter(r => r.status === f).length})`}
           </button>
         ))}
       </div>
 
       {/* Table */}
-      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(200,162,74,0.12)' }}>
+      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(201,162,39,0.12)' }}>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: MUTED }}>Loading…</div>
         ) : filtered.length === 0 ? (
@@ -133,7 +133,7 @@ export default function AdminPayoutsPage() {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'rgba(200,162,74,0.05)', textAlign: 'left' }}>
+              <tr style={{ background: 'rgba(201,162,39,0.05)', textAlign: 'left' }}>
                 {['Teacher', 'Amount', 'Method', 'Requested', 'Status', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: 11, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5 }}>{h}</th>
                 ))}
@@ -141,7 +141,7 @@ export default function AdminPayoutsPage() {
             </thead>
             <tbody>
               {filtered.map(r => (
-                <tr key={r.id} style={{ borderTop: '1px solid rgba(200,162,74,0.07)' }}>
+                <tr key={r.id} style={{ borderTop: '1px solid rgba(201,162,39,0.07)' }}>
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600, color: INK }}>{r.teacher_name}</td>
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: INK }}>{fmt(r.amount_usd, r.currency)}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED, textTransform: 'capitalize' }}>{(r.payout_method || '—').replace('_', ' ')}</td>
@@ -150,7 +150,7 @@ export default function AdminPayoutsPage() {
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       <button onClick={() => setDetail(r)}
-                        style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', background: 'rgba(200,162,74,0.08)', color: GOLD, border: 'none' }}>
+                        style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', background: 'rgba(201,162,39,0.08)', color: GOLD, border: 'none' }}>
                         View
                       </button>
                       {r.status === 'pending' && (
@@ -186,7 +186,7 @@ export default function AdminPayoutsPage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 460, width: '100%' }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: INK, margin: '0 0 4px' }}>Payout Details</h3>
             <p style={{ fontSize: 13, color: MUTED, margin: '0 0 16px' }}>{detail.teacher_name} · {fmt(detail.amount_usd, detail.currency)}</p>
-            <div style={{ background: 'rgba(200,162,74,0.05)', borderRadius: 12, padding: 16, fontSize: 13 }}>
+            <div style={{ background: 'rgba(201,162,39,0.05)', borderRadius: 12, padding: 16, fontSize: 13 }}>
               {detail.payout_settings_snapshot && Object.entries(detail.payout_settings_snapshot)
                 .filter(([k, v]) => v && !['id','teacher_id','created_at','updated_at','is_verified'].includes(k))
                 .map(([k, v]) => (
@@ -201,7 +201,7 @@ export default function AdminPayoutsPage() {
                 Rejected: {detail.rejection_reason}
               </div>
             )}
-            <button onClick={() => setDetail(null)} style={{ marginTop: 16, width: '100%', padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#F5F0E8', color: INK, border: 'none' }}>Close</button>
+            <button onClick={() => setDetail(null)} style={{ marginTop: 16, width: '100%', padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#F8F5EE', color: INK, border: 'none' }}>Close</button>
           </div>
         </div>
       )}

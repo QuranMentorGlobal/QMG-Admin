@@ -7,7 +7,7 @@ import AdminLayout from '@/components/AdminLayout'
 import { Award, Search, Plus, X, History, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { TEACHER_BADGES, STUDENT_BADGES, PARENT_BADGES, BADGE_BY_KEY, type BadgeDef } from '@/lib/badges'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 type U = { id: string; first_name: string; last_name: string; email: string; role: string }
 type UB = { badge_key: string; source: string; reason: string | null; created_at: string }
@@ -112,7 +112,7 @@ export default function BadgeManagementPage() {
               </div>
             )}
           </div>
-          <button onClick={search} style={{ padding: '10px 18px', borderRadius: 12, background: GOLD, color: '#1A1400', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Search</button>
+          <button onClick={search} style={{ padding: '10px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Search</button>
           <button onClick={backfill} disabled={busy} style={{ padding: '10px 16px', borderRadius: 12, background: '#fff', color: INK, border: `1px solid ${BORDER}`, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <RefreshCw size={15} /> Backfill all
           </button>
@@ -137,7 +137,7 @@ export default function BadgeManagementPage() {
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, padding: '10px 16px', borderBottom: `1px solid ${BORDER}` }}>
               {([['badges', 'Badges', Award], ['history', 'History', History], ['thresholds', 'Thresholds', SlidersHorizontal]] as const).map(([k, lbl, Ic]) => (
-                <button key={k} onClick={() => setTab(k)} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: tab === k ? GOLD : 'transparent', color: tab === k ? '#1A1400' : MUTED }}>
+                <button key={k} onClick={() => setTab(k)} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: tab === k ? 'linear-gradient(135deg,#166534,#C9A227)' : 'transparent', color: tab === k ? '#111111' : MUTED }}>
                   <Ic size={14} /> {lbl}
                 </button>
               ))}
@@ -158,7 +158,7 @@ export default function BadgeManagementPage() {
                           </div>
                           {has
                             ? <button onClick={() => remove(b.key)} disabled={busy} title="Remove" style={{ background: 'rgba(220,38,38,0.08)', color: RED, border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', flexShrink: 0 }}><X size={15} /></button>
-                            : <button onClick={() => assign(b.key)} disabled={busy} title="Assign" style={{ background: 'rgba(184,149,42,0.1)', color: GOLD, border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', flexShrink: 0 }}><Plus size={15} /></button>}
+                            : <button onClick={() => assign(b.key)} disabled={busy} title="Assign" style={{ background: 'rgba(201,162,39,0.1)', color: GOLD, border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', flexShrink: 0 }}><Plus size={15} /></button>}
                         </div>
                         {has && <span style={{ display: 'inline-block', marginTop: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 20, background: src === 'manual' ? 'rgba(99,102,241,0.1)' : 'rgba(22,163,74,0.1)', color: src === 'manual' ? '#6366F1' : GREEN }}>{src === 'manual' ? 'Manual' : 'Auto'}</span>}
                       </div>
@@ -222,7 +222,7 @@ function ThresholdRow({ def, current, onSave, busy }: { def: BadgeDef; current: 
         ))}
       </div>
       <button onClick={() => onSave(Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, Number(v)])))} disabled={busy}
-        style={{ padding: '6px 14px', borderRadius: 9, background: GOLD, color: '#1A1400', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Save</button>
+        style={{ padding: '6px 14px', borderRadius: 9, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Save</button>
     </div>
   )
 }

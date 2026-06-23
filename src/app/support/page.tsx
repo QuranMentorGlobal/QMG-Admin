@@ -11,7 +11,7 @@ import AdminLayout from '@/components/AdminLayout'
 import { format } from 'date-fns'
 import { Search, Inbox, AlertTriangle, CheckCircle2, Clock, MessageSquare, Send, Tag, Flag } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 const PRIORITY: Record<string, { bg: string; color: string }> = {
   urgent: { bg: 'rgba(239,68,68,0.12)', color: RED }, high: { bg: 'rgba(249,115,22,0.12)', color: '#EA580C' },
@@ -93,7 +93,7 @@ export default function AdminSupportPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? GOLD : RED, color: toast.startsWith('✅') ? '#1A1400' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? 'linear-gradient(135deg,#166534,#C9A227)' : RED, color: toast.startsWith('✅') ? '#111111' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Support</h1>
@@ -129,7 +129,7 @@ export default function AdminSupportPage() {
       {/* Filters */}
       <div className="qmg-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 14 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {STATUSES.map(s => <button key={s} onClick={() => setFStatus(s)} style={{ padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: fStatus === s ? 'none' : `1px solid ${BORDER}`, background: fStatus === s ? GOLD : '#fff', color: fStatus === s ? '#1A1400' : '#6B6B6B' }}>{s.replace('_', ' ')}</button>)}
+          {STATUSES.map(s => <button key={s} onClick={() => setFStatus(s)} style={{ padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: fStatus === s ? 'none' : `1px solid ${BORDER}`, background: fStatus === s ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: fStatus === s ? '#111111' : '#6B6B6B' }}>{s.replace('_', ' ')}</button>)}
         </div>
         <select value={fCat} onChange={e => setFCat(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600 }}>
           <option value="all">All categories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>)}
@@ -176,7 +176,7 @@ export default function AdminSupportPage() {
               <h2 style={{ fontSize: 17, fontWeight: 800, color: INK, margin: '0 0 4px', fontFamily: "'Fraunces',serif" }}>{selected.subject}</h2>
               <p style={{ fontSize: 12, color: MUTED, margin: '0 0 12px' }}>From {selected.userName} · {selected.userEmail}</p>
               {selected.message && <p style={{ fontSize: 13.5, color: '#444', lineHeight: 1.6, margin: '0 0 14px', padding: '12px 14px', background: '#FBF8F1', borderRadius: 11, border: `1px solid ${BORDER}` }}>{selected.message}</p>}
-              {selected.adminReply && <div style={{ margin: '0 0 14px', padding: '12px 14px', background: 'rgba(184,149,42,0.06)', borderRadius: 11, border: '1px solid rgba(184,149,42,0.25)' }}><p style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Previous reply</p><p style={{ fontSize: 13, color: '#444', margin: 0, lineHeight: 1.55 }}>{selected.adminReply}</p></div>}
+              {selected.adminReply && <div style={{ margin: '0 0 14px', padding: '12px 14px', background: 'rgba(201,162,39,0.06)', borderRadius: 11, border: '1px solid rgba(201,162,39,0.25)' }}><p style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Previous reply</p><p style={{ fontSize: 13, color: '#444', margin: 0, lineHeight: 1.55 }}>{selected.adminReply}</p></div>}
 
               <textarea value={reply} onChange={e => setReply(e.target.value)} placeholder="Write a reply…" rows={4} style={{ width: '100%', padding: 12, borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13.5, fontFamily: "'Inter',sans-serif", color: INK, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
 
@@ -191,7 +191,7 @@ export default function AdminSupportPage() {
                     {PRIORITIES.map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
                   </select>
                 </label>
-                <button onClick={save} disabled={sending} style={{ display: 'flex', alignItems: 'center', gap: 7, marginLeft: 'auto', padding: '9px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 700, opacity: sending ? 0.6 : 1 }}><Send size={14} /> {sending ? 'Saving…' : 'Send & Update'}</button>
+                <button onClick={save} disabled={sending} style={{ display: 'flex', alignItems: 'center', gap: 7, marginLeft: 'auto', padding: '9px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: sending ? 0.6 : 1 }}><Send size={14} /> {sending ? 'Saving…' : 'Send & Update'}</button>
               </div>
             </>
           )}

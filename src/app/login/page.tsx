@@ -38,14 +38,14 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0B0B] px-4"
-      style={{ background: 'linear-gradient(135deg, #0B0B0B 0%, #B8952A 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center bg-[#111111] px-4"
+      style={{ background: 'linear-gradient(135deg, #111111 0%, #166534 100%)' }}>
       
       {/* Decorative circles */}
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
-        style={{ background: '#B8952A', transform: 'translate(30%, -30%)' }} />
+        style={{ background: 'linear-gradient(135deg,#166534,#C9A227)', transform: 'translate(30%, -30%)' }} />
       <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10"
-        style={{ background: '#B8952A', transform: 'translate(-30%, 30%)' }} />
+        style={{ background: 'linear-gradient(135deg,#166534,#C9A227)', transform: 'translate(-30%, 30%)' }} />
 
       <div className="relative w-full max-w-md">
         {/* Card */}
@@ -53,12 +53,12 @@ export default function AdminLoginPage() {
           {/* Logo / Brand */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-              style={{ background: 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
+              style={{ background: 'linear-gradient(135deg, #166534, #111111)' }}>
               <span className="text-2xl">🕌</span>
             </div>
-            <h1 className="font-display text-2xl font-bold text-[#141414]">QuranMentor<span style={{ color: '#B8952A' }}>Global</span></h1>
+            <h1 className="font-display text-2xl font-bold text-[#111111]">QuranMentor<span style={{ color: '#C9A227' }}>Global</span></h1>
             <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase"
-              style={{ background: '#F0E4B8', color: '#B8952A' }}>
+              style={{ background: '#F0E4B8', color: '#C9A227' }}>
               Admin Panel
             </div>
           </div>
@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@quranmentorglobal.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C8A24A] focus:ring-2 focus:ring-[#EFE2B5]"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C9A227] focus:ring-2 focus:ring-[#EFE2B5]"
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />
             </div>
@@ -93,7 +93,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C8A24A] focus:ring-2 focus:ring-[#EFE2B5]"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C9A227] focus:ring-2 focus:ring-[#EFE2B5]"
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />
             </div>
@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
               onClick={handleLogin}
               disabled={loading}
               className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #B8952A, #0B0B0B)', boxShadow: '0 8px 24px rgba(184,149,42,0.35)' }}>
+              style={{ background: 'linear-gradient(135deg, #166534, #111111)', boxShadow: '0 8px 24px rgba(201,162,39,0.35)' }}>
               {loading ? 'Signing in...' : 'Sign In to Admin Panel'}
             </button>
           </div>

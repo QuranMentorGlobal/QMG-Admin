@@ -83,14 +83,14 @@ export default function TeacherManagementPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search teachers..."
-              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C8A24A] w-64"
+              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C9A227] w-64"
             />
           </div>
         </div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold flex items-center gap-2"
-            style={{ background: toast.k === 'error' ? '#DC2626' : '#B8952A' }}>
+            style={{ background: toast.k === 'error' ? '#DC2626' : 'linear-gradient(135deg,#166534,#C9A227)' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
               {toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}
             </svg>
@@ -106,7 +106,7 @@ export default function TeacherManagementPage() {
               <div key={t.id}
                 className="adminx-row bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
-                  style={{ background: t.status === 'suspended' ? '#9CA3AF' : 'linear-gradient(135deg, #B8952A, #0B0B0B)' }}>
+                  style={{ background: t.status === 'suspended' ? '#9CA3AF' : 'linear-gradient(135deg, #166534, #111111)' }}>
                   {(t.profiles?.first_name || 'T')[0]}
                 </div>
                 <div className="flex-1">
@@ -129,7 +129,7 @@ export default function TeacherManagementPage() {
                   <a
                     href={`/teachers/${t.id}`}
                     className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 text-center"
-                    style={{ background: '#fff', color: '#1A1A1A', borderColor: '#E8E4DA' }}>
+                    style={{ background: '#fff', color: '#111111', borderColor: '#E8E4DA' }}>
                     View
                   </a>
                   <button
@@ -137,7 +137,7 @@ export default function TeacherManagementPage() {
                     disabled={actionLoading === t.id}
                     className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50"
                     style={t.status === 'suspended'
-                      ? { background: '#B8952A', color: '#fff', borderColor: '#B8952A' }
+                      ? { background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', borderColor: '#C9A227' }
                       : { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }}>
                     {actionLoading === t.id ? '...' : t.status === 'suspended' ? 'Reinstate' : 'Suspend'}
                   </button>

@@ -19,8 +19,8 @@ import {
   AlertTriangle, CreditCard, Award, BookOpen, Activity, ArrowUpRight, ShieldCheck, Zap, RotateCcw,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', GOLD_L = '#D4AF50', INK = '#1A1A1A', INK_MID = '#3D3D3D'
-const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', GOLD_L = '#E3C04A', INK = '#111111', INK_MID = '#3D3D3D'
+const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626', CREAM = '#F8F5EE'
 
 const RANGES = [
   { key: '7', label: '7 Days' }, { key: '30', label: '30 Days' }, { key: '90', label: '90 Days' },
@@ -288,7 +288,7 @@ export default function DashboardPage() {
             </div>
           )}
           {canExport && (
-            <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700, fontFamily: "'Inter',sans-serif" }}>
+            <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700, fontFamily: "'Inter',sans-serif" }}>
               <Download size={14} /> Export CSV
             </button>
           )}
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                 : <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {topTeachers.map((t, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: i < topTeachers.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                      <span style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                      <span style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg,#166534,#C9A227)' : CREAM, color: i === 0 ? '#111111' : GOLD, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</p>
                         <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0' }}>{t.lessons} lessons · {fmtMoney(t.payout)} payout</p>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
                 : <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {topCourses.map((c, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: i < topCourses.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                      <span style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                      <span style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg,#166534,#C9A227)' : CREAM, color: i === 0 ? '#111111' : GOLD, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.course}</p>
                         <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0' }}>{c.enrollments} enrollments</p>
@@ -505,9 +505,9 @@ export default function DashboardPage() {
         @keyframes qmgrise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         .adminx-rise{animation:qmgrise .5s cubic-bezier(.4,0,.2,1) both}
         .adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}
-        .adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.55)!important}
+        .adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(201,162,39,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.55)!important}
         .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-        .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.5)!important}
+        .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.5)!important}
         @media(max-width:1100px){ .qmg-kpi-grid{grid-template-columns:repeat(3,1fr)!important} .qmg-two{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:repeat(2,1fr)!important} }
         @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2,1fr)!important} .qmg-qa{grid-template-columns:repeat(3,1fr)!important} }
         @media(max-width:380px){ .qmg-kpi-grid{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:1fr!important} }

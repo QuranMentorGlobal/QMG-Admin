@@ -14,11 +14,11 @@ import {
   CheckCircle2, Clock, XCircle, DollarSign, ArrowUpRight, User, GraduationCap,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   pending: { bg: '#FEF3C7', color: '#D97706' },
-  confirmed: { bg: '#F7F1E2', color: '#B8952A' },
+  confirmed: { bg: '#F8F5EE', color: '#C9A227' },
   completed: { bg: 'rgba(22,163,74,0.1)', color: GREEN },
   cancelled: { bg: '#FEE2E2', color: RED },
 }
@@ -145,7 +145,7 @@ export default function BookingsPage() {
         <div className="qmg-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {STATUSES.map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)} style={{ padding: '7px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: statusFilter === s ? 'none' : `1px solid ${BORDER}`, background: statusFilter === s ? GOLD : '#fff', color: statusFilter === s ? '#1A1400' : '#6B6B6B' }}>{s}</button>
+              <button key={s} onClick={() => setStatusFilter(s)} style={{ padding: '7px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer', border: statusFilter === s ? 'none' : `1px solid ${BORDER}`, background: statusFilter === s ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: statusFilter === s ? '#111111' : '#6B6B6B' }}>{s}</button>
             ))}
           </div>
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600, cursor: 'pointer' }}>

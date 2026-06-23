@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { GitCompareArrows, CheckCircle, XCircle, MessageSquareWarning, ArrowRight, Clock, ShieldAlert } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE'
 
 type ChangeReq = {
   id: string
@@ -79,7 +79,7 @@ export default function ReVerificationPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 16px', borderRadius: 12, background: toast.k === 'error' ? '#DC2626' : GOLD, color: toast.k === 'error' ? '#fff' : '#1A1400', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', gap: 8 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">{toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}</svg>{toast.m}</div>}
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 16px', borderRadius: 12, background: toast.k === 'error' ? '#DC2626' : 'linear-gradient(135deg,#166534,#C9A227)', color: toast.k === 'error' ? '#fff' : '#111111', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', gap: 8 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">{toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}</svg>{toast.m}</div>}
 
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>

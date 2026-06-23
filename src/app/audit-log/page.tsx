@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { Search, ShieldCheck } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE'
 
 type Log = { id: string; actor_name: string; action: string; target_type: string | null; target_id: string | null; details: any; created_at: string }
 

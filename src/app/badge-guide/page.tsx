@@ -14,10 +14,10 @@ import {
   type BadgeDef, type BadgeIconKey,
 } from '@/lib/badges'
 
-const INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', GOLD = '#B8952A'
+const INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', GOLD = '#C9A227'
 const ACCENT: Record<string, string> = {
-  trust: '#1B5E37', performance: '#B8952A', specialization: '#0F766E',
-  progress: '#B8952A', attendance: '#1B5E37', achievement: '#B8952A',
+  trust: '#1B5E37', performance: '#C9A227', specialization: '#0F766E',
+  progress: '#C9A227', attendance: '#1B5E37', achievement: '#C9A227',
 }
 
 function Icon({ icon, color, size = 20 }: { icon: BadgeIconKey; color: string; size?: number }) {

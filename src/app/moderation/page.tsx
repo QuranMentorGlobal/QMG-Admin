@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { ShieldAlert, CheckCircle, XCircle, Clock, MessageSquareWarning, AlertTriangle } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', RED = '#DC2626'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', RED = '#DC2626'
 
 type Person = { name: string; role: string; email: string }
 type Msg = { body: string; created_at: string; sender: string; senderRole: string }
@@ -87,7 +87,7 @@ export default function ModerationPage() {
   return (
     <AdminLayout adminName={adminName}>
       {toast && (
-        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 60, background: toast.k === 'success' ? GOLD : RED, color: '#fff', padding: '12px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14, boxShadow: '0 8px 24px rgba(0,0,0,.18)' }}>{toast.m}</div>
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 60, background: toast.k === 'success' ? 'linear-gradient(135deg,#166534,#C9A227)' : RED, color: '#fff', padding: '12px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14, boxShadow: '0 8px 24px rgba(0,0,0,.18)' }}>{toast.m}</div>
       )}
 
       <div style={{ maxWidth: 980 }}>
@@ -181,7 +181,7 @@ export default function ModerationPage() {
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
                     <button onClick={() => act(f, 'review')} disabled={!!busy}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: GOLD, color: '#1A1400', border: 'none', fontWeight: 800, fontSize: 13, padding: '9px 16px', borderRadius: 10, cursor: 'pointer', opacity: busy ? .6 : 1 }}>
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', border: 'none', fontWeight: 800, fontSize: 13, padding: '9px 16px', borderRadius: 10, cursor: 'pointer', opacity: busy ? .6 : 1 }}>
                       <CheckCircle size={15} /> {busy === f.id + 'review' ? 'Saving…' : 'Mark reviewed'}
                     </button>
                     <button onClick={() => act(f, 'dismiss')} disabled={!!busy}

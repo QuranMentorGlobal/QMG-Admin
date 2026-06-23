@@ -71,14 +71,14 @@ export default function StudentManagementPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search students..."
-              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C8A24A] w-64"
+              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C9A227] w-64"
             />
           </div>
         </div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ background: '#B8952A' }}>{toast}</div>
+            style={{ background: 'linear-gradient(135deg,#166534,#C9A227)' }}>{toast}</div>
         )}
 
         {loading ? (
@@ -89,7 +89,7 @@ export default function StudentManagementPage() {
               <div key={s.id}
                 className="adminx-row bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0"
-                  style={{ background: s.is_active ? 'linear-gradient(135deg, #B8952A, #D4AF50)' : '#9CA3AF' }}>
+                  style={{ background: s.is_active ? 'linear-gradient(135deg, #166534, #C9A227)' : '#9CA3AF' }}>
                   {(s.first_name || 'S')[0]}
                 </div>
                 <div className="flex-1">
@@ -111,7 +111,7 @@ export default function StudentManagementPage() {
                   <a
                     href={`/students/${s.id}`}
                     className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 text-center"
-                    style={{ background: '#fff', color: '#1A1A1A', borderColor: '#E8E4DA' }}>
+                    style={{ background: '#fff', color: '#111111', borderColor: '#E8E4DA' }}>
                     View
                   </a>
                   <button
@@ -120,7 +120,7 @@ export default function StudentManagementPage() {
                     className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 disabled:opacity-50"
                     style={s.is_active
                       ? { background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }
-                      : { background: '#F7F1E2', color: '#B8952A', borderColor: '#C6E6D1' }}>
+                      : { background: '#F8F5EE', color: '#C9A227', borderColor: '#C6E6D1' }}>
                     {actionLoading === s.id ? '...' : s.is_active ? 'Deactivate' : 'Reactivate'}
                   </button>
                 </div>

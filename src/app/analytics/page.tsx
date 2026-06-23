@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { Download, FileText, Sparkles, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
 
-const GOLD = '#B8952A', GOLD_L = '#D4AF50', INK = '#1A1A1A', INK_MID = '#3D3D3D'
+const GOLD = '#C9A227', GOLD_L = '#E3C04A', INK = '#111111', INK_MID = '#3D3D3D'
 const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626'
 
 const RANGES = [
@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
           <button onClick={exportCSV} className="qmg-noprint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 11, border: `1px solid ${BORDER}`, cursor: 'pointer', background: '#fff', color: INK, fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> CSV</button>
-          <button onClick={() => window.print()} className="qmg-noprint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700 }}><FileText size={14} /> PDF</button>
+          <button onClick={() => window.print()} className="qmg-noprint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><FileText size={14} /> PDF</button>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ export default function AnalyticsPage() {
                         <span style={{ color: MUTED }}>{fmtNum(f.value)}{stepConv != null && <span style={{ color: GOLD, fontWeight: 700 }}> · {stepConv}%</span>}</span>
                       </div>
                       <div style={{ height: 26, background: '#F3EEE3', borderRadius: 8, overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.max(4, pct)}%`, height: '100%', background: `linear-gradient(90deg, ${GOLD}, ${GOLD_L})`, borderRadius: 8 }} />
+                        <div style={{ width: `${Math.max(4, pct)}%`, height: '100%', background: `linear-gradient(90deg, #166534, #C9A227)`, borderRadius: 8 }} />
                       </div>
                     </div>
                   )
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
               <Panel title="Geographic Distribution" right={
                 <div style={{ display: 'flex', gap: 4 }}>
                   {(['students', 'teachers', 'revenue'] as const).map(m => (
-                    <button key={m} onClick={() => setGeoMetric(m)} style={{ border: 'none', cursor: 'pointer', padding: '5px 11px', borderRadius: 8, fontSize: 11.5, fontWeight: 700, textTransform: 'capitalize', background: geoMetric === m ? '#F7F1E2' : 'transparent', color: geoMetric === m ? GOLD : MUTED }}>{m}</button>
+                    <button key={m} onClick={() => setGeoMetric(m)} style={{ border: 'none', cursor: 'pointer', padding: '5px 11px', borderRadius: 8, fontSize: 11.5, fontWeight: 700, textTransform: 'capitalize', background: geoMetric === m ? '#F8F5EE' : 'transparent', color: geoMetric === m ? GOLD : MUTED }}>{m}</button>
                   ))}
                 </div>
               }>
@@ -230,7 +230,7 @@ export default function AnalyticsPage() {
                       <div key={g.country} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ width: 110, fontSize: 12.5, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.country}</span>
                         <div style={{ flex: 1, height: 18, background: '#F3EEE3', borderRadius: 6, overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.max(3, ((g[geoMetric] || 0) / geoMax) * 100)}%`, height: '100%', background: GOLD }} />
+                          <div style={{ width: `${Math.max(3, ((g[geoMetric] || 0) / geoMax) * 100)}%`, height: '100%', background: 'linear-gradient(135deg,#166534,#C9A227)' }} />
                         </div>
                         <span style={{ width: 70, textAlign: 'right', fontSize: 12, fontWeight: 700, color: INK }}>{fmtGeo(g[geoMetric] || 0)}</span>
                       </div>
@@ -333,7 +333,7 @@ export default function AnalyticsPage() {
           {tab === 'Marketing' && (
             <Panel title="Marketing Analytics">
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 16px', borderRadius: 12, background: '#FFF8E8', border: '1px solid #FDE68A', marginBottom: 16 }}>
-                <AlertTriangle size={18} style={{ color: '#B8952A', flexShrink: 0, marginTop: 1 }} />
+                <AlertTriangle size={18} style={{ color: '#C9A227', flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontSize: 12.5, color: '#92400E', margin: 0 }}>Visitor, traffic-source and landing-page conversion data needs a web-analytics integration (e.g. GA4 or Plausible). Once connected, these widgets populate automatically. The conversions below are computed from real platform data.</p>
               </div>
               <div className="qmg-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>

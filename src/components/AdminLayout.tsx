@@ -1,7 +1,7 @@
 // ============================================================
 // PASTE THIS WHOLE FILE INTO:  src/components/AdminLayout.tsx
 // (Admin chrome — charcoal-gold redesign to match the platform portal.
-//  Solid #141414 sidebar + top bar, gold nav, rounded cream content panel.
+//  Solid #111111 sidebar + top bar, gold nav, rounded cream content panel.
 //  Nav items + routes UNCHANGED; added pending/ticket count badges.)
 // ============================================================
 'use client'
@@ -55,7 +55,7 @@ const LOGO_SRC = '/logo.png'
 function Wordmark({ size = 16, light = true }: { size?: number; light?: boolean }) {
   return (
     <span style={{ fontFamily: "'Fraunces', serif", fontSize: size, fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1, color: light ? '#ffffff' : '#111111', whiteSpace: 'nowrap' }}>
-      Quran<span style={{ color: '#D4AF50' }}>Mentor</span>Global
+      Quran<span style={{ color: '#E3C04A' }}>Mentor</span>Global
     </span>
   )
 }
@@ -64,44 +64,44 @@ function Wordmark({ size = 16, light = true }: { size?: number; light?: boolean 
 const ADMINX_STYLES = `
 .adminx-nav{display:flex;align-items:center;gap:11px;width:100%;padding:10px 13px;border-radius:12px;margin-bottom:2px;background:transparent;border:none;border-left:3px solid transparent;color:#fff;font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;text-align:left;cursor:pointer;transition:background .2s ease,transform .2s cubic-bezier(.4,0,.2,1),color .2s ease,border-color .2s ease}
 .adminx-nav:hover{background:rgba(255,255,255,.06);transform:translateX(3px)}
-.adminx-nav-active{background:linear-gradient(90deg,rgba(200,162,74,.24),rgba(200,162,74,.07));color:#E8C766;border-left:3px solid #C8A24A;font-weight:700;box-shadow:inset 0 0 0 1px rgba(200,162,74,.12)}
-.adminx-badge{flex-shrink:0;min-width:20px;height:20px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:linear-gradient(135deg,#D4AF50,#B8952A);color:#141414;font-size:11px;font-weight:800;font-family:'Inter',sans-serif;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35);animation:adminxpop .25s cubic-bezier(.34,1.56,.64,1) both}
+.adminx-nav-active{background:linear-gradient(90deg,rgba(201,162,39,.24),rgba(201,162,39,.07));color:#E3C04A;border-left:3px solid #C9A227;font-weight:700;box-shadow:inset 0 0 0 1px rgba(201,162,39,.12)}
+.adminx-badge{flex-shrink:0;min-width:20px;height:20px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:linear-gradient(135deg,#E3C04A,#C9A227);color:#111111;font-size:11px;font-weight:800;font-family:'Inter',sans-serif;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35);animation:adminxpop .25s cubic-bezier(.34,1.56,.64,1) both}
 .adminx-badge-urgent{background:linear-gradient(135deg,#F87171,#DC2626);color:#fff}
 @keyframes adminxpop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
 .adminx-signout{display:flex;align-items:center;gap:11px;width:100%;padding:10px 13px;border-radius:12px;background:transparent;border:none;border-left:3px solid transparent;color:rgba(255,255,255,.62);font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;text-align:left;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease}
 .adminx-signout:hover{background:rgba(239,68,68,.1);color:#FCA5A5;transform:translateX(3px)}
-.adminx-portal-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8C766;background:rgba(200,162,74,.12);border:1px solid rgba(200,162,74,.28)}
-.adminx-portal-dot{width:5px;height:5px;border-radius:50%;background:#C8A24A;box-shadow:0 0 6px rgba(200,162,74,.8)}
+.adminx-portal-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E3C04A;background:rgba(201,162,39,.12);border:1px solid rgba(201,162,39,.28)}
+.adminx-portal-dot{width:5px;height:5px;border-radius:50%;background:#C9A227;box-shadow:0 0 6px rgba(201,162,39,.8)}
 .adminx-avatar{transition:transform .2s ease,box-shadow .2s ease}
 .adminx-avatar:hover{transform:scale(1.05)}
-@media(min-width:1024px){.adminx-panel{border-top-left-radius:22px;border-top-right-radius:22px}}
+@media(min-width:1024px){.adminx-panel{border-top-left-radius:0;border-top-right-radius:0}}
 .adminx-page{animation:adminxpagein .42s cubic-bezier(.4,0,.2,1) both}
 @keyframes adminxpagein{from{opacity:0}to{opacity:1}}
 @keyframes adminxrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .adminx-rise{animation:adminxrise .5s cubic-bezier(.4,0,.2,1) both}
 .adminx-stat{transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s ease,border-color .25s ease}
-.adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(184,149,42,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.55)!important}
+.adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(201,162,39,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.55)!important}
 .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(184,149,42,.5)!important}
+.adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.5)!important}
 .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
 @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .adminx-iconbtn{position:relative;width:38px;height:38px;border-radius:11px;border:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease}
 .adminx-iconbtn:hover{background:rgba(255,255,255,.13)}
-.adminx-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#D4AF50;box-shadow:0 0 0 2px #141414}
+.adminx-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#E3C04A;box-shadow:0 0 0 2px #111111}
 .adminx-bell{position:absolute;top:46px;right:0;width:272px;background:#fff;border:1px solid #ECECEC;border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.18);padding:14px;z-index:60;animation:adminxrise .2s ease both}
 .adminx-bellrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:9px;text-decoration:none;transition:background .15s ease}
-.adminx-bellrow:hover{background:#F7F1E2}
+.adminx-bellrow:hover{background:#F8F5EE}
 .adminx-overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding-top:14vh;z-index:80;animation:adminxfade .15s ease both}
 @keyframes adminxfade{from{opacity:0}to{opacity:1}}
 .adminx-palette{width:min(560px,92vw);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}
 .adminx-palrow{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:none;background:transparent;border-radius:10px;cursor:pointer;text-align:left;transition:background .14s ease}
-.adminx-palrow:hover{background:#F7F1E2}
-.adminx-menurow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;color:#1A1A1A;transition:background .15s ease}
-.adminx-menurow:hover{background:#F7F1E2}
+.adminx-palrow:hover{background:#F8F5EE}
+.adminx-menurow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;color:#111111;transition:background .15s ease}
+.adminx-menurow:hover{background:#F8F5EE}
 .adminx-panel{padding:28px}
 @media(max-width:640px){.adminx-panel{padding:16px 14px}}
 @media(max-width:640px){.qmg-bar{justify-content:center!important}}
-.adminx-drawer{position:fixed;top:0;bottom:0;left:0;width:min(284px,86vw);z-index:55;background:#181818;border-right:1px solid rgba(255,255,255,.08);box-shadow:10px 0 40px rgba(0,0,0,.5);display:flex;flex-direction:column;animation:adminxslide .2s cubic-bezier(.4,0,.2,1) both}
+.adminx-drawer{position:fixed;top:0;bottom:0;left:0;width:min(284px,86vw);z-index:55;background:linear-gradient(180deg,#111111 0%,#166534 100%);border-right:1px solid rgba(255,255,255,.08);box-shadow:10px 0 40px rgba(0,0,0,.5);display:flex;flex-direction:column;animation:adminxslide .2s cubic-bezier(.4,0,.2,1) both}
 @media(min-width:1024px){.adminx-drawer{left:240px;width:250px}}
 @keyframes adminxslide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 .adminx-drawer-bd{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.2)}
@@ -184,7 +184,7 @@ export default function AdminLayout({
     if (href === '/attendance')         { const c = findCount('attendance_anomaly'); return c > 0 ? { count: c, urgent: true } : null }
     return null
   }
-  const SEV: Record<string, string> = { gold: '#B8952A', red: '#DC2626', neutral: '#6366F1' }
+  const SEV: Record<string, string> = { gold: '#C9A227', red: '#DC2626', neutral: '#6366F1' }
   const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
 
   // ── Category derivation (two-level nav) ──
@@ -213,7 +213,7 @@ export default function AdminLayout({
 
   function SidebarContent() {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#141414' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'linear-gradient(180deg, #111111 0%, #166534 100%)' }}>
         {/* Brand header */}
         <div style={{ padding: '18px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.09)', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
           <img src={LOGO_SRC} alt="QMG" style={{ width: 52, height: 52, objectFit: 'contain' }} />
@@ -246,7 +246,7 @@ export default function AdminLayout({
                     {badge.count > 99 ? '99+' : badge.count}
                   </span>
                 )}
-                <ChevronRight size={14} className="adminx-chev" style={{ flexShrink: 0, color: active ? '#E8C766' : 'rgba(255,255,255,0.42)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
+                <ChevronRight size={14} className="adminx-chev" style={{ flexShrink: 0, color: active ? '#E3C04A' : 'rgba(255,255,255,0.42)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
               </button>
             )
           })}
@@ -269,7 +269,7 @@ export default function AdminLayout({
   const activePage = NAV_ITEMS.find(n => isActive(n.href))
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#141414' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#111111' }}>
       <style>{ADMINX_STYLES}</style>
 
       {/* Desktop Sidebar */}
@@ -291,7 +291,7 @@ export default function AdminLayout({
           <div className="adminx-drawer-bd" onClick={() => setOpenCat(null)} />
           <aside className="adminx-drawer">
             <div style={{ padding: '17px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <DrawerIcon size={17} color="#E8C766" style={{ flexShrink: 0 }} />
+              <DrawerIcon size={17} color="#E3C04A" style={{ flexShrink: 0 }} />
               <span style={{ flex: 1, color: '#fff', fontWeight: 800, fontSize: 14.5, fontFamily: "'Fraunces',serif" }}>{openCategory.label}</span>
               <button onClick={() => setOpenCat(null)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
                 <X size={16} color="#fff" />
@@ -314,7 +314,7 @@ export default function AdminLayout({
                         {badge.count > 99 ? '99+' : badge.count}
                       </span>
                     )}
-                    {active && <ChevronRight size={13} style={{ color: '#E8C766', flexShrink: 0 }} />}
+                    {active && <ChevronRight size={13} style={{ color: '#E3C04A', flexShrink: 0 }} />}
                   </button>
                 )
               })}
@@ -324,11 +324,11 @@ export default function AdminLayout({
       )}
 
       {/* Right side (dark frame so the rounded panel corners read clean) */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, background: '#141414' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, background: '#111111' }}>
 
         {/* Top bar */}
         <header style={{
-          height: 64, background: '#141414',
+          height: 72, background: 'linear-gradient(90deg, #111111 0%, #166534 100%)',
           display: 'flex', alignItems: 'center', paddingLeft: 22, paddingRight: 22,
           gap: 14, flexShrink: 0, position: 'relative',
         }}>
@@ -340,7 +340,8 @@ export default function AdminLayout({
 
           {/* Left: greeting */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Fraunces',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#E3C04A', margin: 0, letterSpacing: '0.04em' }}>{(() => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening' })()}</p>
+            <p style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Fraunces',serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <span className="hidden sm:inline">Welcome back, </span>{name} 👋
             </p>
           </div>
@@ -365,16 +366,16 @@ export default function AdminLayout({
               {bellOpen && (
                 <div className="adminx-bell">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px' }}>
-                    <p style={{ fontSize: 12.5, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>Notifications</p>
-                    {bellCount > 0 && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B8952A', background: '#F7F1E2', borderRadius: 999, padding: '2px 8px' }}>{bellCount}</span>}
+                    <p style={{ fontSize: 12.5, fontWeight: 800, color: '#111111', margin: 0 }}>Notifications</p>
+                    {bellCount > 0 && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#C9A227', background: '#F8F5EE', borderRadius: 999, padding: '2px 8px' }}>{bellCount}</span>}
                   </div>
                   {notes.length === 0
                     ? <p style={{ fontSize: 12, color: '#9A9A8A', margin: '8px 0 4px' }}>You&apos;re all caught up ✨</p>
                     : notes.map((b, i) => (
                       <a key={i} href={b.href} onClick={() => setBellOpen(false)} className="adminx-bellrow">
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: SEV[b.severity] || '#B8952A', flexShrink: 0 }} />
-                        <span style={{ flex: 1, fontSize: 12.5, color: '#1A1A1A', fontWeight: 600, lineHeight: 1.3 }}>{b.label}</span>
-                        <span style={{ fontSize: 11.5, fontWeight: 800, color: SEV[b.severity] || '#B8952A', background: '#F7F1E2', borderRadius: 7, padding: '1px 7px', flexShrink: 0 }}>{b.count}</span>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: SEV[b.severity] || '#C9A227', flexShrink: 0 }} />
+                        <span style={{ flex: 1, fontSize: 12.5, color: '#111111', fontWeight: 600, lineHeight: 1.3 }}>{b.label}</span>
+                        <span style={{ fontSize: 11.5, fontWeight: 800, color: SEV[b.severity] || '#C9A227', background: '#F8F5EE', borderRadius: 7, padding: '1px 7px', flexShrink: 0 }}>{b.count}</span>
                       </a>
                     ))}
                 </div>
@@ -384,9 +385,9 @@ export default function AdminLayout({
               <button onClick={() => setUserMenuOpen(o => !o)} title="Account" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 <div className="hidden sm:block" style={{ textAlign: 'right' }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.2 }}>{name}</p>
-                  <p style={{ fontSize: 11, color: '#D4AF50', margin: 0 }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
+                  <p style={{ fontSize: 11, color: '#E3C04A', margin: 0 }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
                 </div>
-                <div className="adminx-avatar" style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #C8A24A, #E0BE63)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1A1400', fontSize: 15, fontWeight: 800, flexShrink: 0, boxShadow: '0 2px 8px rgba(184,149,42,0.35)' }}>
+                <div className="adminx-avatar" style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #C9A227, #E0BE63)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111111', fontSize: 15, fontWeight: 800, flexShrink: 0, boxShadow: '0 2px 8px rgba(201,162,39,0.35)' }}>
                   {(name || 'A')[0].toUpperCase()}
                 </div>
               </button>
@@ -394,8 +395,8 @@ export default function AdminLayout({
               {userMenuOpen && (
                 <div className="adminx-bell" style={{ width: 232 }}>
                   <div style={{ padding: '2px 6px 10px', borderBottom: '1px solid #ECECEC', marginBottom: 8 }}>
-                    <p style={{ fontSize: 13.5, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>{name}</p>
-                    <p style={{ fontSize: 11.5, color: '#B8952A', fontWeight: 700, margin: '2px 0 0' }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
+                    <p style={{ fontSize: 13.5, fontWeight: 800, color: '#111111', margin: 0 }}>{name}</p>
+                    <p style={{ fontSize: 11.5, color: '#C9A227', fontWeight: 700, margin: '2px 0 0' }}>{isSuper ? 'Super Admin' : (ctx?.roleLabel || 'Sub Admin')}</p>
                   </div>
                   {can('settings.view') && (
                     <a href="/settings" onClick={() => setUserMenuOpen(false)} className="adminx-menurow"><Settings size={15} style={{ color: '#9A9A8A' }} /> Platform Settings</a>
@@ -411,7 +412,7 @@ export default function AdminLayout({
         <main className="adminx-panel" style={{
           flex: 1, overflowY: 'auto',
           width: '100%', boxSizing: 'border-box',
-          background: '#F5F0E8',
+          background: '#F8F5EE',
         }}>
           <div className="adminx-page" key={pathname}>{children}</div>
         </main>
@@ -424,7 +425,7 @@ export default function AdminLayout({
               <Search size={18} color="#9A9A8A" />
               <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && paletteResults[0]) { router.push(paletteResults[0].href); setSearchOpen(false); setQuery('') } }}
-                placeholder="Search pages…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#1A1A1A', background: 'transparent', fontFamily: "'Inter',sans-serif" }} />
+                placeholder="Search pages…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#111111', background: 'transparent', fontFamily: "'Inter',sans-serif" }} />
               <span style={{ fontSize: 10.5, color: '#B0B0B0', border: '1px solid #E2E2E2', borderRadius: 6, padding: '2px 6px' }}>ESC</span>
             </div>
             <div style={{ maxHeight: 320, overflowY: 'auto', padding: 8 }}>
@@ -432,8 +433,8 @@ export default function AdminLayout({
                 ? <p style={{ fontSize: 13, color: '#9A9A8A', padding: 16, textAlign: 'center', margin: 0 }}>No matching pages.</p>
                 : paletteResults.map(({ href, label, icon: Icon }) => (
                   <button key={href} onClick={() => { router.push(href); setSearchOpen(false); setQuery('') }} className="adminx-palrow">
-                    <Icon size={16} style={{ color: '#B8952A' }} />
-                    <span style={{ fontSize: 14, color: '#1A1A1A', fontWeight: 600 }}>{label}</span>
+                    <Icon size={16} style={{ color: '#C9A227' }} />
+                    <span style={{ fontSize: 14, color: '#111111', fontWeight: 600 }}>{label}</span>
                     <ChevronRight size={15} style={{ color: '#C8C8C8', marginLeft: 'auto' }} />
                   </button>
                 ))}

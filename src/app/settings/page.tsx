@@ -27,7 +27,7 @@ import {
   Baby, CreditCard, Mail, Bell, Shield, Palette, KeyRound, ExternalLink,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE'
 
 type FieldType = 'text' | 'number' | 'toggle' | 'color' | 'select' | 'textarea'
 type Field = {
@@ -191,7 +191,7 @@ const DEFAULTS: Record<string, any> = {
   // security
   require_2fa: false, session_timeout_mins: 60, password_min_length: 8,
   // branding
-  brand_primary_color: '#B8952A', brand_accent_color: '#1B5E37', brand_logo_url: '',
+  brand_primary_color: '#C9A227', brand_accent_color: '#1B5E37', brand_logo_url: '',
   // roles
   enforce_permission_audit: true, sub_admin_self_signup: false,
 }
@@ -277,7 +277,7 @@ export default function SettingsPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? GOLD : '#DC2626', color: toast.startsWith('✅') ? '#1A1400' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? 'linear-gradient(135deg,#166534,#C9A227)' : '#DC2626', color: toast.startsWith('✅') ? '#111111' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
@@ -285,9 +285,9 @@ export default function SettingsPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Platform Settings</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Configure your platform across {CATEGORIES.length} categories.</p>
         </div>
-        <button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+        <button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           <Save size={15} /> {saving ? 'Saving…' : 'Save changes'}
-          {criticalChanges.length > 0 && !saving && <span style={{ background: '#1A1400', color: GOLD, borderRadius: 99, fontSize: 11, fontWeight: 800, padding: '1px 7px' }}>{criticalChanges.length}</span>}
+          {criticalChanges.length > 0 && !saving && <span style={{ background: '#111111', color: GOLD, borderRadius: 99, fontSize: 11, fontWeight: 800, padding: '1px 7px' }}>{criticalChanges.length}</span>}
         </button>
       </div>
 
@@ -374,7 +374,7 @@ export default function SettingsPage() {
                         </p>
                         {f.hint && <p style={{ fontSize: 12, color: MUTED, margin: '2px 0 0', lineHeight: 1.4 }}>{f.hint}</p>}
                       </div>
-                      <button onClick={() => set(f.k, !s[f.k])} aria-label={f.label} style={{ width: 46, height: 26, borderRadius: 99, border: 'none', cursor: 'pointer', background: s[f.k] ? GOLD : '#D8D2C4', position: 'relative', flexShrink: 0, transition: 'background .2s' }}>
+                      <button onClick={() => set(f.k, !s[f.k])} aria-label={f.label} style={{ width: 46, height: 26, borderRadius: 99, border: 'none', cursor: 'pointer', background: s[f.k] ? 'linear-gradient(135deg,#166534,#C9A227)' : '#D8D2C4', position: 'relative', flexShrink: 0, transition: 'background .2s' }}>
                         <span style={{ position: 'absolute', top: 3, left: s[f.k] ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                       </button>
                     </div>
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                         <select value={s[f.k] ?? ''} onChange={e => set(f.k, e.target.value)} style={inputStyle}>{f.options!.map(o => <option key={o} value={o}>{o[0].toUpperCase() + o.slice(1)}</option>)}</select>
                       ) : f.type === 'color' ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <input type="color" value={s[f.k] || '#B8952A'} onChange={e => set(f.k, e.target.value)} style={{ width: 46, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`, cursor: 'pointer', background: '#fff', padding: 2 }} />
+                          <input type="color" value={s[f.k] || '#C9A227'} onChange={e => set(f.k, e.target.value)} style={{ width: 46, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`, cursor: 'pointer', background: '#fff', padding: 2 }} />
                           <input type="text" value={s[f.k] ?? ''} onChange={e => set(f.k, e.target.value)} style={{ ...inputStyle, maxWidth: 160 }} />
                         </div>
                       ) : (
@@ -431,7 +431,7 @@ export default function SettingsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button onClick={() => setConfirmList(null)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${BORDER}`, background: '#fff', color: '#6B6B6B', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={doSave} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Confirm & Save</button>
+              <button onClick={doSave} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Confirm & Save</button>
             </div>
           </div>
         </div>
@@ -443,7 +443,7 @@ export default function SettingsPage() {
         @media(max-width:1024px){.qmg-cards{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:600px){.qmg-cards{grid-template-columns:1fr}}
         .qmg-card{text-align:left;background:#fff;border:1px solid ${BORDER};border-radius:16px;padding:18px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-        .qmg-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(184,149,42,.14);border-color:rgba(184,149,42,.5)}
+        .qmg-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(201,162,39,.14);border-color:rgba(201,162,39,.5)}
         .qmg-card-ic{width:40px;height:40px;border-radius:12px;background:${CREAM};color:${GOLD};display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .qmg-tag-found{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1B5E37;background:#E3F0E7;border:1px solid #C5E0CE;border-radius:99px;padding:1px 7px}
         .qmg-tag-dirty{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#B45309;background:#FEF3C7;border-radius:99px;padding:1px 7px}

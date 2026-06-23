@@ -12,7 +12,7 @@ import AdminLayout from '@/components/AdminLayout'
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { CheckCircle2, Clock, XCircle, ShieldCheck, TrendingUp } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE'
 const C = { present: '#16A34A', late: '#EA580C', absent: '#DC2626', excused: '#2563EB' }
 const rateColor = (r: number) => r >= 80 ? '#16A34A' : r >= 60 ? GOLD : '#DC2626'
 
@@ -103,7 +103,7 @@ export default function AdminAttendance() {
               <p style={{ fontWeight: 700, color: INK, margin: '0 0 12px' }}>Monthly Attendance Trend</p>
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={d.monthly} margin={{ top: 6, right: 10, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(184,149,42,0.12)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(201,162,39,0.12)" />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: MUTED }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: MUTED }} />
                   <Tooltip formatter={(v: any) => `${v}%`} />
@@ -117,7 +117,7 @@ export default function AdminAttendance() {
               <p style={{ fontWeight: 700, color: INK, margin: '0 0 12px' }}>Attendance by Teacher</p>
               <ResponsiveContainer width="100%" height={Math.max(220, d.byTeacher.length * 34)}>
                 <BarChart layout="vertical" data={d.byTeacher} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(184,149,42,0.12)" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(201,162,39,0.12)" horizontal={false} />
                   <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: MUTED }} />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: INK }} />
                   <Tooltip formatter={(v: any) => `${v}%`} />
@@ -136,7 +136,7 @@ export default function AdminAttendance() {
                       <span style={{ color: INK, fontWeight: 600 }}>{c.title}</span>
                       <span style={{ color: rateColor(c.rate), fontWeight: 700 }}>{c.rate}% <span style={{ color: MUTED, fontWeight: 400 }}>· {c.total} lessons</span></span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 4, background: 'rgba(184,149,42,0.1)', overflow: 'hidden' }}>
+                    <div style={{ height: 8, borderRadius: 4, background: 'rgba(201,162,39,0.1)', overflow: 'hidden' }}>
                       <div style={{ width: `${c.rate}%`, height: '100%', background: rateColor(c.rate), borderRadius: 4 }} />
                     </div>
                   </div>

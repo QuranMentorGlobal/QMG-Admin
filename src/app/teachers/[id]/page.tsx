@@ -13,7 +13,7 @@ import {
   Wallet, Percent, BadgeCheck, MapPin, Calendar, Globe, Sparkles,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 function money(n: number) { if (Math.abs(n) >= 1000) return '$' + (n / 1000).toFixed(1) + 'k'; return '$' + Math.round(n).toLocaleString() }
 function fmtDate(d: string | null) { return d ? new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—' }
@@ -99,7 +99,7 @@ export default function TeacherDetailPage() {
         <>
           {/* Header card */}
           <div className="adminx-rise" style={{ background: '#fff', borderRadius: 18, padding: '22px 24px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 18, display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 26, fontWeight: 800, flexShrink: 0, fontFamily: "'Fraunces',serif", background: suspended ? '#9CA3AF' : 'linear-gradient(135deg,#C8A24A,#0B0B0B)' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 26, fontWeight: 800, flexShrink: 0, fontFamily: "'Fraunces',serif", background: suspended ? '#9CA3AF' : 'linear-gradient(135deg,#166534,#111111)' }}>
               {(p.firstName || 'T')[0]}
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
@@ -114,7 +114,7 @@ export default function TeacherDetailPage() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Star size={13} /> {m.avgRating || 'N/A'} {m.reviewCount ? `(${m.reviewCount})` : ''}</span>
               </div>
             </div>
-            <button onClick={toggleSuspend} disabled={busy} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0, background: suspended ? GOLD : '#FEE2E2', color: suspended ? '#1A1400' : RED, opacity: busy ? 0.6 : 1 }}>
+            <button onClick={toggleSuspend} disabled={busy} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0, background: suspended ? 'linear-gradient(135deg,#166534,#C9A227)' : '#FEE2E2', color: suspended ? '#111111' : RED, opacity: busy ? 0.6 : 1 }}>
               {busy ? '…' : suspended ? 'Reinstate' : 'Suspend'}
             </button>
           </div>
@@ -136,7 +136,7 @@ export default function TeacherDetailPage() {
               <span style={{ fontSize: 13, fontWeight: 800, color: GOLD }}>{m.completeness}%</span>
             </div>
             <div style={{ height: 9, borderRadius: 99, background: CREAM, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${m.completeness}%`, borderRadius: 99, background: 'linear-gradient(90deg,#C8A24A,#D4AF37)', transition: 'width .8s cubic-bezier(.4,0,.2,1)' }} />
+              <div style={{ height: '100%', width: `${m.completeness}%`, borderRadius: 99, background: 'linear-gradient(90deg,#166534,#C9A227)', transition: 'width .8s cubic-bezier(.4,0,.2,1)' }} />
             </div>
           </div>
 

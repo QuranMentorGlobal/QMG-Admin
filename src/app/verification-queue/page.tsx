@@ -15,8 +15,8 @@ import {
   Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A'
-const CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626', BLUE = '#1E40AF', AMBER = '#B45309'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A'
+const CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626', BLUE = '#1E40AF', AMBER = '#B45309'
 
 type Teacher = {
   id: string; user_id: string; status: string
@@ -330,7 +330,7 @@ function ChangeCard({ r, expanded, onToggle, notes, setNotes, busy, decideChange
               <div key={field} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 0, alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${BORDER}` }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{FIELD_LABELS[field] || field}</span>
                 <span style={{ fontSize: 13, color: MUTED, textDecoration: 'line-through', paddingRight: 10 }}>{fmtVal(v.from)}</span>
-                <span style={{ fontSize: 13, color: INK, fontWeight: 600, background: 'rgba(184,149,42,0.1)', borderRadius: 6, padding: '3px 8px' }}>{fmtVal(v.to)}</span>
+                <span style={{ fontSize: 13, color: INK, fontWeight: 600, background: 'rgba(201,162,39,0.1)', borderRadius: 6, padding: '3px 8px' }}>{fmtVal(v.to)}</span>
               </div>
             ))}
           </div>

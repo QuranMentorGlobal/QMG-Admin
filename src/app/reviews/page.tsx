@@ -12,7 +12,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { Star, CheckCircle2, XCircle, Clock, MessageSquare, Award, AlertTriangle, TrendingUp } from 'lucide-react'
 import { format } from 'date-fns'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626', GRID = '#EDE6D6'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626', GRID = '#EDE6D6'
 
 function Stars({ n, size = 13 }: { n: number; size?: number }) {
   return <span style={{ display: 'inline-flex', gap: 1 }}>{[1, 2, 3, 4, 5].map(i => <Star key={i} size={size} style={{ color: i <= Math.round(n) ? GOLD : '#DDD5C4', fill: i <= Math.round(n) ? GOLD : 'none' }} />)}</span>
@@ -75,7 +75,7 @@ export default function ReviewsPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Reviews</h1>
@@ -102,7 +102,7 @@ export default function ReviewsPage() {
                 return (
                   <div key={x.star} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 3, width: 40, fontSize: 12.5, fontWeight: 700, color: INK }}>{x.star} <Star size={12} style={{ color: GOLD, fill: GOLD }} /></span>
-                    <div style={{ flex: 1, height: 10, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${(x.count / maxDist) * 100}%`, background: 'linear-gradient(90deg,#C8A24A,#D4AF37)', borderRadius: 99, transition: 'width .7s ease' }} /></div>
+                    <div style={{ flex: 1, height: 10, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${(x.count / maxDist) * 100}%`, background: 'linear-gradient(90deg,#166534,#C9A227)', borderRadius: 99, transition: 'width .7s ease' }} /></div>
                     <span style={{ width: 64, textAlign: 'right', fontSize: 12, color: MUTED }}>{x.count} · {pct}%</span>
                   </div>
                 )
@@ -132,7 +132,7 @@ export default function ReviewsPage() {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {topRated.map((tr: any, i: number) => (
                 <a key={tr.id} href={`/teachers/${tr.id}`} className="adminx-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, textDecoration: 'none', borderBottom: i < topRated.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                  <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg,#166534,#C9A227)' : CREAM, color: i === 0 ? '#111111' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tr.name}</span>
                   <Stars n={tr.avg} size={12} />
                   <span style={{ fontSize: 12.5, fontWeight: 800, color: GOLD, width: 56, textAlign: 'right' }}>{tr.avg} <span style={{ color: MUTED, fontWeight: 400, fontSize: 11 }}>({tr.count})</span></span>
@@ -183,7 +183,7 @@ export default function ReviewsPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 11.5, color: MUTED }}>👤 {r.student} → 🎓 {r.teacher}</span>
                   <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-                    <button onClick={() => handleReview(r.id, true)} disabled={actionLoading === r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700, opacity: actionLoading === r.id ? 0.6 : 1 }}><CheckCircle2 size={14} /> Publish</button>
+                    <button onClick={() => handleReview(r.id, true)} disabled={actionLoading === r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700, opacity: actionLoading === r.id ? 0.6 : 1 }}><CheckCircle2 size={14} /> Publish</button>
                     <button onClick={() => handleReview(r.id, false)} disabled={actionLoading === r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', background: '#FEE2E2', color: RED, border: '1px solid #FECACA', fontSize: 12.5, fontWeight: 700, opacity: actionLoading === r.id ? 0.6 : 1 }}><XCircle size={14} /> Reject</button>
                   </div>
                 </div>

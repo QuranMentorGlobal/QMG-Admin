@@ -18,8 +18,8 @@ import {
   Sparkles, CreditCard, Users, BarChart3,
 } from 'lucide-react'
 
-const GOLD = '#B8952A', GOLD_L = '#D4AF50', INK = '#1A1A1A', INK_MID = '#3D3D3D'
-const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
+const GOLD = '#C9A227', GOLD_L = '#E3C04A', INK = '#111111', INK_MID = '#3D3D3D'
+const GRID = '#EDE6D6', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 function money(n: number) { if (Math.abs(n) >= 1_000_000) return '$' + (n / 1e6).toFixed(1) + 'M'; if (Math.abs(n) >= 1000) return '$' + (n / 1000).toFixed(1) + 'k'; return '$' + Math.round(n).toLocaleString() }
 function full(n: number) { return '$' + (Number(n) || 0).toFixed(2) }
@@ -110,7 +110,7 @@ export default function AdminPaymentsPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Payments &amp; Revenue</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Financial overview across the platform.</p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
       </div>
 
       {/* KPIs */}
@@ -179,7 +179,7 @@ export default function AdminPaymentsPage() {
                     <span style={{ color: INK, fontWeight: 600, textTransform: 'capitalize' }}>{x.name} <span style={{ color: MUTED, fontWeight: 400 }}>· {x.count}</span></span>
                     <span style={{ color: GOLD, fontWeight: 700 }}>{money(x.gross)}</span>
                   </div>
-                  <div style={{ height: 7, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#C8A24A,#D4AF37)', borderRadius: 99 }} /></div>
+                  <div style={{ height: 7, borderRadius: 99, background: CREAM, overflow: 'hidden' }}><div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#166534,#C9A227)', borderRadius: 99 }} /></div>
                 </div>
               )})}
             </div>
@@ -194,7 +194,7 @@ export default function AdminPaymentsPage() {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {topPayouts.map((tp: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < topPayouts.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                  <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? GOLD : CREAM, color: i === 0 ? '#1A1400' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg,#166534,#C9A227)' : CREAM, color: i === 0 ? '#111111' : GOLD, fontSize: 11.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tp.name}</span>
                   <span style={{ fontSize: 11, color: MUTED }}>{tp.count}×</span>
                   <span style={{ fontSize: 13.5, fontWeight: 800, color: GOLD, fontFamily: "'Fraunces',serif" }}>{money(tp.payout)}</span>

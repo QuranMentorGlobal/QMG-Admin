@@ -10,7 +10,7 @@ import AdminLayout from '@/components/AdminLayout'
 import { PERMISSION_GROUPS, ROLE_PRESETS } from '@/lib/permissions'
 import { Plus, Pencil, Trash2, Power, X, Check, ShieldCheck } from 'lucide-react'
 
-const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626', CREAM = '#F7F1E2'
+const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626', CREAM = '#F8F5EE'
 
 type Sub = {
   id: string; email: string; first_name: string; last_name: string
@@ -111,7 +111,7 @@ export default function AdminManagementPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Admin Management</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Create scoped admin accounts and assign exactly the permissions they need.</p>
         </div>
-        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: GOLD, color: '#1A1400', fontSize: 13, fontWeight: 700 }}>
+        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700 }}>
           <Plus size={16} /> Create Sub Admin
         </button>
       </div>
@@ -142,7 +142,7 @@ export default function AdminManagementPage() {
                       <td style={{ padding: '12px 16px' }}><span style={{ fontSize: 11.5, fontWeight: 700, color: GOLD, background: CREAM, padding: '3px 9px', borderRadius: 8 }}>{s.admin_role_label || 'Sub Admin'}</span></td>
                       <td style={{ padding: '12px 16px', textAlign: 'center', color: INK, fontWeight: 700 }}>{(s.admin_permissions || []).length}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.admin_status === 'suspended' ? '#FEE2E2' : '#F7F1E2', color: s.admin_status === 'suspended' ? RED : GOLD }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.admin_status === 'suspended' ? '#FEE2E2' : '#F8F5EE', color: s.admin_status === 'suspended' ? RED : GOLD }}>
                           {s.admin_status === 'suspended' ? 'Suspended' : 'Active'}
                         </span>
                       </td>
@@ -163,8 +163,8 @@ export default function AdminManagementPage() {
 
       {open && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '4vh 16px', overflowY: 'auto' }} onClick={() => setOpen(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ width: 'min(960px, 96vw)', maxHeight: '92vh', background: '#F5F0E8', overflowY: 'auto', borderRadius: 18, boxShadow: '0 24px 70px rgba(0,0,0,0.4)' }}>
-            <div style={{ position: 'sticky', top: 0, background: '#141414', padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 1, borderRadius: '18px 18px 0 0' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 'min(960px, 96vw)', maxHeight: '92vh', background: '#F8F5EE', overflowY: 'auto', borderRadius: 18, boxShadow: '0 24px 70px rgba(0,0,0,0.4)' }}>
+            <div style={{ position: 'sticky', top: 0, background: '#111111', padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 1, borderRadius: '18px 18px 0 0' }}>
               <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>{editing ? 'Edit Sub Admin' : 'Create Sub Admin'}</h2>
               <button onClick={() => setOpen(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff' }}><X size={18} /></button>
             </div>
@@ -203,7 +203,7 @@ export default function AdminManagementPage() {
                           const on = form.perms.includes(p.key)
                           return (
                             <button key={p.key} onClick={() => togglePerm(p.key)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, border: `1px solid ${on ? GOLD : BORDER}`, background: on ? CREAM : '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                              <span style={{ width: 17, height: 17, borderRadius: 5, background: on ? GOLD : '#fff', border: `1px solid ${on ? GOLD : '#CBC4B5'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{on && <Check size={12} color="#1A1400" />}</span>
+                              <span style={{ width: 17, height: 17, borderRadius: 5, background: on ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', border: `1px solid ${on ? GOLD : '#CBC4B5'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{on && <Check size={12} color="#111111" />}</span>
                               <span style={{ fontSize: 12, color: INK }}>{p.label}</span>
                             </button>
                           )
@@ -216,7 +216,7 @@ export default function AdminManagementPage() {
 
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                 <button onClick={() => setOpen(false)} style={{ flex: 1, padding: '11px', borderRadius: 11, border: `1px solid ${BORDER}`, background: '#fff', color: INK, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={save} disabled={!canSave || saving} style={{ flex: 2, padding: '11px', borderRadius: 11, border: 'none', background: (!canSave || saving) ? '#D9CFA8' : GOLD, color: '#1A1400', fontWeight: 700, cursor: (!canSave || saving) ? 'default' : 'pointer' }}>
+                <button onClick={save} disabled={!canSave || saving} style={{ flex: 2, padding: '11px', borderRadius: 11, border: 'none', background: (!canSave || saving) ? '#D9CFA8' : 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontWeight: 700, cursor: (!canSave || saving) ? 'default' : 'pointer' }}>
                   {saving ? 'Saving…' : editing ? 'Save changes' : 'Create sub-admin'}
                 </button>
               </div>
@@ -225,7 +225,7 @@ export default function AdminManagementPage() {
         </div>
       )}
 
-      {toast && <div style={{ position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)', background: '#141414', color: '#fff', padding: '11px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 70 }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)', background: '#111111', color: '#fff', padding: '11px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 70 }}>{toast}</div>}
     </AdminLayout>
   )
 }
