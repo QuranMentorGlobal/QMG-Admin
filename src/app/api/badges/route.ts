@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const { data } = await svc.from('profiles')
       .select('id, first_name, last_name, email, role')
       .or(`first_name.ilike.${term},last_name.ilike.${term},email.ilike.${term}`)
-      .in('role', ['teacher', 'student'])
+      .in('role', ['teacher', 'student', 'parent'])
       .limit(15)
     return NextResponse.json({ users: data || [] })
   }

@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
 import { Award, Search, Plus, X, History, SlidersHorizontal, RefreshCw } from 'lucide-react'
-import { TEACHER_BADGES, STUDENT_BADGES, BADGE_BY_KEY, type BadgeDef } from '@/lib/badges'
+import { TEACHER_BADGES, STUDENT_BADGES, PARENT_BADGES, BADGE_BY_KEY, type BadgeDef } from '@/lib/badges'
 
 const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626'
 
@@ -82,8 +82,8 @@ export default function BadgeManagementPage() {
   }
 
   const activeKeys = new Set(badges.map(b => b.badge_key))
-  const audience = user?.role === 'teacher' ? 'teacher' : 'student'
-  const catalog = audience === 'teacher' ? TEACHER_BADGES : STUDENT_BADGES
+  const audience = user?.role === 'teacher' ? 'teacher' : user?.role === 'parent' ? 'parent' : 'student'
+  const catalog = audience === 'teacher' ? TEACHER_BADGES : audience === 'parent' ? PARENT_BADGES : STUDENT_BADGES
 
   return (
     <AdminLayout>

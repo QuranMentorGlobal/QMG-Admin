@@ -9,7 +9,7 @@
 import AdminLayout from '@/components/AdminLayout'
 import { BookOpen } from 'lucide-react'
 import {
-  TEACHER_GROUPS, STUDENT_GROUPS, TEACHER_BADGES, STUDENT_BADGES,
+  TEACHER_GROUPS, STUDENT_GROUPS, PARENT_GROUPS, TEACHER_BADGES, STUDENT_BADGES, PARENT_BADGES,
   BADGE_ICON_PATHS, criteriaText, assignmentLabel,
   type BadgeDef, type BadgeIconKey,
 } from '@/lib/badges'
@@ -87,6 +87,7 @@ export default function BadgeGuidePage() {
         </p>
         <Section title="Teacher Badges" groups={TEACHER_GROUPS} badges={TEACHER_BADGES} />
         <Section title="Student Badges" groups={STUDENT_GROUPS} badges={STUDENT_BADGES} />
+        <Section title="Parent Badges" groups={PARENT_GROUPS} badges={PARENT_BADGES} />
       </div>
     </AdminLayout>
   )

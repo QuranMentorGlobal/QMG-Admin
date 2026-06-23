@@ -16,10 +16,11 @@
 // Drop this identical file at src/lib/badges.ts in BOTH repositories.
 // ════════════════════════════════════════════════════════════════════════════
 
-export type BadgeAudience = 'teacher' | 'student'
+export type BadgeAudience = 'teacher' | 'student' | 'parent'
 export type BadgeCategory =
   | 'trust' | 'performance' | 'specialization'   // teacher groups
   | 'progress' | 'attendance' | 'achievement'    // student groups
+  | 'involvement'                                // parent group
 export type Assignment = 'auto' | 'manual' | 'auto_or_manual'
 
 export interface BadgeDef {
@@ -64,6 +65,12 @@ export interface StudentSignals {
   attendance_late: number
   courses_completed: number       // enrollments at 100%
   completed_course_types: string[]// course_type[] of 100% courses
+}
+
+export interface ParentSignals {
+  children_count: number              // linked children
+  children_lessons_completed: number  // completed lessons across all children
+  active_children: number             // children with at least one completed lesson
 }
 
 // ── THE CATALOG ───────────────────────────────────────────────────────────────
@@ -155,7 +162,22 @@ export const STUDENT_BADGES: BadgeDef[] = [
     icon: 'star_burst', assignment: 'auto', criteria: { min_courses: 3 } },
 ]
 
-export const ALL_BADGES: BadgeDef[] = [...TEACHER_BADGES, ...STUDENT_BADGES]
+export const PARENT_BADGES: BadgeDef[] = [
+  { key: 'supportive_parent', audience: 'parent', category: 'involvement', tier: 10,
+    name: 'Supportive Parent', description: 'Started a child on their Quran learning journey.',
+    icon: 'book_heart', assignment: 'auto', criteria: { min_lessons: 1 } },
+  { key: 'engaged_parent', audience: 'parent', category: 'involvement', tier: 20,
+    name: 'Engaged Parent', description: 'Your children have completed 10 lessons together.',
+    icon: 'spark', assignment: 'auto', criteria: { min_lessons: 10 } },
+  { key: 'active_parent', audience: 'parent', category: 'involvement', tier: 30,
+    name: 'Active Parent', description: 'Your children have completed 25 lessons together.',
+    icon: 'flame', assignment: 'auto', criteria: { min_lessons: 25 } },
+  { key: 'dedicated_parent', audience: 'parent', category: 'involvement', tier: 40,
+    name: 'Dedicated Parent', description: 'Your children have completed 50 lessons together.',
+    icon: 'trophy', assignment: 'auto', criteria: { min_lessons: 50 } },
+]
+
+export const ALL_BADGES: BadgeDef[] = [...TEACHER_BADGES, ...STUDENT_BADGES, ...PARENT_BADGES]
 export const BADGE_BY_KEY: Record<string, BadgeDef> =
   Object.fromEntries(ALL_BADGES.map(b => [b.key, b]))
 
@@ -169,6 +191,9 @@ export const STUDENT_GROUPS: { category: BadgeCategory; label: string }[] = [
   { category: 'progress', label: 'Learning Progress' },
   { category: 'attendance', label: 'Attendance' },
   { category: 'achievement', label: 'Achievements' },
+]
+export const PARENT_GROUPS: { category: BadgeCategory; label: string }[] = [
+  { category: 'involvement', label: 'Involvement' },
 ]
 
 // ── EVALUATORS — pure functions, no I/O. Same logic everywhere. ────────────────
@@ -249,6 +274,20 @@ export function evaluateStudentBadges(
   return out
 }
 
+/** Returns the badge keys a parent currently QUALIFIES for (auto rules only). */
+export function evaluateParentBadges(
+  s: ParentSignals,
+  cfg?: Record<string, Record<string, number>>
+): string[] {
+  const out: string[] = []
+  const c = (k: string) => thr(BADGE_BY_KEY[k], cfg)
+  if (s.children_lessons_completed >= c('supportive_parent').min_lessons) out.push('supportive_parent')
+  if (s.children_lessons_completed >= c('engaged_parent').min_lessons) out.push('engaged_parent')
+  if (s.children_lessons_completed >= c('active_parent').min_lessons) out.push('active_parent')
+  if (s.children_lessons_completed >= c('dedicated_parent').min_lessons) out.push('dedicated_parent')
+  return out
+}
+
 // ── PREMIUM SVG ICONS — equal 24×24 viewBox, single-stroke, theme via `color` ──
 export type BadgeIconKey =
   | 'shield_check' | 'shield_star' | 'rosette' | 'crown' | 'calendar_check'
@@ -316,6 +355,11 @@ export function criteriaText(def: BadgeDef, cfg?: Record<string, Record<string, 
     case 'hifz_achievement':    return 'Complete a Hifz course.'
     case 'course_achievement':  return `Complete ${c.min_courses} full course.`
     case 'quran_achievement':   return `Complete ${c.min_courses}+ courses.`
+    // Parent — involvement
+    case 'supportive_parent':   return 'Enrol a child and complete their first lesson.'
+    case 'engaged_parent':      return `Your children complete ${c.min_lessons} lessons in total.`
+    case 'active_parent':       return `Your children complete ${c.min_lessons} lessons in total.`
+    case 'dedicated_parent':    return `Your children complete ${c.min_lessons} lessons in total.`
     default: return def.description
   }
 }
