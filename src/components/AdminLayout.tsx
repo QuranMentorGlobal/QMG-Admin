@@ -31,7 +31,6 @@ const CATEGORIES = [
   ] },
   { key: 'trust', label: 'Verification & Trust', l1: 'Verification', l2: '& Trust', icon: ShieldCheck, items: [
     { href: '/verification-queue', label: 'Verification Queue', icon: ShieldCheck      },
-    { href: '/re-verification',    label: 'Re-Verification',    icon: GitCompareArrows },
     { href: '/moderation',         label: 'Trust & Safety',     icon: ShieldAlert      },
     { href: '/reviews',            label: 'Reviews Moderation', icon: Star             },
     { href: '/badges',             label: 'Badge Management',   icon: Award            },
