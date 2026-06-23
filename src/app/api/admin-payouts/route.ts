@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   }
   if (action === 'reject') {
+    // Release covered earnings back to 'available'.
+    await admin.from('teacher_earnings')
+      .update({ status: 'available', payout_id: null, updated_at: new Date().toISOString() })
+      .eq('payout_id', payoutId).eq('status', 'payout_pending')
     await admin.from('teacher_payouts').update({
       status: 'rejected', rejected_by: user.id, rejected_at: new Date().toISOString(),
       rejection_reason: body.reason || 'Not specified',
@@ -40,8 +44,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   }
   if (action === 'complete') {
+    const now = new Date().toISOString()
+    // Covered earnings → paid.
+    await admin.from('teacher_earnings')
+      .update({ status: 'paid', paid_at: now, updated_at: now })
+      .eq('payout_id', payoutId).eq('status', 'payout_pending')
+    // Consume this teacher's unsettled adjustments against this payout.
+    const { data: po } = await admin.from('teacher_payouts').select('teacher_id').eq('id', payoutId).single()
+    if (po?.teacher_id) {
+      try {
+        await admin.from('teacher_adjustments')
+          .update({ payout_id: payoutId }).eq('teacher_id', po.teacher_id).is('payout_id', null)
+      } catch {}
+    }
     await admin.from('teacher_payouts').update({
-      status: 'completed', completed_at: new Date().toISOString(), reference: body.reference || null,
+      status: 'completed', completed_at: now, reference: body.reference || null,
     }).eq('id', payoutId)
     return NextResponse.json({ success: true })
   }
