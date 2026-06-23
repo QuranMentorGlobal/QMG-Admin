@@ -269,7 +269,7 @@ export default function AdminLayout({
   const activePage = NAV_ITEMS.find(n => isActive(n.href))
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#111111' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', maxWidth: '100vw', overflow: 'hidden', background: '#111111' }}>
       <style>{ADMINX_STYLES}</style>
 
       {/* Desktop Sidebar */}
