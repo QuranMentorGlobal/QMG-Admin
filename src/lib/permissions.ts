@@ -96,6 +96,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],
   '/badges': ['badges.view', 'badges.manage'],
+  '/badge-guide': ['badges.view', 'badges.manage'],
   '/moderation': ['support.view'],
   '/students': ['students.view'],
   '/bookings': ['bookings.view'],

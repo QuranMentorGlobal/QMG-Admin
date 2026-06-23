@@ -34,6 +34,7 @@ const CATEGORIES = [
     { href: '/moderation',         label: 'Trust & Safety',     icon: ShieldAlert      },
     { href: '/reviews',            label: 'Reviews Moderation', icon: Star             },
     { href: '/badges',             label: 'Badge Management',   icon: Award            },
+    { href: '/badge-guide',        label: 'Badge Guide',        icon: BookOpen         },
   ] },
   { key: 'people', label: 'People Management', l1: 'People', l2: 'Management', icon: Users, items: [
     { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },

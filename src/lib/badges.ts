@@ -281,3 +281,48 @@ export const BADGE_ICON_PATHS: Record<BadgeIconKey, string> = {
   certificate:   'M5 3h14v12H5z M8 18l-1 3 5-2 5 2-1-3 M9 7h6 M9 10h4',
   star_burst:    'M12 2l1.8 4.2L18 4l-1.2 4.4L21 11l-4.2 1.2L18 16l-4.4-1.2L12 20l-1.6-5.2L6 16l1.2-3.8L3 11l4.2-2.6L6 4l4.2 2.2z',
 }
+
+// ── Human-readable "how it's earned" — used by the Badge Guide / help center ──
+export function criteriaText(def: BadgeDef, cfg?: Record<string, Record<string, number>>): string {
+  const c = { ...def.criteria, ...(cfg?.[def.key] || {}) }
+  switch (def.key) {
+    // Teacher — trust
+    case 'verified_teacher':    return 'Awarded automatically once the teacher is approved and identity-verified.'
+    case 'trusted_teacher':     return `Verified and in good standing, with at least ${c.min_lessons} completed lessons and a ${c.min_rating}★+ rating.`
+    case 'top_rated_teacher':   return `Maintains a ${c.min_rating}★+ average rating across ${c.min_reviews}+ reviews.`
+    case 'elite_teacher':       return `Ijazah-certified with a ${c.min_rating}★+ rating, ${c.min_reviews}+ reviews, and ${c.min_lessons}+ completed lessons.`
+    // Teacher — performance
+    case 'reliable_teacher':    return `Keeps a ${c.min_completion}%+ lesson completion rate across ${c.min_lessons}+ lessons (rarely cancels).`
+    case 'fast_response_teacher': return `Median reply time under ${c.max_response_hours} hours across at least ${c.min_samples} student messages.`
+    case 'global_teacher':      return `Teaches students from at least ${c.min_countries} different countries.`
+    case 'expert_teacher':      return `Has ${c.min_lessons}+ completed lessons or ${c.min_years}+ years of teaching experience.`
+    // Teacher — specialization
+    case 'tajweed_specialist':  return 'Lists Tajweed among their specializations (approved teachers).'
+    case 'hifz_specialist':     return 'Lists Hifz among their specializations (approved teachers).'
+    case 'tafseer_specialist':  return 'Lists Tafseer among their specializations (approved teachers).'
+    case 'kids_specialist':     return 'Teaches courses for children, or granted manually by an admin.'
+    // Student — progress
+    case 'first_lesson_award':      return 'Complete your first lesson.'
+    case 'active_learning_award':   return `Complete ${c.min_lessons} lessons.`
+    case 'dedicated_learning_award':return `Complete ${c.min_lessons} lessons.`
+    case 'quran_journey_award':     return `Complete ${c.min_lessons} lessons.`
+    // Student — attendance
+    case 'perfect_attendance':  return `Attend 100% of your lessons (minimum ${c.min_graded} graded lessons).`
+    case 'consistent_attendance': return `Attend at least ${c.min_present_pct}% of your lessons (minimum ${c.min_graded}).`
+    case 'punctual_learner':    return `No late arrivals across at least ${c.min_graded} lessons.`
+    case 'attendance_champion': return `Attend ${c.min_present}+ lessons.`
+    // Student — achievement
+    case 'tajweed_achievement': return 'Complete a Tajweed course.'
+    case 'hifz_achievement':    return 'Complete a Hifz course.'
+    case 'course_achievement':  return `Complete ${c.min_courses} full course.`
+    case 'quran_achievement':   return `Complete ${c.min_courses}+ courses.`
+    default: return def.description
+  }
+}
+
+// Assignment label for display
+export function assignmentLabel(def: BadgeDef): string {
+  if (def.assignment === 'manual') return 'Admin-assigned'
+  if (def.assignment === 'auto_or_manual') return 'Automatic or admin-assigned'
+  return 'Automatic'
+}
