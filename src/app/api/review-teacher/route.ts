@@ -55,10 +55,14 @@ export async function POST(req: NextRequest) {
       : 'Teacher'
 
     // 4. In-platform notification
-    const notifTitle = action === 'approved' ? 'Application Approved! 🎉' : 'Application Update'
+    const isChanges = action === 'changes_requested'
+    const notifTitle = action === 'approved' ? 'Application Approved! 🎉'
+      : isChanges ? 'Action Required on Your Application' : 'Application Update'
     const notifBody = action === 'approved'
       ? 'Congratulations! Your teacher application has been approved. You can now receive bookings.'
-      : `Your application was not approved. Reason: ${reason || 'Please contact support for details.'}`
+      : isChanges
+        ? `Please update your application and resubmit. ${reason || 'Some details need attention.'}`
+        : `Your application was not approved. Reason: ${reason || 'Please contact support for details.'}`
 
     await supabase.from('notifications').insert({
       user_id: userId,

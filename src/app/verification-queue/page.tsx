@@ -1,522 +1,357 @@
-// qmg-admin: src/app/verification-queue/page.tsx
+// PASTE THIS WHOLE FILE INTO:  src/app/verification-queue/page.tsx
+// ════════════════════════════════════════════════════════════════════════════
+// UNIFIED VERIFICATION QUEUE (Phases 7–8)
+// One place for new applications AND profile re-verifications. Five clean
+// statuses, an 8-point application review, a Current-vs-Submitted diff for
+// changes, and three actions: Approve · Reject · Request Changes.
+// Approving fires the badge engine automatically (server-side), so trust badges
+// update everywhere with no manual refresh.
+// ════════════════════════════════════════════════════════════════════════════
 'use client'
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
-import { ShieldCheck, Eye, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play, Clock } from 'lucide-react'
+import {
+  ShieldCheck, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play,
+  Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw,
+} from 'lucide-react'
+
+const GOLD = '#B8952A', INK = '#1A1A1A', BORDER = '#E8E4DA', MUTED = '#9A9A8A'
+const CREAM = '#F7F1E2', GREEN = '#16A34A', RED = '#DC2626', BLUE = '#1E40AF', AMBER = '#B45309'
 
 type Teacher = {
-  id: string
-  user_id: string
-  status: string
-  email_verified: boolean
-  phone_verified: boolean
-  identity_verified: boolean
-  identity_document_url: string | null
-  quran_mentor_verified: boolean
-  ijazah_verified: boolean
-  ijazah_document_url: string | null
-  verification_notes: string | null
-  years_experience: number
-  specializations: string[]
-  teaching_languages: string[]
-  hourly_rate_usd: number
-  trial_rate_usd: number
-  available_days: string[]
-  profile_photo_url: string | null
-  intro_video_url: string | null
-  submitted_at: string | null
-  rejection_reason: string | null
-  profiles: {
-    first_name: string
-    last_name: string
-    email: string
-    country: string
-    phone: string
-    bio: string
-  }
+  id: string; user_id: string; status: string
+  email_verified: boolean; phone_verified: boolean; identity_verified: boolean
+  identity_document_url: string | null; quran_mentor_verified: boolean
+  ijazah_verified: boolean; ijazah_document_url: string | null
+  verification_notes: string | null; years_experience: number
+  specializations: string[]; teaching_languages: string[]
+  intro_video_url: string | null; rejection_reason: string | null
+  profiles: { first_name: string; last_name: string; email: string; country: string; phone: string; bio: string }
+}
+type ChangeReq = {
+  id: string; teacher_user_id: string; teacher_profile_id: string
+  status: string; change_type: string; created_at: string
+  changes: Record<string, { from: any; to: any }>
+  teacher_name?: string; teacher_email?: string; current_status?: string
 }
 
-type TierKey = 'identity' | 'quran_mentor' | 'ijazah' | 'phone'
+// ── The five clean statuses ───────────────────────────────────────────────────
+const STATUSES = [
+  { key: 'pending_review',     label: 'Pending Review',          color: GOLD,  icon: Clock },
+  { key: 'pending_reverify',   label: 'Pending Re-Verification', color: BLUE,  icon: GitCompareArrows },
+  { key: 'action_required',    label: 'Action Required',         color: AMBER, icon: AlertTriangle },
+  { key: 'verified',           label: 'Verified',                color: GREEN, icon: BadgeCheck },
+  { key: 'rejected',           label: 'Rejected',                color: RED,   icon: XCircle },
+] as const
+type StatusKey = typeof STATUSES[number]['key']
 
-const TIER_CONFIG: { key: TierKey; label: string; color: string }[] = [
-  { key: 'phone',        label: 'Phone Verified',        color: '#6B7280' },
-  { key: 'identity',     label: 'Identity Verified',     color: '#1E40AF' },
-  { key: 'quran_mentor', label: 'Quran Mentor Verified', color: '#B8952A' },
-  { key: 'ijazah',       label: 'Ijazah Verified',       color: '#92710A' },
-]
+// The credential items an admin verifies on an application.
+const REVIEW_TIERS = [
+  { key: 'identity', label: 'Identity', flag: 'identity_verified', doc: 'identity_document_url' },
+  { key: 'phone', label: 'Phone', flag: 'phone_verified', doc: null },
+  { key: 'quran_mentor', label: 'Qualifications', flag: 'quran_mentor_verified', doc: null },
+  { key: 'ijazah', label: 'Certifications / Ijazah', flag: 'ijazah_verified', doc: 'ijazah_document_url' },
+] as const
 
-function TierIcon({ k, color, size = 18 }: { k: string; color: string; size?: number }) {
-  const c = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  if (k === 'phone')        return (<svg {...c}><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>)
-  if (k === 'identity')     return (<svg {...c}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>)
-  if (k === 'quran_mentor') return (<svg {...c}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>)
-  if (k === 'ijazah')       return (<svg {...c}><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"/></svg>)
-  return null
+const FIELD_LABELS: Record<string, string> = {
+  bio: 'Bio', country: 'Country', teaching_languages: 'Languages', specializations: 'Specializations',
+  intro_video_url: 'Intro Video', years_experience: 'Experience', hourly_rate_usd: 'Hourly Rate',
+  trial_rate_usd: 'Trial Rate', phone: 'Phone', first_name: 'First Name', last_name: 'Last Name',
 }
+const fmtVal = (v: any) => v == null || v === '' ? '—' : Array.isArray(v) ? (v.length ? v.join(', ') : '—') : String(v)
+const fmtDate = (s: string) => { try { return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) } catch { return s } }
 
 export default function VerificationQueuePage() {
   const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [reqs, setReqs] = useState<ChangeReq[]>([])
   const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<StatusKey>('pending_review')
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
-  const [docUrls, setDocUrls] = useState<Record<string, string>>({})
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'identity' | 'quran_mentor' | 'ijazah'>('all')
+  const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
 
-  useEffect(() => { fetchQueue() }, [])
+  useEffect(() => { load() }, [])
 
-  async function fetchQueue() {
+  async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/verification-queue')
-      const data = await res.json()
-      if (Array.isArray(data)) {
-        setTeachers(data)
-      } else {
-        setTeachers([])
-        showToastErr('Queue error: ' + (data?.error || 'unexpected response'))
-      }
-    } catch {
-      showToastErr('Failed to load verification queue')
-    }
+      const [tRes, rRes] = await Promise.all([
+        fetch('/api/verification-queue').then(r => r.json()).catch(() => []),
+        fetch('/api/profile-change-requests').then(r => r.json()).catch(() => []),
+      ])
+      setTeachers(Array.isArray(tRes) ? tRes : [])
+      setReqs(Array.isArray(rRes) ? rRes : [])
+    } catch { showErr('Failed to load the verification queue') }
     setLoading(false)
   }
 
-  function showToast(msg: string, kind: 'success' | 'error' = 'success') {
-    setToast({ m: msg, k: kind })
-    setTimeout(() => setToast(null), 4000)
-  }
-  const showToastErr = (m: string) => showToast(m, 'error')
+  function show(m: string, k: 'success' | 'error' = 'success') { setToast({ m, k }); setTimeout(() => setToast(null), 3800) }
+  const showErr = (m: string) => show(m, 'error')
 
-  async function loadSignedUrl(docUrl: string) {
+  async function openDoc(docUrl: string) {
     if (!docUrl) return
     let path = docUrl
-    if (docUrl.includes('verification-documents/')) {
-      path = docUrl.split('verification-documents/').pop() || docUrl
-    }
+    if (docUrl.includes('verification-documents/')) path = docUrl.split('verification-documents/').pop() || docUrl
     try {
-      const res = await fetch(`/api/signed-url?bucket=verification-documents&path=${encodeURIComponent(path)}`)
-      const data = await res.json()
-      if (data.signedUrl) {
-        setDocUrls(prev => ({ ...prev, [docUrl]: data.signedUrl }))
-        window.open(data.signedUrl, '_blank')
-      } else {
-        showToastErr('Failed to load document')
-      }
-    } catch {
-      showToastErr('Failed to load document')
-    }
+      const r = await fetch(`/api/signed-url?bucket=verification-documents&path=${encodeURIComponent(path)}`)
+      const d = await r.json()
+      if (d.signedUrl) window.open(d.signedUrl, '_blank'); else showErr('Could not open document')
+    } catch { showErr('Could not open document') }
   }
 
-  // ── Initial application approve/reject ──
-  async function handleApplicationAction(teacher: Teacher, action: 'approved' | 'rejected') {
-    if (action === 'rejected' && !notes[`${teacher.id}-app`]?.trim()) {
-      showToastErr('Please provide a rejection reason')
-      return
-    }
-    setActionLoading(`${teacher.id}-app-${action}`)
+  async function decideApplication(t: Teacher, action: 'approved' | 'rejected' | 'changes_requested') {
+    const reason = notes[`app-${t.id}`] || ''
+    if ((action === 'rejected' || action === 'changes_requested') && !reason.trim()) { showErr('Add a note explaining what is needed'); return }
+    setBusy(`app-${t.id}-${action}`)
     try {
-      const res = await fetch('/api/review-teacher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: teacher.id,
-          userId: teacher.user_id,
-          action,
-          reason: notes[`${teacher.id}-app`] || '',
-        }),
+      const r = await fetch('/api/review-teacher', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: t.id, userId: t.user_id, action, reason }),
       })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      showToast(action === 'approved' ? 'Teacher approved and now live!' : 'Application rejected')
-      fetchQueue()
-    } catch (err: any) {
-      showToastErr(`Error: ${err.message}`)
-    }
-    setActionLoading(null)
+      const text = await r.text(); const d = text ? JSON.parse(text) : {}
+      if (!r.ok || d.error) throw new Error(d.error || 'Action failed')
+      show(action === 'approved' ? 'Approved — teacher is live and badges updated' : action === 'rejected' ? 'Application rejected' : 'Changes requested')
+      load()
+    } catch (e: any) { showErr(e.message) }
+    setBusy(null)
   }
 
-  // ── Per-tier approve/reject ──
-  async function handleTierAction(teacher: Teacher, tier: TierKey, action: 'approve' | 'reject') {
-    const loadingKey = `${teacher.id}-${tier}-${action}`
-    setActionLoading(loadingKey)
+  async function tierAction(t: Teacher, tier: string, action: 'approve' | 'reject') {
+    setBusy(`tier-${t.id}-${tier}-${action}`)
     try {
-      const res = await fetch('/api/verification-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teacherProfileId: teacher.id,
-          userId: teacher.user_id,
-          tier,
-          action,
-          notes: notes[`${teacher.id}-${tier}`] || '',
-        }),
+      const r = await fetch('/api/verification-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherProfileId: t.id, userId: t.user_id, tier, action, notes: notes[`tier-${t.id}-${tier}`] || '' }),
       })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      showToast(`${tier.replace('_', ' ')} ${action}d successfully`)
-      fetchQueue()
-    } catch (err: any) {
-      showToastErr(`Error: ${err.message}`)
-    }
-    setActionLoading(null)
+      const text = await r.text(); const d = text ? JSON.parse(text) : {}
+      if (!r.ok || d.error) throw new Error(d.error || 'Action failed')
+      show(`${tier.replace('_', ' ')} ${action}d`)
+      load()
+    } catch (e: any) { showErr(e.message) }
+    setBusy(null)
   }
 
-  function getName(t: Teacher) {
-    const p = t.profiles
-    return p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : 'Unknown'
+  async function decideChange(r: ChangeReq, action: 'approve' | 'reject' | 'request_changes') {
+    const note = notes[`req-${r.id}`] || ''
+    if ((action === 'reject' || action === 'request_changes') && !note.trim()) { showErr('Add a note explaining what is needed'); return }
+    setBusy(`req-${r.id}-${action}`)
+    try {
+      const res = await fetch('/api/profile-change-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: r.id, teacherUserId: r.teacher_user_id, teacherProfileId: r.teacher_profile_id, action, notes: note }),
+      })
+      const text = await res.text(); const d = text ? JSON.parse(text) : {}
+      if (!res.ok || d.error) throw new Error(d.error || 'Action failed')
+      show(action === 'approve' ? 'Changes approved — profile re-listed and badges updated' : action === 'reject' ? 'Changes rejected' : 'Changes requested from teacher')
+      load()
+    } catch (e: any) { showErr(e.message) }
+    setBusy(null)
   }
 
-  function getVerifiedCount(t: Teacher): number {
-    let count = 0
-    if (t.email_verified && t.phone_verified) count++
-    if (t.identity_verified) count++
-    if (t.quran_mentor_verified) count++
-    if (t.ijazah_verified) count++
-    return count
+  const name = (t: Teacher) => t.profiles ? `${t.profiles.first_name || ''} ${t.profiles.last_name || ''}`.trim() || 'Unknown' : 'Unknown'
+
+  const apps = {
+    pending_review: teachers.filter(t => t.status === 'pending'),
+    action_required: teachers.filter(t => t.status === 'changes_requested'),
+    verified: teachers.filter(t => t.status === 'approved'),
+    rejected: teachers.filter(t => t.status === 'rejected'),
   }
-
-  const filtered = teachers.filter(t => {
-    if (filter === 'all') return true
-    if (filter === 'pending') return t.status === 'pending'
-    if (filter === 'identity') return t.identity_document_url && !t.identity_verified
-    if (filter === 'quran_mentor') return !t.quran_mentor_verified && t.status === 'approved'
-    if (filter === 'ijazah') return t.ijazah_document_url && !t.ijazah_verified
-    return true
-  })
-
-  const pendingCount = teachers.filter(t => t.status === 'pending').length
+  const changes = {
+    pending_reverify: reqs.filter(r => r.status === 'pending'),
+    action_required: reqs.filter(r => r.status === 'changes_requested'),
+  }
+  const count: Record<StatusKey, number> = {
+    pending_review: apps.pending_review.length,
+    pending_reverify: changes.pending_reverify.length,
+    action_required: apps.action_required.length + changes.action_required.length,
+    verified: apps.verified.length,
+    rejected: apps.rejected.length,
+  }
 
   return (
     <AdminLayout>
-     <div>
-      {toast && (
-          <div style={{
-            position: 'fixed', top: 24, right: 24, zIndex: 200,
-            background: toast.k === 'error' ? '#DC2626' : '#B8952A',
-            color: '#fff', padding: '12px 18px', borderRadius: 12,
-            fontSize: 14, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-              {toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}
-            </svg>
-            {toast.m}
+      <div style={{ maxWidth: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <ShieldCheck size={22} style={{ color: GOLD }} />
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Verification Queue</h1>
+          <button onClick={load} title="Refresh" style={{ marginLeft: 'auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>
+        </div>
+        <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+          {STATUSES.map(s => {
+            const Ic = s.icon; const active = tab === s.key
+            return (
+              <button key={s.key} onClick={() => { setTab(s.key); setExpanded(null) }}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 11, cursor: 'pointer',
+                  border: `1.5px solid ${active ? s.color : BORDER}`, background: active ? s.color : '#fff', color: active ? '#fff' : INK, fontWeight: 600, fontSize: 13 }}>
+                <Ic size={15} /> {s.label}
+                <span style={{ background: active ? 'rgba(255,255,255,0.25)' : CREAM, color: active ? '#fff' : s.color, borderRadius: 20, padding: '1px 8px', fontSize: 12, fontWeight: 800 }}>{count[s.key]}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{[1, 2, 3].map(i => <div key={i} style={{ height: 90, borderRadius: 16, background: '#EFEADD' }} className="animate-pulse" />)}</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {(tab === 'pending_review' || tab === 'verified' || tab === 'rejected' || tab === 'action_required') &&
+              (apps as any)[tab]?.map((t: Teacher) => (
+                <ApplicationCard key={t.id} t={t} name={name(t)} expanded={expanded === t.id}
+                  onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                  notes={notes} setNotes={setNotes} busy={busy} openDoc={openDoc}
+                  decideApplication={decideApplication} tierAction={tierAction} showVerified={tab === 'verified'} />
+              ))}
+
+            {(tab === 'pending_reverify' || tab === 'action_required') &&
+              (tab === 'pending_reverify' ? changes.pending_reverify : changes.action_required).map(r => (
+                <ChangeCard key={r.id} r={r} expanded={expanded === r.id}
+                  onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
+                  notes={notes} setNotes={setNotes} busy={busy} decideChange={decideChange} />
+              ))}
+
+            {count[tab] === 0 && (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: MUTED, background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}` }}>
+                Nothing in “{STATUSES.find(s => s.key === tab)?.label}”.
+              </div>
+            )}
           </div>
         )}
 
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>
-              Verification Queue
-            </h1>
-            <p style={{ fontSize: 13, color: '#6B7280', margin: '4px 0 0' }}>
-              Approve new teachers and manage verification tiers
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {([
-              { key: 'all', label: 'All' },
-              { key: 'pending', label: `New Applications${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
-              { key: 'identity', label: 'ID Pending' },
-              { key: 'quran_mentor', label: 'QM Pending' },
-              { key: 'ijazah', label: 'Ijazah Pending' },
-            ] as const).map(f => (
-              <button key={f.key} onClick={() => setFilter(f.key as any)}
-                style={{
-                  padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                  border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
-                  borderColor: filter === f.key ? '#B8952A' : '#E5E7EB',
-                  background: filter === f.key ? '#B8952A' : '#fff',
-                  color: filter === f.key ? '#fff' : '#6B7280',
-                }}>
-                {f.label}
-              </button>
-            ))}
-          </div>
+        {toast && <div style={{ position: 'fixed', bottom: 24, right: 24, background: toast.k === 'error' ? RED : INK, color: '#fff', padding: '11px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 100, maxWidth: 360 }}>{toast.m}</div>}
+      </div>
+    </AdminLayout>
+  )
+}
+
+function ApplicationCard({ t, name, expanded, onToggle, notes, setNotes, busy, openDoc, decideApplication, tierAction, showVerified }: any) {
+  const reviewables: { label: string; value: string }[] = [
+    { label: 'Country', value: fmtVal(t.profiles?.country) },
+    { label: 'Languages', value: fmtVal(t.teaching_languages) },
+    { label: 'Specializations', value: fmtVal(t.specializations) },
+    { label: 'Experience', value: `${t.years_experience || 0} yrs` },
+  ]
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+      <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }} onClick={onToggle}>
+        <div>
+          <p style={{ fontWeight: 800, color: INK, margin: 0, fontSize: 15 }}>{name}</p>
+          <p style={{ color: MUTED, fontSize: 12, margin: '2px 0 0' }}>{t.profiles?.email} · {t.profiles?.country || '—'}</p>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {showVerified && <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, background: 'rgba(22,163,74,0.1)', borderRadius: 20, padding: '3px 10px' }}>Live</span>}
+          {expanded ? <ChevronUp size={18} style={{ color: MUTED }} /> : <ChevronDown size={18} style={{ color: MUTED }} />}
+        </div>
+      </div>
 
-        {/* Loading / Empty */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B8952A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
-            Loading verification queue…
+      {expanded && (
+        <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${BORDER}` }}>
+          {t.profiles?.bio && <p style={{ fontSize: 13, color: '#444', margin: '14px 0', lineHeight: 1.5 }}>{t.profiles.bio}</p>}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 10, marginBottom: 16 }}>
+            {reviewables.map(rv => (
+              <div key={rv.label} style={{ background: CREAM, borderRadius: 10, padding: '8px 12px' }}>
+                <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: MUTED, margin: 0 }}>{rv.label}</p>
+                <p style={{ fontSize: 13, color: INK, margin: '2px 0 0', fontWeight: 600 }}>{rv.value}</p>
+              </div>
+            ))}
+            {t.intro_video_url && (
+              <a href={t.intro_video_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, background: CREAM, borderRadius: 10, padding: '8px 12px', color: GOLD, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                <Play size={14} /> Watch intro video
+              </a>
+            )}
           </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px dashed #E5E7EB' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 9 11 14 8 11"/></svg></div>
-            <p style={{ fontWeight: 700, color: '#1A1A1A', fontSize: 16 }}>Queue is clear!</p>
-            <p style={{ color: '#9CA3AF', fontSize: 13, marginTop: 4 }}>No pending items in this category.</p>
-          </div>
-        ) : (
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {filtered.map(teacher => {
-              const isExpanded = expanded === teacher.id
-              const isPending = teacher.status === 'pending'
-              const name = getName(teacher)
-              const verifiedCount = getVerifiedCount(teacher)
-
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: MUTED, margin: '0 0 8px' }}>Verify credentials</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {REVIEW_TIERS.map(tier => {
+              const verified = !!t[tier.flag]
+              const docUrl = tier.doc ? t[tier.doc] : null
               return (
-                <div key={teacher.id} className="adminx-row" style={{
-                  background: '#fff', borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s',
-                  border: `1.5px solid ${isPending ? '#FDE68A' : '#E5E7EB'}`,
-                }}>
-                  {/* Collapsed header */}
-                  <button onClick={() => setExpanded(isExpanded ? null : teacher.id)}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '16px 20px', cursor: 'pointer', border: 'none', background: 'transparent',
-                      textAlign: 'left', gap: 12,
-                    }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        width: 42, height: 42, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
-                        background: teacher.profile_photo_url ? undefined : 'linear-gradient(135deg, #B8952A, #1A1A1A)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 700, fontSize: 16,
-                      }}>
-                        {teacher.profile_photo_url
-                          ? <img src={teacher.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : (teacher.profiles?.first_name?.[0] || '?').toUpperCase()}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 700, fontSize: 14, color: '#1A1A1A' }}>{name}</span>
-                          {isPending && (
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#FEF3C7', color: '#D97706' }}>
-                              NEW APPLICATION
-                            </span>
-                          )}
-                          {!isPending && (
-                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{verifiedCount}/4 tiers</span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
-                          {teacher.profiles?.email} · {teacher.profiles?.country || 'N/A'}
-                          {teacher.submitted_at && ` · ${new Date(teacher.submitted_at).toLocaleDateString()}`}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-                      {!isPending && (
-                        <>
-                          <span title="Basic" style={{ width: 10, height: 10, borderRadius: '50%', background: (teacher.email_verified && teacher.phone_verified) ? '#22C55E' : '#E5E7EB' }} />
-                          <span title="Identity" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.identity_verified ? '#3B82F6' : teacher.identity_document_url ? '#FCD34D' : '#E5E7EB' }} />
-                          <span title="QM" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.quran_mentor_verified ? '#B8952A' : '#E5E7EB' }} />
-                          <span title="Ijazah" style={{ width: 10, height: 10, borderRadius: '50%', background: teacher.ijazah_verified ? '#B8952A' : teacher.ijazah_document_url ? '#FCD34D' : '#E5E7EB' }} />
-                        </>
-                      )}
-                      {isPending && <Clock size={16} color="#D97706" />}
-                      {isExpanded ? <ChevronUp size={16} color="#9CA3AF" /> : <ChevronDown size={16} color="#9CA3AF" />}
-                    </div>
-                  </button>
-
-                  {/* Expanded detail */}
-                  {isExpanded && (
-                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid #F3F4F6' }}>
-
-                      {/* Teacher info grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, padding: '16px 0' }}>
-                        {[
-                          { label: 'Experience', value: `${teacher.years_experience} years` },
-                          { label: 'Phone', value: teacher.profiles?.phone || 'N/A' },
-                          { label: 'Hourly Rate', value: `$${teacher.hourly_rate_usd}` },
-                          { label: 'Trial Rate', value: teacher.trial_rate_usd ? `$${teacher.trial_rate_usd}` : 'Free' },
-                          { label: 'Specializations', value: (teacher.specializations || []).join(', ') || 'N/A' },
-                          { label: 'Languages', value: (teacher.teaching_languages || []).join(', ') || 'N/A' },
-                          { label: 'Available Days', value: (teacher.available_days || []).map((d: string) => d.slice(0, 3)).join(', ') || 'N/A' },
-                        ].map(item => (
-                          <div key={item.label} style={{ padding: '8px 12px', borderRadius: 10, background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{item.label}</div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{item.value}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Bio */}
-                      {teacher.profiles?.bio && (
-                        <div style={{ padding: '12px 14px', borderRadius: 10, background: '#F9FAFB', border: '1px solid #F3F4F6', marginBottom: 16 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Bio</div>
-                          <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.6 }}>{teacher.profiles.bio}</div>
-                        </div>
-                      )}
-
-                      {/* Intro video */}
-                      {teacher.intro_video_url && (
-                        <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Intro Video</div>
-                          {playingVideo === teacher.id ? (
-                            <div style={{ borderRadius: 12, overflow: 'hidden', background: '#000', position: 'relative' }}>
-                              <video controls autoPlay style={{ width: '100%', maxHeight: 300, display: 'block' }}>
-                                <source src={teacher.intro_video_url} />
-                              </video>
-                              <button onClick={() => setPlayingVideo(null)}
-                                style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: 6, color: '#fff', padding: '4px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
-                                Close
-                              </button>
-                            </div>
-                          ) : (
-                            <button onClick={() => setPlayingVideo(teacher.id)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10,
-                                border: '1.5px solid #B8952A', background: '#F7F1E2', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#B8952A',
-                              }}>
-                              <Play size={16} /> Watch Introduction Video
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Admin notes history */}
-                      {teacher.verification_notes && (
-                        <div style={{ padding: '12px 14px', borderRadius: 10, marginBottom: 16, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Admin Notes History</div>
-                          <pre style={{ fontSize: 12, color: '#92400E', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{teacher.verification_notes}</pre>
-                        </div>
-                      )}
-
-                      {/* ════ PENDING: Application Approve/Reject ════ */}
-                      {isPending && (
-                        <div style={{ padding: 16, borderRadius: 12, border: '2px solid #FDE68A', background: '#FFFBEB', marginBottom: 16 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <Clock size={18} color="#D97706" />
-                            <span style={{ fontWeight: 700, fontSize: 14, color: '#92400E' }}>Application Decision</span>
-                          </div>
-                          <p style={{ fontSize: 12, color: '#92400E', marginBottom: 12, lineHeight: 1.5 }}>
-                            This teacher is applying to join the platform. Approving makes their profile live and visible to students.
-                          </p>
-                          <input type="text" placeholder="Notes / rejection reason (required for rejection)..."
-                            value={notes[`${teacher.id}-app`] || ''}
-                            onChange={e => setNotes(prev => ({ ...prev, [`${teacher.id}-app`]: e.target.value }))}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', fontFamily: 'inherit', marginBottom: 12 }}
-                            onFocus={e => { e.currentTarget.style.borderColor = '#B8952A' }}
-                            onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-                          />
-                          <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={() => handleApplicationAction(teacher, 'approved')}
-                              disabled={actionLoading !== null}
-                              style={{
-                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                                border: 'none', color: '#fff', background: '#B8952A', cursor: 'pointer',
-                                opacity: actionLoading ? 0.6 : 1,
-                              }}>
-                              <CheckCircle size={16} />
-                              {actionLoading === `${teacher.id}-app-approved` ? 'Approving…' : 'Approve Teacher'}
-                            </button>
-                            <button onClick={() => handleApplicationAction(teacher, 'rejected')}
-                              disabled={actionLoading !== null}
-                              style={{
-                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                                border: '1.5px solid #FECACA', color: '#DC2626', background: '#FEF2F2', cursor: 'pointer',
-                                opacity: actionLoading ? 0.6 : 1,
-                              }}>
-                              <XCircle size={16} />
-                              {actionLoading === `${teacher.id}-app-rejected` ? 'Rejecting…' : 'Reject'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ════ APPROVED: Per-tier verification ════ */}
-                      {!isPending && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-                            Verification Tiers
-                          </div>
-                          {TIER_CONFIG.map(tierCfg => {
-                            const isVerified = teacher[`${tierCfg.key}_verified` as keyof Teacher] as boolean
-                            const docUrl = tierCfg.key === 'identity' ? teacher.identity_document_url
-                              : tierCfg.key === 'ijazah' ? teacher.ijazah_document_url : null
-                            const hasDoc = !!docUrl
-                            const needsReview = tierCfg.key === 'identity' ? (hasDoc && !isVerified)
-                              : tierCfg.key === 'ijazah' ? (hasDoc && !isVerified)
-                              : tierCfg.key === 'quran_mentor' ? (!isVerified)
-                              : !isVerified
-                            const notesKey = `${teacher.id}-${tierCfg.key}`
-
-                            return (
-                              <div key={tierCfg.key} style={{
-                                padding: '14px 16px', borderRadius: 12,
-                                border: `1.5px solid ${isVerified ? '#D1FAE5' : needsReview ? '#FDE68A' : '#F3F4F6'}`,
-                                background: isVerified ? '#F0FDF4' : '#fff',
-                              }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <TierIcon k={tierCfg.key} color={tierCfg.color} size={18} />
-                                    <div>
-                                      <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1A1A' }}>{tierCfg.label}</span>
-                                      {isVerified && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#16A34A', display: 'inline-flex', alignItems: 'center', gap: 4 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>}
-                                      {!isVerified && needsReview && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#D97706', display: 'inline-flex', alignItems: 'center', gap: 4 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Needs review</span>}
-                                      {!isVerified && !needsReview && <span style={{ marginLeft: 8, fontSize: 11, color: '#9CA3AF' }}>Not submitted</span>}
-                                    </div>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                                    {hasDoc && (
-                                      <button onClick={() => loadSignedUrl(docUrl!)}
-                                        style={{
-                                          display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
-                                          fontSize: 12, fontWeight: 600, border: '1.5px solid #3B82F6', color: '#3B82F6', background: '#EFF6FF', cursor: 'pointer',
-                                        }}>
-                                        <Eye size={14} /> View Doc
-                                      </button>
-                                    )}
-                                    {!isVerified && needsReview && (
-                                      <>
-                                        <button onClick={() => handleTierAction(teacher, tierCfg.key, 'approve')}
-                                          disabled={actionLoading !== null}
-                                          style={{
-                                            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
-                                            fontSize: 12, fontWeight: 600, border: 'none', color: '#fff', background: '#B8952A', cursor: 'pointer',
-                                            opacity: actionLoading ? 0.6 : 1,
-                                          }}>
-                                          <CheckCircle size={14} />
-                                          {actionLoading === `${teacher.id}-${tierCfg.key}-approve` ? '...' : 'Approve'}
-                                        </button>
-                                        <button onClick={() => handleTierAction(teacher, tierCfg.key, 'reject')}
-                                          disabled={actionLoading !== null}
-                                          style={{
-                                            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
-                                            fontSize: 12, fontWeight: 600, border: '1.5px solid #FECACA', color: '#DC2626', background: '#FEF2F2', cursor: 'pointer',
-                                            opacity: actionLoading ? 0.6 : 1,
-                                          }}>
-                                          <XCircle size={14} />
-                                          {actionLoading === `${teacher.id}-${tierCfg.key}-reject` ? '...' : 'Reject'}
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                                {!isVerified && needsReview && (
-                                  <div style={{ marginTop: 10 }}>
-                                    <input type="text" placeholder={`Notes for ${tierCfg.label} decision…`}
-                                      value={notes[notesKey] || ''}
-                                      onChange={e => setNotes(prev => ({ ...prev, [notesKey]: e.target.value }))}
-                                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
-                                      onFocus={e => { e.currentTarget.style.borderColor = '#B8952A' }}
-                                      onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-
-                    </div>
-                  )}
+                <div key={tier.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', border: `1px solid ${BORDER}`, borderRadius: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {verified ? <CheckCircle size={16} style={{ color: GREEN }} /> : <Clock size={16} style={{ color: MUTED }} />}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: INK }}>{tier.label}</span>
+                    {docUrl && <button onClick={() => openDoc(docUrl)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: GOLD, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><FileText size={13} /> View document</button>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {!verified
+                      ? <button disabled={!!busy} onClick={() => tierAction(t, tier.key, 'approve')} style={btn(GREEN)}>Verify</button>
+                      : <button disabled={!!busy} onClick={() => tierAction(t, tier.key, 'reject')} style={btnOutline(RED)}>Unverify</button>}
+                  </div>
                 </div>
               )
             })}
           </div>
-        )}
-      </div>
-    </AdminLayout>
+
+          {(t.status === 'pending' || t.status === 'changes_requested') && (
+            <>
+              <textarea value={notes[`app-${t.id}`] || ''} onChange={e => setNotes((p: any) => ({ ...p, [`app-${t.id}`]: e.target.value }))}
+                placeholder="Note to the teacher (required for Reject or Request Changes)…"
+                style={{ width: '100%', minHeight: 60, padding: 10, borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, marginBottom: 10, resize: 'vertical' }} />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button disabled={!!busy} onClick={() => decideApplication(t, 'approved')} style={btn(GREEN)}><CheckCircle size={14} /> Approve</button>
+                <button disabled={!!busy} onClick={() => decideApplication(t, 'changes_requested')} style={btn(AMBER)}><AlertTriangle size={14} /> Request Changes</button>
+                <button disabled={!!busy} onClick={() => decideApplication(t, 'rejected')} style={btnOutline(RED)}><XCircle size={14} /> Reject</button>
+              </div>
+            </>
+          )}
+          {t.status === 'rejected' && t.rejection_reason && <p style={{ fontSize: 12, color: RED, marginTop: 8 }}>Rejected: {t.rejection_reason}</p>}
+        </div>
+      )}
+    </div>
   )
+}
+
+function ChangeCard({ r, expanded, onToggle, notes, setNotes, busy, decideChange }: any) {
+  const entries = Object.entries(r.changes || {}) as [string, { from: any; to: any }][]
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+      <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }} onClick={onToggle}>
+        <div>
+          <p style={{ fontWeight: 800, color: INK, margin: 0, fontSize: 15 }}>{r.teacher_name || 'Teacher'}</p>
+          <p style={{ color: MUTED, fontSize: 12, margin: '2px 0 0' }}>{r.teacher_email} · {entries.length} change{entries.length !== 1 ? 's' : ''} submitted {fmtDate(r.created_at)}</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {r.status === 'changes_requested' && <span style={{ fontSize: 11, fontWeight: 700, color: AMBER, background: '#FEF3C7', borderRadius: 20, padding: '3px 10px' }}>Changes requested</span>}
+          {expanded ? <ChevronUp size={18} style={{ color: MUTED }} /> : <ChevronDown size={18} style={{ color: MUTED }} />}
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ margin: '14px 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: MUTED, padding: '0 0 6px' }}>
+              <span>Field</span><span>Current (Approved)</span><span style={{ color: GOLD }}>Submitted</span>
+            </div>
+            {entries.map(([field, v]) => (
+              <div key={field} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 0, alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${BORDER}` }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{FIELD_LABELS[field] || field}</span>
+                <span style={{ fontSize: 13, color: MUTED, textDecoration: 'line-through', paddingRight: 10 }}>{fmtVal(v.from)}</span>
+                <span style={{ fontSize: 13, color: INK, fontWeight: 600, background: 'rgba(184,149,42,0.1)', borderRadius: 6, padding: '3px 8px' }}>{fmtVal(v.to)}</span>
+              </div>
+            ))}
+          </div>
+
+          <textarea value={notes[`req-${r.id}`] || ''} onChange={e => setNotes((p: any) => ({ ...p, [`req-${r.id}`]: e.target.value }))}
+            placeholder="Note to the teacher (required for Reject or Request Changes)…"
+            style={{ width: '100%', minHeight: 60, padding: 10, borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, marginBottom: 10, resize: 'vertical' }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button disabled={!!busy} onClick={() => decideChange(r, 'approve')} style={btn(GREEN)}><CheckCircle size={14} /> Approve</button>
+            <button disabled={!!busy} onClick={() => decideChange(r, 'request_changes')} style={btn(AMBER)}><AlertTriangle size={14} /> Request Changes</button>
+            <button disabled={!!busy} onClick={() => decideChange(r, 'reject')} style={btnOutline(RED)}><XCircle size={14} /> Reject</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function btn(bg: string): React.CSSProperties {
+  return { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: bg, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer' }
+}
+function btnOutline(c: string): React.CSSProperties {
+  return { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', color: c, border: `1.5px solid ${c}55`, fontWeight: 700, fontSize: 13, cursor: 'pointer' }
 }

@@ -30,7 +30,7 @@ export async function GET() {
     let res: any = await supabase
       .from('teacher_profiles')
       .select('*, profiles(first_name, last_name, email, country, phone, bio)')
-      .in('status', ['pending', 'approved'])
+      .in('status', ['pending', 'approved', 'rejected', 'changes_requested', 'pending_review'])
       .order('created_at', { ascending: false })
 
     // Fallback: if the profiles embed isn't available in this schema, retry plain.
@@ -38,7 +38,7 @@ export async function GET() {
       res = await supabase
         .from('teacher_profiles')
         .select('*')
-        .in('status', ['pending', 'approved'])
+        .in('status', ['pending', 'approved', 'rejected', 'changes_requested', 'pending_review'])
         .order('created_at', { ascending: false })
     }
 
