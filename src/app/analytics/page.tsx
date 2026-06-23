@@ -239,7 +239,7 @@ export default function AnalyticsPage() {
                 )}
               </Panel>
               <Panel title="Key Markets">
-                <div className="qmg-markets" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10 }}>
+                <div className="qmg-markets" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 10 }}>
                   {KEY_MARKETS.map(km => (
                     <div key={km.name} style={{ textAlign: 'center', padding: '14px 6px', borderRadius: 12, background: '#F9F5EC', border: `1px solid ${BORDER}` }}>
                       <div style={{ fontSize: 26 }}>{km.flag}</div>
@@ -302,7 +302,7 @@ export default function AnalyticsPage() {
 
           {tab === 'Support' && (
             <>
-              <div className="qmg-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+              <div className="qmg-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
                 {[
                   { label: 'Open Tickets', value: fmtNum(deep?.support?.open ?? 0) },
                   { label: 'Resolved Tickets', value: fmtNum(deep?.support?.resolved ?? 0) },
@@ -336,7 +336,7 @@ export default function AnalyticsPage() {
                 <AlertTriangle size={18} style={{ color: '#C9A227', flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontSize: 12.5, color: '#92400E', margin: 0 }}>Visitor, traffic-source and landing-page conversion data needs a web-analytics integration (e.g. GA4 or Plausible). Once connected, these widgets populate automatically. The conversions below are computed from real platform data.</p>
               </div>
-              <div className="qmg-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+              <div className="qmg-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
                 {[
                   { label: 'Trial Bookings', value: fmtNum(deep?.insights?.trialBooked ?? 0), sub: 'in selected range' },
                   { label: 'Trial → Paid', value: `${deep?.insights?.conversionRate ?? 0}%`, sub: `${fmtNum(deep?.insights?.paidEnroll ?? 0)} paid` },
@@ -384,8 +384,8 @@ export default function AnalyticsPage() {
       )}
 
       <style>{`
-        @media(max-width:1000px){ .qmg-markets{grid-template-columns:repeat(4,1fr)!important} .qmg-3{grid-template-columns:1fr!important} }
-        @media(max-width:560px){ .qmg-markets{grid-template-columns:repeat(2,1fr)!important} }
+        @media(max-width:1000px){ .qmg-markets{grid-template-columns:repeat(4, minmax(0, 1fr))!important} .qmg-3{grid-template-columns:minmax(0,1fr)!important} }
+        @media(max-width:560px){ .qmg-markets{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
         @media print { .qmg-noprint{display:none!important} body{background:#fff!important} }
       `}</style>
     </AdminLayout>

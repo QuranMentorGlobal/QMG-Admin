@@ -410,8 +410,8 @@ export default function AdminLayout({
 
         {/* Cream rounded content panel — full width, internal scroll */}
         <main className="adminx-panel" style={{
-          flex: 1, overflowY: 'auto',
-          width: '100%', boxSizing: 'border-box',
+          flex: 1, overflowY: 'auto', overflowX: 'hidden', minWidth: 0,
+          width: '100%', maxWidth: '100%', boxSizing: 'border-box',
           background: '#F8F5EE',
         }}>
           <div className="adminx-page" key={pathname}>{children}</div>

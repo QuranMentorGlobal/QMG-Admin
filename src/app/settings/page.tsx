@@ -439,8 +439,8 @@ export default function SettingsPage() {
 
       <style>{`
         .adminx-rise{animation:qmgrise .4s ease both}@keyframes qmgrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-        .qmg-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-        @media(max-width:1024px){.qmg-cards{grid-template-columns:repeat(2,1fr)}}
+        .qmg-cards{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:14px}
+        @media(max-width:1024px){.qmg-cards{grid-template-columns:repeat(2, minmax(0, 1fr))}}
         @media(max-width:600px){.qmg-cards{grid-template-columns:1fr}}
         .qmg-card{text-align:left;background:#fff;border:1px solid ${BORDER};border-radius:16px;padding:18px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
         .qmg-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(201,162,39,.14);border-color:rgba(201,162,39,.5)}

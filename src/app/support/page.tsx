@@ -101,7 +101,7 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Metrics */}
-      <div className="qmg-sp-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 18 }}>
+      <div className="qmg-sp-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
         {loading ? [...Array(6)].map((_, i) => <Skel key={i} h={84} />) : <>
           <Kpi icon={Inbox} label="Total" value={String(m.total)} />
           <Kpi icon={Clock} label="Open" value={String(m.open)} accent />
@@ -114,7 +114,7 @@ export default function AdminSupportPage() {
 
       {/* Breakdown */}
       {!loading && d && (
-        <div className="qmg-sp-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+        <div className="qmg-sp-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
           <div className="adminx-rise" style={{ background: '#fff', borderRadius: 14, padding: '14px 18px', border: `1px solid ${BORDER}` }}>
             <p style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: INK, margin: '0 0 10px' }}><Tag size={14} style={{ color: GOLD }} /> By Category</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{d.byCategory.map((c: any) => <span key={c.name} style={{ fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 9, background: CREAM, color: INK, textTransform: 'capitalize' }}>{c.name} · <strong style={{ color: GOLD }}>{c.count}</strong></span>)}</div>
@@ -141,7 +141,7 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Two-pane workspace */}
-      <div className="qmg-sp-work" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 18 }}>
+      <div className="qmg-sp-work" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.2fr)', gap: 18 }}>
         {/* List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 620, overflowY: 'auto' }}>
           {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={76} />)
@@ -201,8 +201,8 @@ export default function AdminSupportPage() {
       <style>{`
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:1000px){ .qmg-sp-kpi{grid-template-columns:repeat(3,1fr)!important} .qmg-sp-2{grid-template-columns:1fr!important} .qmg-sp-work{grid-template-columns:1fr!important} }
-        @media(max-width:520px){ .qmg-sp-kpi{grid-template-columns:repeat(2,1fr)!important} }
+        @media(max-width:1000px){ .qmg-sp-kpi{grid-template-columns:repeat(3, minmax(0, 1fr))!important} .qmg-sp-2{grid-template-columns:minmax(0,1fr)!important} .qmg-sp-work{grid-template-columns:minmax(0,1fr)!important} }
+        @media(max-width:520px){ .qmg-sp-kpi{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
       `}</style>
     </AdminLayout>
   )

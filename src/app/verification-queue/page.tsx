@@ -323,11 +323,11 @@ function ChangeCard({ r, expanded, onToggle, notes, setNotes, busy, decideChange
       {expanded && (
         <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${BORDER}` }}>
           <div style={{ margin: '14px 0' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: MUTED, padding: '0 0 6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '160px minmax(0,1fr) minmax(0,1fr)', gap: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: MUTED, padding: '0 0 6px' }}>
               <span>Field</span><span>Current (Approved)</span><span style={{ color: GOLD }}>Submitted</span>
             </div>
             {entries.map(([field, v]) => (
-              <div key={field} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 0, alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${BORDER}` }}>
+              <div key={field} style={{ display: 'grid', gridTemplateColumns: '160px minmax(0,1fr) minmax(0,1fr)', gap: 0, alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${BORDER}` }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{FIELD_LABELS[field] || field}</span>
                 <span style={{ fontSize: 13, color: MUTED, textDecoration: 'line-through', paddingRight: 10 }}>{fmtVal(v.from)}</span>
                 <span style={{ fontSize: 13, color: INK, fontWeight: 600, background: 'rgba(201,162,39,0.1)', borderRadius: 6, padding: '3px 8px' }}>{fmtVal(v.to)}</span>

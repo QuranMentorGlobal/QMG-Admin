@@ -110,7 +110,7 @@ export default function AdminRefundsPage() {
       )}
 
       {/* KPIs */}
-      <div className="qmg-rf-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 18 }}>
+      <div className="qmg-rf-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
         {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={96} />) : <>
           <Kpi icon={DollarSign} label="Total Refunded" value={money(t.total)} accent sub={`${t.count} refunds`} />
           <Kpi icon={CalendarClock} label="This Month" value={money(t.thisMonth)} sub="Refunded this calendar month" />
@@ -120,7 +120,7 @@ export default function AdminRefundsPage() {
       </div>
 
       {/* Trend + initiator split */}
-      <div className="qmg-rf-2" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div className="qmg-rf-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.6fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
         <Panel title="Refunds (12 months)" icon={RotateCcw}>
           {loading ? <Skel h={260} /> : (
             <ResponsiveContainer width="100%" height={260}>
@@ -211,8 +211,8 @@ export default function AdminRefundsPage() {
       <style>{`
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:1000px){ .qmg-rf-kpi{grid-template-columns:repeat(2,1fr)!important} .qmg-rf-2{grid-template-columns:1fr!important} }
-        @media(max-width:520px){ .qmg-rf-kpi{grid-template-columns:1fr!important} }
+        @media(max-width:1000px){ .qmg-rf-kpi{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-rf-2{grid-template-columns:minmax(0,1fr)!important} }
+        @media(max-width:520px){ .qmg-rf-kpi{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
   )

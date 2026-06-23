@@ -134,7 +134,7 @@ export default function ReVerificationPage() {
                   {entries.length === 0 ? (
                     <p style={{ fontSize: 13, color: MUTED }}>No field-level detail recorded.</p>
                   ) : entries.map(([label, val]) => (
-                    <div key={label} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 12, alignItems: 'center', background: CREAM, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 13px' }} className="qmg-diffrow">
+                    <div key={label} style={{ display: 'grid', gridTemplateColumns: '150px minmax(0,1fr)', gap: 12, alignItems: 'center', background: CREAM, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 13px' }} className="qmg-diffrow">
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{label}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13 }}>
                         <span style={{ color: '#9A9A8A', textDecoration: 'line-through' }}>{fmt(val?.from)}</span>
@@ -167,7 +167,7 @@ export default function ReVerificationPage() {
       <style>{`
         .adminx-rise{animation:qmgrise .4s ease both}@keyframes qmgrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}@keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:560px){ .qmg-diffrow{grid-template-columns:1fr!important} }
+        @media(max-width:560px){ .qmg-diffrow{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
   )

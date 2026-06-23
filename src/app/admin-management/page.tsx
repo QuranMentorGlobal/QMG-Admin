@@ -172,7 +172,7 @@ export default function AdminManagementPage() {
             <div style={{ padding: 22 }}>
               {err && <div style={{ background: '#FEE2E2', color: RED, padding: '10px 14px', borderRadius: 10, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
                 <Field label="First name"><input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} style={inp} /></Field>
                 <Field label="Last name"><input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} style={inp} /></Field>
               </div>
@@ -198,7 +198,7 @@ export default function AdminManagementPage() {
                         <button onClick={() => setForm(f => ({ ...f, perms: all ? f.perms.filter(x => !g.perms.some(p => p.key === x)) : Array.from(new Set([...f.perms, ...g.perms.map(p => p.key)])) }))}
                           style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'transparent', border: 'none', cursor: 'pointer' }}>{all ? 'Clear' : 'Select all'}</button>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                         {g.perms.map(p => {
                           const on = form.perms.includes(p.key)
                           return (

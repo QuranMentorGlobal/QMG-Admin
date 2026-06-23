@@ -89,7 +89,7 @@ export default function TeacherDetailPage() {
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="qmg-skel" style={{ height: 120 }} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>{[...Array(6)].map((_, i) => <div key={i} className="qmg-skel" style={{ height: 92 }} />)}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>{[...Array(6)].map((_, i) => <div key={i} className="qmg-skel" style={{ height: 92 }} />)}</div>
         </div>
       ) : err ? (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: `1px solid ${BORDER}` }}>
@@ -120,7 +120,7 @@ export default function TeacherDetailPage() {
           </div>
 
           {/* Performance KPIs */}
-          <div className="qmg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18 }}>
+          <div className="qmg-grid3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
             <Stat icon={TrendingUp} label="Revenue Generated" value={money(m.revenue)} accent sub={`${m.paidLessons} paid lessons`} />
             <Stat icon={Wallet} label="Teacher Payout" value={money(m.payout)} sub="Total earned" />
             <Stat icon={Percent} label="Lesson Completion" value={`${m.completionRate}%`} sub={`${m.completed} done · ${m.cancelled} cancelled`} />
@@ -141,7 +141,7 @@ export default function TeacherDetailPage() {
           </div>
 
           {/* Verification + Profile */}
-          <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+          <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
             <div className="adminx-rise" style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', border: `1px solid ${BORDER}` }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: INK, margin: '0 0 14px', fontFamily: "'Fraunces',serif" }}><BadgeCheck size={16} style={{ color: GOLD }} /> Verification Status</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -183,8 +183,8 @@ export default function TeacherDetailPage() {
           <style>{`
             .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
             @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-            @media(max-width:900px){ .qmg-grid3{grid-template-columns:repeat(2,1fr)!important} .qmg-two{grid-template-columns:1fr!important} }
-            @media(max-width:520px){ .qmg-grid3{grid-template-columns:1fr!important} }
+            @media(max-width:900px){ .qmg-grid3{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-two{grid-template-columns:minmax(0,1fr)!important} }
+            @media(max-width:520px){ .qmg-grid3{grid-template-columns:minmax(0,1fr)!important} }
           `}</style>
         </>
       )}

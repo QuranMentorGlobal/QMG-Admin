@@ -83,7 +83,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* KPIs */}
-      <div className="qmg-rv-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 18 }}>
+      <div className="qmg-rv-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
         {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={96} />) : <>
           <Kpi icon={Star} label="Average Rating" value={t.avgRating ? `${t.avgRating}/5` : 'N/A'} accent sub="Across published reviews" />
           <Kpi icon={MessageSquare} label="Total Reviews" value={String(t.total)} />
@@ -93,7 +93,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Distribution + trend */}
-      <div className="qmg-rv-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 18, marginBottom: 18 }}>
+      <div className="qmg-rv-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.3fr)', gap: 18, marginBottom: 18 }}>
         <Panel title="Rating Distribution" icon={Star}>
           {loading ? <Skel h={210} /> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
@@ -126,7 +126,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Reputation */}
-      <div className="qmg-rv-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div className="qmg-rv-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
         <Panel title="Top-Rated Teachers" icon={Award}>
           {loading ? <Skel h={200} /> : (topRated.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No published reviews yet.</p> :
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -196,8 +196,8 @@ export default function ReviewsPage() {
       <style>{`
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:1000px){ .qmg-rv-kpi{grid-template-columns:repeat(2,1fr)!important} .qmg-rv-2{grid-template-columns:1fr!important} }
-        @media(max-width:520px){ .qmg-rv-kpi{grid-template-columns:1fr!important} }
+        @media(max-width:1000px){ .qmg-rv-kpi{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-rv-2{grid-template-columns:minmax(0,1fr)!important} }
+        @media(max-width:520px){ .qmg-rv-kpi{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
   )

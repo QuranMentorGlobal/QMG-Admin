@@ -114,7 +114,7 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* KPIs */}
-      <div className="qmg-fin-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 18 }}>
+      <div className="qmg-fin-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
         {loading ? [...Array(4)].map((_, i) => <Skel key={i} h={96} />) : <>
           <Kpi icon={DollarSign} label="Total Revenue (GTV)" value={money(t.gross)} accent sub={`${t.succeeded} successful payments`} />
           <Kpi icon={Landmark} label="Platform Commission" value={money(t.commission)} accent sub="Net to platform" />
@@ -148,7 +148,7 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Split + forecast + type */}
-      <div className="qmg-fin-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div className="qmg-fin-3" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
         <Panel title="Commission vs Payout" icon={Landmark}>
           {loading ? <Skel h={230} /> : (
             <ResponsiveContainer width="100%" height={230}>
@@ -188,7 +188,7 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Top payouts + monthly bars */}
-      <div className="qmg-fin-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 18, marginBottom: 18 }}>
+      <div className="qmg-fin-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.4fr)', gap: 18, marginBottom: 18 }}>
         <Panel title="Top Teacher Payouts" icon={Users}>
           {loading ? <Skel h={240} /> : (topPayouts.length === 0 ? <p style={{ fontSize: 12.5, color: MUTED }}>No payouts yet.</p> :
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -254,8 +254,8 @@ export default function AdminPaymentsPage() {
       <style>{`
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:1000px){ .qmg-fin-kpi{grid-template-columns:repeat(2,1fr)!important} .qmg-fin-3{grid-template-columns:1fr!important} .qmg-fin-2{grid-template-columns:1fr!important} }
-        @media(max-width:520px){ .qmg-fin-kpi{grid-template-columns:1fr!important} }
+        @media(max-width:1000px){ .qmg-fin-kpi{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-fin-3{grid-template-columns:minmax(0,1fr)!important} .qmg-fin-2{grid-template-columns:minmax(0,1fr)!important} }
+        @media(max-width:520px){ .qmg-fin-kpi{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
   )

@@ -297,7 +297,7 @@ export default function DashboardPage() {
 
       {/* KPI grid */}
       {kpiCards.length > 0 && (
-        <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 18 }}>
+        <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
           {loading
             ? [...Array(kpiCards.length || 8)].map((_, i) => <div key={i} className="qmg-skel" style={{ borderRadius: 16, height: 92 }} />)
             : kpiCards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} />)
@@ -307,7 +307,7 @@ export default function DashboardPage() {
 
       {/* Attention center + Quick actions */}
       {(attention.length > 0 || quickActions.length > 0) && (
-        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 18, marginBottom: 18 }}>
+        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.4fr)', gap: 18, marginBottom: 18 }}>
           {attention.length > 0 && (
             <Panel title="Needs Attention" icon={Zap}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
           )}
           {quickActions.length > 0 && (
             <Panel title="Quick Actions" icon={Zap}>
-              <div className="qmg-qa" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              <div className="qmg-qa" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
                 {quickActions.map(a => (
                   <a key={a.href} href={a.href} className="adminx-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 8px', borderRadius: 12, textDecoration: 'none', background: '#fff', border: `1px solid ${BORDER}` }}>
                     <div style={{ width: 40, height: 40, borderRadius: 11, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><a.icon size={18} style={{ color: GOLD }} /></div>
@@ -375,7 +375,7 @@ export default function DashboardPage() {
 
       {/* Top teachers + Top courses */}
       {(showTopTeachers || showTopCourses) && (
-        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 18, marginBottom: 18 }}>
           {showTopTeachers && (
             <Panel title="Top Performing Teachers" icon={Award}>
               {loading ? <Skel h={220} /> : topTeachers.length === 0 ? <Empty label="No teacher revenue in this period yet." />
@@ -415,7 +415,7 @@ export default function DashboardPage() {
 
       {/* Two-up: revenue split + bookings */}
       {showCharts && (
-        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 18, marginBottom: 18 }}>
+        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.4fr)', gap: 18, marginBottom: 18 }}>
           <Panel title="Revenue Split" icon={CreditCard}>
             {loading ? <Skel h={250} /> : (
               <ResponsiveContainer width="100%" height={250}>
@@ -508,9 +508,9 @@ export default function DashboardPage() {
         .adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(201,162,39,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.55)!important}
         .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
         .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.5)!important}
-        @media(max-width:1100px){ .qmg-kpi-grid{grid-template-columns:repeat(3,1fr)!important} .qmg-two{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:repeat(2,1fr)!important} }
-        @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2,1fr)!important} .qmg-qa{grid-template-columns:repeat(3,1fr)!important} }
-        @media(max-width:380px){ .qmg-kpi-grid{grid-template-columns:1fr!important} .qmg-ops{grid-template-columns:1fr!important} }
+        @media(max-width:1100px){ .qmg-kpi-grid{grid-template-columns:repeat(3, minmax(0, 1fr))!important} .qmg-two{grid-template-columns:minmax(0,1fr)!important} .qmg-ops{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
+        @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-qa{grid-template-columns:repeat(3, minmax(0, 1fr))!important} }
+        @media(max-width:380px){ .qmg-kpi-grid{grid-template-columns:minmax(0,1fr)!important} .qmg-ops{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
   )

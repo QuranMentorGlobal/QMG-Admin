@@ -132,7 +132,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Analytics */}
-        <div className="qmg-bstats" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 18 }}>
+        <div className="qmg-bstats" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
           <Stat icon={BookOpen} label="Total" value={String(stats.total)} />
           <Stat icon={CheckCircle2} label="Completed" value={String(stats.completed)} />
           <Stat icon={Clock} label="Upcoming" value={String(stats.upcoming)} />
@@ -176,7 +176,7 @@ export default function BookingsPage() {
                   <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} style={navBtn}><ChevronRight size={16} /></button>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6 }}>
                 {WD.map(w => <div key={w} style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textAlign: 'center', padding: '4px 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{w}</div>)}
                 {cells.map((day, i) => {
                   if (day === null) return <div key={`b${i}`} />
@@ -213,8 +213,8 @@ export default function BookingsPage() {
       <style>{`
         .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @media(max-width:1000px){ .qmg-bstats{grid-template-columns:repeat(3,1fr)!important} }
-        @media(max-width:520px){ .qmg-bstats{grid-template-columns:repeat(2,1fr)!important} }
+        @media(max-width:1000px){ .qmg-bstats{grid-template-columns:repeat(3, minmax(0, 1fr))!important} }
+        @media(max-width:520px){ .qmg-bstats{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
       `}</style>
     </AdminLayout>
   )
