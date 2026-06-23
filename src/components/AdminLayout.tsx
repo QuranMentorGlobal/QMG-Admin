@@ -216,7 +216,7 @@ export default function AdminLayout({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'linear-gradient(180deg, #111111 0%, #166534 100%)' }}>
         {/* Brand header */}
         <div style={{ padding: '18px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.09)', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
-          <img src={LOGO_SRC} alt="QMG" style={{ width: 52, height: 52, objectFit: 'contain' }} />
+          <img src={LOGO_SRC} alt="QMG" style={{ width: 60, height: 60, objectFit: 'contain' }} />
           <Wordmark size={16} light />
           <span className="adminx-portal-pill"><span className="adminx-portal-dot" />Admin Panel</span>
         </div>
