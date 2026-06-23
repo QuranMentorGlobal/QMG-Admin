@@ -10,6 +10,15 @@ export async function POST(req: Request) {
   const { error } = await svc.from('teacher_profiles').update({ status }).eq('id', teacherProfileId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   await svc.from('profiles').update({ is_active: isActive }).eq('id', userId)
+
+    // Auto-update badges (Phase 9): recompute this teacher's badges immediately.
+    try {
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+      await fetch(`${frontendUrl}/api/badges/recompute`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, audience: 'teacher' }),
+      })
+    } catch (e) { console.error('[badges] recompute trigger failed (non-fatal)', e) }
   await logAudit(g.caller, status === 'suspended' ? 'teacher.suspend' : 'teacher.reinstate', 'teacher', teacherProfileId, { userId, status })
   return NextResponse.json({ ok: true })
 }

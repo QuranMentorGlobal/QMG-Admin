@@ -90,6 +90,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+
+    // Auto-update badges (Phase 9): recompute this teacher's badges immediately.
+    try {
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+      await fetch(`${frontendUrl}/api/badges/recompute`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, audience: 'teacher' }),
+      })
+    } catch (e) { console.error('[badges] recompute trigger failed (non-fatal)', e) }
     await logAudit(g.caller, action === 'approved' ? 'teacher.approve' : 'teacher.reject', 'teacher', id, { userId, reason: reason || null })
 
     return NextResponse.json({ success: true })

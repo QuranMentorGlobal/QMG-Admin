@@ -94,6 +94,16 @@ export async function POST(req: NextRequest) {
 
     await logAudit(g.caller, `reverification.${action}`, 'teacher', teacherProfileId || requestId, { requestId, teacherUserId, notes: notes || null })
 
+    // Auto-update badges (Phase 9): recompute this teacher's badges immediately.
+    try {
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+      await fetch(`${frontendUrl}/api/badges/recompute`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: teacherUserId, audience: 'teacher' }),
+      })
+    } catch (e) { console.error('[badges] recompute trigger failed (non-fatal)', e) }
+
+
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
