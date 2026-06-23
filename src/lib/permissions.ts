@@ -65,6 +65,12 @@ export const PERMISSION_GROUPS: PermGroup[] = [
     ],
   },
   {
+    key: 'badges', label: 'Badges', perms: [
+      { key: 'badges.view', label: 'View Badges' },
+      { key: 'badges.manage', label: 'Assign / Remove Badges' },
+    ],
+  },
+  {
     key: 'settings', label: 'Platform Settings', perms: [
       { key: 'settings.view', label: 'View Settings' },
       { key: 'settings.edit', label: 'Edit Settings' },
@@ -89,6 +95,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/teachers': ['teachers.view'],
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],
+  '/badges': ['badges.view', 'badges.manage'],
   '/moderation': ['support.view'],
   '/students': ['students.view'],
   '/bookings': ['bookings.view'],
