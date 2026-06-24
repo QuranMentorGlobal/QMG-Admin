@@ -26,7 +26,13 @@ export async function getCaller(): Promise<Caller> {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+    { cookies: {
+      getAll: () => cookieStore.getAll(),
+      // Route handlers CAN write cookies — persist any refreshed token so
+      // getUser() succeeds even after the access token rotates. A no-op here
+      // was making getUser() return null → guard() 401 → empty admin pages.
+      setAll: (toSet) => { try { toSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {} },
+    } }
   )
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { userId: null, name: 'Unknown', role: null, adminRole: null, permissions: [], status: 'active' }

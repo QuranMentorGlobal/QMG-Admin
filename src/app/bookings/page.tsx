@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(22,163,74,0.1)', color: GREEN },
   cancelled: { bg: '#FEE2E2', color: RED },
 }
-const STATUSES = ['pending', 'confirmed', 'completed']
+const STATUSES = ['all', 'pending', 'confirmed', 'completed', 'cancelled']
 const TYPES = [{ k: 'all', l: 'All types' }, { k: 'trial', l: 'Trial' }, { k: 'paid', l: 'Paid' }]
 const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -55,9 +55,11 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'list' | 'calendar'>('list')
-  const [statusFilter, setStatusFilter] = useState('pending')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [cursor, setCursor] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
@@ -78,13 +80,19 @@ export default function BookingsPage() {
       if (statusFilter !== 'all' && b.status !== statusFilter) return false
       if (typeFilter === 'trial' && !b.is_trial) return false
       if (typeFilter === 'paid' && b.is_trial) return false
+      if (dateFrom || dateTo) {
+        const d = (b.start_date || b.created_at || '').slice(0, 10)
+        if (!d) return false
+        if (dateFrom && d < dateFrom) return false
+        if (dateTo && d > dateTo) return false
+      }
       if (q) {
         const hay = `${b.courses?.title} ${b.student?.first_name} ${b.student?.last_name} ${b.student?.email} ${b.teacher?.first_name} ${b.teacher?.last_name}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
     })
-  }, [bookings, statusFilter, typeFilter, search])
+  }, [bookings, statusFilter, typeFilter, search, dateFrom, dateTo])
 
   const stats = useMemo(() => {
     let completed = 0, upcoming = 0, cancelled = 0, trial = 0, paid = 0, revenue = 0
@@ -148,6 +156,12 @@ export default function BookingsPage() {
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600, cursor: 'pointer' }}>
             {TYPES.map(t => <option key={t.k} value={t.k}>{t.l}</option>)}
           </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff' }} />
+            <span style={{ fontSize: 12, color: MUTED }}>→</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} title="To date" style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff' }} />
+            {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(''); setDateTo('') }} style={{ padding: '7px 10px', borderRadius: 9, border: `1px solid ${BORDER}`, background: '#fff', fontSize: 12, fontWeight: 700, color: '#6B6B6B', cursor: 'pointer' }}>Clear</button>}
+          </div>
           <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
             <Search size={15} style={{ position: 'absolute', left: 12, top: 10, color: MUTED }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search course, student, teacher…" style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />

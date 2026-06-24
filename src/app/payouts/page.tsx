@@ -5,6 +5,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 // Charcoal-gold admin palette
@@ -50,6 +51,7 @@ export default function AdminPayoutsPage() {
   const [rows, setRows]       = useState<PayoutRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter]   = useState<'all'|'pending'|'approved'|'completed'|'rejected'>('pending')
+  const [search, setSearch]   = useState('')
   const [busy, setBusy]       = useState<string | null>(null)
   const [detail, setDetail]   = useState<PayoutRow | null>(null)
 
@@ -82,7 +84,8 @@ export default function AdminPayoutsPage() {
     } finally { setBusy(null) }
   }
 
-  const filtered = filter === 'all' ? rows : rows.filter(r => r.status === filter)
+  const filtered = (filter === 'all' ? rows : rows.filter(r => r.status === filter))
+    .filter(r => !search.trim() || (r.teacher_name || '').toLowerCase().includes(search.trim().toLowerCase()))
   const totals = {
     pending:   rows.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount_usd, 0),
     approved:  rows.filter(r => r.status === 'approved').reduce((s, r) => s + r.amount_usd, 0),
@@ -111,8 +114,8 @@ export default function AdminPayoutsPage() {
         ))}
       </div>
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      {/* Filter tabs + search */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         {(['pending','approved','completed','rejected','all'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
@@ -120,6 +123,11 @@ export default function AdminPayoutsPage() {
             {f} {f !== 'all' && `(${rows.filter(r => r.status === f).length})`}
           </button>
         ))}
+        <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320, marginLeft: 'auto' }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: MUTED }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search teacher…"
+            style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13, background: '#fff', color: INK }} />
+        </div>
       </div>
 
       {/* Table */}
