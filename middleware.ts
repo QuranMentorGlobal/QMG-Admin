@@ -8,7 +8,10 @@ import { createServerClient } from '@supabase/ssr'
 import { canAccessRoute } from '@/lib/permissions'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } })
+  const requestHeaders = new Headers(request.headers)
+  // Never trust an inbound spoofed identity header.
+  requestHeaders.delete('x-admin-id')
+  let response = NextResponse.next({ request: { headers: requestHeaders } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +21,7 @@ export async function middleware(request: NextRequest) {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({ request: { headers: request.headers } })
+          response = NextResponse.next({ request: { headers: requestHeaders } })
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
         },
       },
@@ -64,7 +67,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard?denied=1', request.url))
   }
 
-  return response
+  // Forward the verified admin id to route handlers so getCaller() never has to
+  // re-read the auth cookie (which fails after token rotation → empty pages).
+  requestHeaders.set('x-admin-id', user.id)
+  const out = NextResponse.next({ request: { headers: requestHeaders } })
+  for (const c of response.cookies.getAll()) out.cookies.set(c)
+  return out
 }
 
 export const config = {

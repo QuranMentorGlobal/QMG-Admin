@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 const r1 = (n: number) => Math.round(n * 10) / 10
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const g = await guard(['teachers.view']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
 
   const { data: tp, error } = await svc

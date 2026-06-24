@@ -5,7 +5,7 @@
 // - service(): service-role client for privileged writes
 // - logAudit(): append an entry to admin_audit_log
 // ============================================================
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
@@ -22,22 +22,41 @@ export function service() {
 export interface Caller extends AdminCtx { userId: string | null; name: string }
 
 export async function getCaller(): Promise<Caller> {
+  const svc = service()
+
+  // Primary path: middleware verified the session and forwarded the admin id as
+  // a request header. This is reliable — unlike re-reading the auth cookie in a
+  // route handler, which returns null after token rotation (→ guard 401 → empty
+  // pages). Middleware strips any inbound x-admin-id, so this can't be spoofed.
+  const hid = headers().get('x-admin-id')
+  if (hid) {
+    const { data: p } = await svc.from('profiles')
+      .select('role, admin_role, admin_permissions, admin_status, first_name, last_name')
+      .eq('id', hid).single()
+    const prof = (p as any) || {}
+    return {
+      userId: hid,
+      name: `${prof.first_name ?? ''} ${prof.last_name ?? ''}`.trim() || 'Admin',
+      role: prof.role ?? null,
+      adminRole: prof.admin_role ?? null,
+      permissions: Array.isArray(prof.admin_permissions) ? prof.admin_permissions : [],
+      status: prof.admin_status ?? 'active',
+    }
+  }
+
+  // Fallback: cookie-based session read.
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { cookies: {
       getAll: () => cookieStore.getAll(),
-      // Route handlers CAN write cookies — persist any refreshed token so
-      // getUser() succeeds even after the access token rotates. A no-op here
-      // was making getUser() return null → guard() 401 → empty admin pages.
       setAll: (toSet) => { try { toSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {} },
     } }
   )
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { userId: null, name: 'Unknown', role: null, adminRole: null, permissions: [], status: 'active' }
 
-  const svc = service()
   const { data: p } = await svc.from('profiles')
     .select('role, admin_role, admin_permissions, admin_status, first_name, last_name')
     .eq('id', user.id).single()

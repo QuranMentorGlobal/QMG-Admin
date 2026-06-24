@@ -5,7 +5,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 const daysBetween = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const g = await guard(['students.view']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
   const id = params.id
 

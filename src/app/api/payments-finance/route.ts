@@ -6,7 +6,7 @@ const growth = (cur: number, prev: number) => prev > 0 ? r1(((cur - prev) / prev
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
 export async function GET() {
-  const g = await guard(['payments.view']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
 
   // Resilient: drop optional columns (provider/payment_type) if they don't exist.

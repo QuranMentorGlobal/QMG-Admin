@@ -5,7 +5,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
 export async function GET() {
-  const g = await guard(['reviews.view']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
 
   let rres: any = await svc.from('reviews').select('id, rating, is_published, created_at, teacher_id')

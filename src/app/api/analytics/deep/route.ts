@@ -74,7 +74,7 @@ export async function GET(req: Request) {
   const signups = profs.filter(p => p.role === 'student' && inCur(p.created_at)).length
   const trialBooked = bCur.filter(b => b.is_trial).length
   const trialCompleted = bCur.filter(b => b.is_trial && b.status === 'completed').length
-  const paidEnroll = bCur.filter(b => !b.is_trial).length
+  const paidEnroll = bCur.filter(b => !b.is_trial && (b.status === 'confirmed' || b.status === 'completed')).length
   const activeStudents = profs.filter(p => p.role === 'student' && p.is_active).length
   const funnel = [
     { stage: 'Signups', value: signups },

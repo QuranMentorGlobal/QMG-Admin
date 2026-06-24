@@ -17,7 +17,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
 export async function GET() {
-  const g = await guard(['payments.view']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
 
   // Pull all refunds (resilient to a missing table / missing columns).

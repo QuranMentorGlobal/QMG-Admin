@@ -179,12 +179,13 @@ export default function VerificationQueuePage() {
         </div>
         <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+        <div className="vq-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {STATUSES.map(s => {
             const Ic = s.icon; const active = tab === s.key
             return (
               <button key={s.key} onClick={() => { setTab(s.key); setExpanded(null) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 11, cursor: 'pointer',
+                className="vq-tab"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '8px 14px', borderRadius: 11, cursor: 'pointer',
                   border: `1.5px solid ${active ? s.color : BORDER}`, background: active ? s.color : '#fff', color: active ? '#fff' : INK, fontWeight: 600, fontSize: 13 }}>
                 <Ic size={15} /> {s.label}
                 <span style={{ background: active ? 'rgba(255,255,255,0.25)' : CREAM, color: active ? '#fff' : s.color, borderRadius: 20, padding: '1px 8px', fontSize: 12, fontWeight: 800 }}>{count[s.key]}</span>
@@ -192,6 +193,17 @@ export default function VerificationQueuePage() {
             )
           })}
         </div>
+        <style>{`
+          @media (max-width: 640px) {
+            .vq-tabs { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .vq-tab { width: 100%; }
+            .vq-tab:nth-child(5) { grid-column: 1 / -1; }
+          }
+          @media (max-width: 380px) {
+            .vq-tabs { grid-template-columns: 1fr; }
+            .vq-tab:nth-child(5) { grid-column: auto; }
+          }
+        `}</style>
 
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{[1, 2, 3].map(i => <div key={i} style={{ height: 90, borderRadius: 16, background: '#EFEADD' }} className="animate-pulse" />)}</div>

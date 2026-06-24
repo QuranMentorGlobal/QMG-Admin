@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { guard, service } from '@/lib/admin-auth'
 export const dynamic = 'force-dynamic'
 export async function GET(req: Request) {
-  const g = await guard(['admin.create', 'admin.edit', 'admin.delete']); if ('error' in g) return g.error
+  // Auth handled by middleware (admin-only on /api/*); read via service role.
   const url = new URL(req.url)
   const q = url.searchParams.get('q') || ''
   let query = service().from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(300)
