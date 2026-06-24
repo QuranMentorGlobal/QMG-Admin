@@ -46,6 +46,7 @@ export default function AdminSupportPage() {
   const [adminName, setAdminName] = useState('Admin')
   const [d, setD] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState('')
   const [selected, setSelected] = useState<any>(null)
   const [reply, setReply] = useState('')
   const [replyStatus, setReplyStatus] = useState('resolved')
@@ -62,7 +63,17 @@ export default function AdminSupportPage() {
 
   async function load() {
     setLoading(true)
-    try { const res = await fetch('/api/support-metrics'); if (res.ok) setD(await res.json()) } catch {}
+    setErr('')
+    try {
+      const res = await fetch('/api/support-metrics')
+      const text = await res.text()
+      const json = text ? JSON.parse(text) : {}
+      if (!res.ok) throw new Error(json.error || `Failed to load tickets (${res.status})`)
+      setD(json)
+      if (json.error) setErr(`Tickets could not be read: ${json.error}`)
+    } catch (e: any) {
+      setErr(e.message || 'Could not load support tickets.')
+    }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -99,6 +110,13 @@ export default function AdminSupportPage() {
         <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Support</h1>
         <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ticketing workspace — respond, prioritise and resolve.</p>
       </div>
+
+      {err && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E', borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
+          <span>{err}</span>
+          <button onClick={load} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}>Retry</button>
+        </div>
+      )}
 
       {/* Metrics */}
       <div className="qmg-sp-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>

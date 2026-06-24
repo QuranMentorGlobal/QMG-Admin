@@ -21,7 +21,7 @@ function tabOf(productType: string | null | undefined): 'trial' | 'recorded' | '
 }
 
 export async function GET(req: Request) {
-  const g = await guard(['teachers.view', 'analytics.dashboard'])
+  const g = await guard(['courses.view', 'teachers.view', 'analytics.dashboard'])
   if ('error' in g) return g.error
 
   const countsOnly = new URL(req.url).searchParams.get('counts') === '1'

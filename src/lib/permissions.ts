@@ -26,6 +26,11 @@ export const PERMISSION_GROUPS: PermGroup[] = [
     ],
   },
   {
+    key: 'courses', label: 'Courses Hub', perms: [
+      { key: 'courses.view', label: 'View Courses Hub' },
+    ],
+  },
+  {
     key: 'bookings', label: 'Bookings', perms: [
       { key: 'bookings.view', label: 'View Bookings' },
       { key: 'bookings.manage', label: 'Manage Bookings' },
@@ -93,7 +98,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/analytics': ['analytics.deep'],
   '/attendance': ['analytics.deep'],
   '/teachers': ['teachers.view'],
-  '/courses-hub': ['teachers.view'],
+  '/courses-hub': ['courses.view', 'teachers.view', 'analytics.dashboard'],
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],
   '/badges': ['badges.view', 'badges.manage'],
@@ -120,7 +125,7 @@ export const API_PERMISSIONS: { match: string; perms: string[] }[] = [
   { match: '/api/analytics/deep', perms: ['analytics.deep'] },
   { match: '/api/analytics', perms: ['analytics.dashboard'] },
   { match: '/api/stats', perms: ['analytics.dashboard'] },
-  { match: '/api/courses-hub', perms: ['teachers.view', 'analytics.dashboard'] },
+  { match: '/api/courses-hub', perms: ['courses.view', 'teachers.view', 'analytics.dashboard'] },
 ]
 
 // ── Default Sub-Admin role presets ───────────────────────────────────────────
@@ -134,8 +139,8 @@ export const ROLE_PRESETS: { key: string; label: string; description: string; pe
     perms: ['support.view', 'support.manage', 'reviews.view', 'reviews.publish', 'reviews.unpublish'],
   },
   {
-    key: 'operations', label: 'Operations Manager', description: 'Teachers, students and bookings.',
-    perms: ['teachers.view', 'teachers.approve', 'teachers.reject', 'teachers.suspend', 'students.view', 'students.toggle', 'bookings.view', 'bookings.manage'],
+    key: 'operations', label: 'Operations Manager', description: 'Teachers, students, courses and bookings.',
+    perms: ['teachers.view', 'teachers.approve', 'teachers.reject', 'teachers.suspend', 'students.view', 'students.toggle', 'courses.view', 'bookings.view', 'bookings.manage'],
   },
   {
     key: 'finance', label: 'Finance Manager', description: 'Payments, commissions and revenue.',

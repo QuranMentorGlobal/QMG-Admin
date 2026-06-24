@@ -183,18 +183,21 @@ export default function AdminManagementPage() {
               <p style={{ fontSize: 12, fontWeight: 700, color: INK, margin: '8px 0 8px' }}>Quick presets</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 18 }}>
                 {ROLE_PRESETS.map(p => (
-                  <button key={p.key} onClick={() => applyPreset(p)} title={p.description} style={{ border: `1px solid ${BORDER}`, background: '#fff', borderRadius: 9, padding: '7px 11px', fontSize: 12, fontWeight: 600, color: INK, cursor: 'pointer' }}>{p.label}</button>
+                  <button key={p.key} onClick={() => applyPreset(p)} title={p.description} style={{ border: `1px solid ${GOLD}`, background: CREAM, borderRadius: 9, padding: '7px 11px', fontSize: 12, fontWeight: 700, color: '#166534', cursor: 'pointer' }}>{p.label}</button>
                 ))}
               </div>
 
-              <p style={{ fontSize: 12, fontWeight: 700, color: INK, margin: '0 0 10px' }}>Permissions ({form.perms.length} selected)</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: INK, margin: '0 0 10px' }}>Permissions (<span style={{ color: GOLD }}>{form.perms.length}</span> selected)</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
                 {PERMISSION_GROUPS.map(g => {
                   const all = g.perms.every(p => form.perms.includes(p.key))
                   return (
                     <div key={g.key} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{g.label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${CREAM}` }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 800, color: '#166534' }}>
+                          <span style={{ width: 7, height: 7, borderRadius: 999, background: 'linear-gradient(135deg,#166534,#C9A227)', flexShrink: 0 }} />
+                          {g.label}
+                        </span>
                         <button onClick={() => setForm(f => ({ ...f, perms: all ? f.perms.filter(x => !g.perms.some(p => p.key === x)) : Array.from(new Set([...f.perms, ...g.perms.map(p => p.key)])) }))}
                           style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'transparent', border: 'none', cursor: 'pointer' }}>{all ? 'Clear' : 'Select all'}</button>
                       </div>

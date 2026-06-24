@@ -187,7 +187,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!ctx) return
-    if (isSub && !ctx.perms.includes('teachers.view') && !ctx.perms.includes('analytics.dashboard')) return
+    if (isSub && !ctx.perms.includes('courses.view') && !ctx.perms.includes('teachers.view') && !ctx.perms.includes('analytics.dashboard')) return
     fetch('/api/courses-hub?counts=1').then(r => r.ok ? r.json() : null)
       .then(j => { if (j?.counts) setCourseCounts(j.counts) }).catch(() => {})
   }, [ctx, isSub])
@@ -313,7 +313,7 @@ export default function DashboardPage() {
       )}
 
       {/* Courses overview — 4 interlinked cards into the Courses Hub */}
-      {courseCounts && can('teachers.view') && (
+      {courseCounts && (can('courses.view') || can('teachers.view')) && (
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -7,15 +7,20 @@ export async function GET() {
   // Auth handled by middleware (admin-only on /api/*); read via service role.
   const svc = service()
 
-  // Resilient fetch: try with the profiles join, fall back to a plain select if the
-  // FK/embed isn't available in this schema (prevents a 500 → blank page).
+  // Resilient fetch. Earlier this ordered by created_at in BOTH the embed query
+  // AND the fallback, so if that column/embed was unavailable the whole route
+  // returned empty — while the sidebar badge (an order-less COUNT) still saw the
+  // ticket. We now never depend on order/embed: try richest → plainest, then
+  // sort in JS. Rows are only lost if the table itself is unreadable.
   let raw: any[] = []
   let r: any = await svc.from('support_tickets')
     .select('*, profiles!support_tickets_user_id_fkey(first_name, last_name, email)')
-    .order('created_at', { ascending: false })
-  if (r.error) r = await svc.from('support_tickets').select('*').order('created_at', { ascending: false })
-  if (r.error) return NextResponse.json({ metrics: { total: 0, open: 0, inProgress: 0, resolved: 0, urgentOpen: 0, responded: 0, responseRate: 0, resolutionRate: 0, avgResolutionHours: 0 }, byCategory: [], byPriority: [], tickets: [] })
+  if (r.error) r = await svc.from('support_tickets').select('*')
+  if (r.error) r = await svc.from('support_tickets').select('id, subject, message, status, priority, category, user_id, admin_reply, created_at, updated_at, resolved_at')
+  if (r.error) return NextResponse.json({ metrics: { total: 0, open: 0, inProgress: 0, resolved: 0, urgentOpen: 0, responded: 0, responseRate: 0, resolutionRate: 0, avgResolutionHours: 0 }, byCategory: [], byPriority: [], tickets: [], error: r.error.message })
   raw = r.data || []
+  // Newest first, defensively (created_at may be missing on some rows).
+  raw.sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime())
 
   const tickets = raw.map((t: any) => ({
     id: t.id, subject: t.subject || t.title || 'Support request', message: t.message || t.body || '',
