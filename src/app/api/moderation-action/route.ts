@@ -20,7 +20,7 @@ type Body = {
 
 export async function POST(req: NextRequest) {
   try {
-    const g = await guard(['support.view', 'support.manage'])
+    const g = await guard(['moderation.action', 'support.manage', 'support.view'])
     if ('error' in g) return g.error
 
     const { id, action, notes }: Body = await req.json()

@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { PERMISSION_GROUPS, ROLE_PRESETS } from '@/lib/permissions'
-import { Plus, Pencil, Trash2, Power, X, Check, ShieldCheck } from 'lucide-react'
+import { Plus, Pencil, Trash2, Power, X, Check, ShieldCheck, Search } from 'lucide-react'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', RED = '#DC2626', CREAM = '#F8F5EE'
 
@@ -31,6 +31,8 @@ export default function AdminManagementPage() {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState('')
+  const [activeGroup, setActiveGroup] = useState<string>(PERMISSION_GROUPS[0]?.key || '')
+  const [permSearch, setPermSearch] = useState('')
 
   const editing = !!form.id
 
@@ -68,6 +70,31 @@ export default function AdminManagementPage() {
   function applyPreset(p: typeof ROLE_PRESETS[0]) {
     setForm(f => ({ ...f, perms: [...p.perms], roleLabel: f.roleLabel || p.label }))
   }
+
+  // ── Access-level model (QuickBooks-style None / View / Full) ────────────────
+  const isViewPerm = (k: string) => /\.(view|access|dashboard)$/.test(k)
+  function groupLevel(g: typeof PERMISSION_GROUPS[number]): 'none' | 'view' | 'full' | 'custom' {
+    const keys = g.perms.map(p => p.key)
+    const sel = keys.filter(k => form.perms.includes(k))
+    if (sel.length === 0) return 'none'
+    if (sel.length === keys.length) return 'full'
+    const viewKeys = keys.filter(isViewPerm)
+    if (viewKeys.length && sel.length === viewKeys.length && sel.every(isViewPerm)) return 'view'
+    return 'custom'
+  }
+  function setGroupLevel(g: typeof PERMISSION_GROUPS[number], level: 'none' | 'view' | 'full') {
+    const keys = g.perms.map(p => p.key)
+    setForm(f => {
+      const rest = f.perms.filter(k => !keys.includes(k))
+      if (level === 'none') return { ...f, perms: rest }
+      if (level === 'full') return { ...f, perms: Array.from(new Set([...rest, ...keys])) }
+      const viewKeys = keys.filter(isViewPerm)
+      return { ...f, perms: Array.from(new Set([...rest, ...(viewKeys.length ? viewKeys : keys)])) }
+    })
+  }
+  const grantedLabels = () => PERMISSION_GROUPS
+    .filter(g => g.perms.some(p => form.perms.includes(p.key)))
+    .map(g => g.label)
 
   async function save() {
     setErr(''); setSaving(true)
@@ -187,35 +214,81 @@ export default function AdminManagementPage() {
                 ))}
               </div>
 
-              <p style={{ fontSize: 12, fontWeight: 700, color: INK, margin: '0 0 10px' }}>Permissions (<span style={{ color: GOLD }}>{form.perms.length}</span> selected)</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-                {PERMISSION_GROUPS.map(g => {
-                  const all = g.perms.every(p => form.perms.includes(p.key))
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', margin: '0 0 10px' }}>
+                <p style={{ fontSize: 13, fontWeight: 800, color: INK, margin: 0 }}>
+                  Role permissions <span style={{ fontWeight: 700, color: MUTED }}>· <span style={{ color: GOLD }}>{form.perms.length}</span> granted</span>
+                </p>
+                <div style={{ position: 'relative', minWidth: 200, flex: '0 1 260px' }}>
+                  <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: MUTED }} />
+                  <input value={permSearch} onChange={e => setPermSearch(e.target.value)} placeholder="Search areas…" style={{ width: '100%', padding: '8px 10px 8px 30px', borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 12.5, background: '#fff', color: INK }} />
+                </div>
+              </div>
+
+              <div className="qmg-perm-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 240px) minmax(0,1fr)', border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
+                {/* LEFT: area rail */}
+                <div style={{ borderRight: `1px solid ${BORDER}`, background: '#FBF8F1', padding: 6, maxHeight: 360, overflowY: 'auto' }}>
+                  {PERMISSION_GROUPS.filter(g => !permSearch || g.label.toLowerCase().includes(permSearch.toLowerCase())).map(g => {
+                    const sel = g.perms.filter(p => form.perms.includes(p.key)).length
+                    const on = activeGroup === g.key
+                    return (
+                      <button key={g.key} onClick={() => setActiveGroup(g.key)} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', marginBottom: 2, background: on ? '#fff' : 'transparent', boxShadow: on ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: 999, flexShrink: 0, background: sel > 0 ? 'linear-gradient(135deg,#166534,#C9A227)' : '#D6CFBE' }} />
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: on ? 800 : 600, color: on ? '#166534' : INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.label}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: sel > 0 ? GOLD : MUTED, flexShrink: 0 }}>{sel}/{g.perms.length}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* RIGHT: active area detail */}
+                {(() => {
+                  const ag = PERMISSION_GROUPS.find(g => g.key === activeGroup) || PERMISSION_GROUPS[0]
+                  if (!ag) return null
+                  const lvl = groupLevel(ag)
+                  const LEVELS: { k: 'none' | 'view' | 'full'; label: string }[] = [{ k: 'none', label: 'No access' }, { k: 'view', label: 'View only' }, { k: 'full', label: 'Full access' }]
                   return (
-                    <div key={g.key} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${CREAM}` }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 800, color: '#166534' }}>
-                          <span style={{ width: 7, height: 7, borderRadius: 999, background: 'linear-gradient(135deg,#166534,#C9A227)', flexShrink: 0 }} />
-                          {g.label}
-                        </span>
-                        <button onClick={() => setForm(f => ({ ...f, perms: all ? f.perms.filter(x => !g.perms.some(p => p.key === x)) : Array.from(new Set([...f.perms, ...g.perms.map(p => p.key)])) }))}
-                          style={{ fontSize: 11, fontWeight: 700, color: GOLD, background: 'transparent', border: 'none', cursor: 'pointer' }}>{all ? 'Clear' : 'Select all'}</button>
+                    <div style={{ padding: '14px 16px', maxHeight: 360, overflowY: 'auto' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 800, color: INK, margin: 0 }}>{ag.label}</p>
+                          {ag.desc && <p style={{ fontSize: 12, color: MUTED, margin: '3px 0 0', maxWidth: 420 }}>{ag.desc}</p>}
+                        </div>
+                        <div style={{ display: 'inline-flex', background: CREAM, borderRadius: 10, padding: 3, flexShrink: 0 }}>
+                          {LEVELS.map(L => {
+                            const active = lvl === L.k
+                            return (
+                              <button key={L.k} onClick={() => setGroupLevel(ag, L.k)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 800, background: active ? 'linear-gradient(135deg,#166534,#C9A227)' : 'transparent', color: active ? '#fff' : '#6B6B6B' }}>{L.label}</button>
+                            )
+                          })}
+                        </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
-                        {g.perms.map(p => {
+                      {lvl === 'custom' && <p style={{ fontSize: 11, fontWeight: 700, color: '#8A6A16', margin: '0 0 10px' }}>Custom selection</p>}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
+                        {ag.perms.map(p => {
                           const on = form.perms.includes(p.key)
                           return (
-                            <button key={p.key} onClick={() => togglePerm(p.key)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, border: `1px solid ${on ? GOLD : BORDER}`, background: on ? CREAM : '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                              <span style={{ width: 17, height: 17, borderRadius: 5, background: on ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', border: `1px solid ${on ? GOLD : '#CBC4B5'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{on && <Check size={12} color="#111111" />}</span>
-                              <span style={{ fontSize: 12, color: INK }}>{p.label}</span>
+                            <button key={p.key} onClick={() => togglePerm(p.key)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, border: `1px solid ${on ? GOLD : BORDER}`, background: on ? CREAM : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                              <span style={{ width: 18, height: 18, borderRadius: 6, background: on ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', border: `1px solid ${on ? GOLD : '#CBC4B5'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{on && <Check size={12} color="#fff" />}</span>
+                              <span style={{ fontSize: 12.5, fontWeight: 600, color: INK }}>{p.label}</span>
                             </button>
                           )
                         })}
                       </div>
                     </div>
                   )
-                })}
+                })()}
               </div>
+
+              {/* Granted summary */}
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, paddingTop: 4 }}>This role can access:</span>
+                {grantedLabels().length === 0
+                  ? <span style={{ fontSize: 12, color: MUTED, paddingTop: 3 }}>No areas yet — choose an access level on the right.</span>
+                  : grantedLabels().map(l => <span key={l} style={{ fontSize: 11, fontWeight: 700, color: '#166534', background: CREAM, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '4px 10px' }}>{l}</span>)}
+              </div>
+
+              <style>{`@media (max-width:640px){ .qmg-perm-grid{ grid-template-columns: 1fr !important; } .qmg-perm-grid > div:first-child{ border-right:none !important; border-bottom:1px solid ${BORDER} !important; max-height:160px !important; } }`}</style>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                 <button onClick={() => setOpen(false)} style={{ flex: 1, padding: '11px', borderRadius: 11, border: `1px solid ${BORDER}`, background: '#fff', color: INK, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
