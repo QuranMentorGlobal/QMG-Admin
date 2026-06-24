@@ -106,6 +106,12 @@ const ADMINX_STYLES = `
 @keyframes adminxslide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 .adminx-drawer-bd{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.2)}
 .adminx-chev{transition:transform .2s ease}
+.adminx-section{padding:14px 13px 5px;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Inter',sans-serif;user-select:none;white-space:nowrap}
+.adminx-section:first-child{padding-top:4px}
+.adminx-nav-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+.adminx-nav-scroll::-webkit-scrollbar{width:6px}
+.adminx-nav-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
+.adminx-nav-scroll::-webkit-scrollbar-thumb:hover{background:rgba(201,162,39,.4)}
 `
 
 export default function AdminLayout({
@@ -187,18 +193,10 @@ export default function AdminLayout({
   const SEV: Record<string, string> = { gold: '#C9A227', red: '#DC2626', neutral: '#6366F1' }
   const paletteResults = visibleNav.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
 
-  // ── Category derivation (two-level nav) ──
+  // ── Category derivation (flat sections) ──
   const visibleCategories = CATEGORIES
     .map(c => ({ ...c, items: isSub ? c.items.filter(n => canAccessRoute(n.href, ctx)) : c.items }))
     .filter(c => c.items.length > 0)
-  const catBadge = (items: { href: string }[]) => {
-    let count = 0, urgent = false
-    items.forEach(it => { const b = badgeForHref(it.href); if (b) { count += b.count; if (b.urgent) urgent = true } })
-    return count > 0 ? { count, urgent } : null
-  }
-  const activeCatKey = visibleCategories.find(c => c.items.some(it => isActive(it.href)))?.key || null
-  const openCategory = visibleCategories.find(c => c.key === openCat) || null
-  const DrawerIcon = (openCategory?.icon || LayoutDashboard) as any
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -221,35 +219,37 @@ export default function AdminLayout({
           <span className="adminx-portal-pill"><span className="adminx-portal-dot" />Admin Panel</span>
         </div>
 
-        {/* Nav — categories (click opens a drawer of sub-pages) */}
-        <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
+        {/* Nav — flat category sections; items listed directly, scrolls if tall */}
+        <nav className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
           {!ctxReady ? (
-            [0, 1, 2, 3, 4].map(i => (
-              <div key={i} style={{ height: 42, margin: '4px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)' }} />
+            [0, 1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} style={{ height: 36, margin: '5px 0', borderRadius: 11, background: 'rgba(255,255,255,0.05)' }} />
             ))
-          ) : visibleCategories.map((cat) => {
-            const Icon = cat.icon
-            const active = cat.key === activeCatKey
-            const isOpen = cat.key === openCat
-            const badge = catBadge(cat.items)
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setOpenCat(o => (o === cat.key ? null : cat.key))}
-                className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
-                aria-expanded={isOpen}
-              >
-                <Icon size={16} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1, lineHeight: 1.16 }}>{cat.l1}<br />{cat.l2}</span>
-                {badge && (
-                  <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
-                    {badge.count > 99 ? '99+' : badge.count}
-                  </span>
-                )}
-                <ChevronRight size={14} className="adminx-chev" style={{ flexShrink: 0, color: active ? '#E3C04A' : 'rgba(255,255,255,0.42)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
-              </button>
-            )
-          })}
+          ) : visibleCategories.map((cat) => (
+            <div key={cat.key} style={{ marginBottom: 4 }}>
+              <div className="adminx-section">{cat.label}</div>
+              {cat.items.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href)
+                const badge = badgeForHref(href)
+                return (
+                  <button
+                    key={href}
+                    onClick={() => { router.push(href); setSidebarOpen(false) }}
+                    className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
+                  >
+                    <Icon size={16} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1, lineHeight: 1.2 }}>{label}</span>
+                    {badge && (
+                      <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
+                        {badge.count > 99 ? '99+' : badge.count}
+                      </span>
+                    )}
+                    {active && <ChevronRight size={13} style={{ color: '#E3C04A', flexShrink: 0 }} />}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Sign Out + footer */}
@@ -283,44 +283,6 @@ export default function AdminLayout({
           <div style={{ width: 240, flexShrink: 0, height: '100%', boxShadow: '6px 0 30px rgba(0,0,0,0.5)' }}><SidebarContent /></div>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.55)' }} onClick={() => setSidebarOpen(false)} />
         </div>
-      )}
-
-      {/* Category drawer — sub-pages of the clicked category */}
-      {openCategory && (
-        <>
-          <div className="adminx-drawer-bd" onClick={() => setOpenCat(null)} />
-          <aside className="adminx-drawer">
-            <div style={{ padding: '17px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <DrawerIcon size={17} color="#E3C04A" style={{ flexShrink: 0 }} />
-              <span style={{ flex: 1, color: '#fff', fontWeight: 800, fontSize: 14.5, fontFamily: "'Fraunces',serif" }}>{openCategory.label}</span>
-              <button onClick={() => setOpenCat(null)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
-                <X size={16} color="#fff" />
-              </button>
-            </div>
-            <nav style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-              {openCategory.items.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href)
-                const badge = badgeForHref(href)
-                return (
-                  <button
-                    key={href}
-                    onClick={() => { router.push(href); setOpenCat(null); setSidebarOpen(false) }}
-                    className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
-                  >
-                    <Icon size={16} style={{ flexShrink: 0 }} />
-                    <span style={{ flex: 1 }}>{label}</span>
-                    {badge && (
-                      <span className={`adminx-badge ${badge.urgent ? 'adminx-badge-urgent' : ''}`}>
-                        {badge.count > 99 ? '99+' : badge.count}
-                      </span>
-                    )}
-                    {active && <ChevronRight size={13} style={{ color: '#E3C04A', flexShrink: 0 }} />}
-                  </button>
-                )
-              })}
-            </nav>
-          </aside>
-        </>
       )}
 
       {/* Right side (dark frame so the rounded panel corners read clean) */}

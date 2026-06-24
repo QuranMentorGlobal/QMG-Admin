@@ -52,16 +52,22 @@ export async function GET(req: Request) {
     .select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, payment_type, created_at, student_id, teacher_id')
   const bookQ = supabase.from('bookings').select('status, is_trial, price_usd, created_at, student_id, teacher_id')
   const profQ = supabase.from('profiles').select('role, created_at, country')
+  // Commission + payout come from the EARNINGS LEDGER, not payments: held
+  // trial/long funds have no earning row until the teacher accepts, and
+  // reversed earnings are net 0 — so the ledger excludes both automatically.
+  const earnQ = supabase.from('teacher_earnings').select('commission_usd, net_amount_usd, created_at')
 
-  const [paysRes, booksRes, profsRes] = await Promise.all([
+  const [paysRes, booksRes, profsRes, earnsRes] = await Promise.all([
     (prevStartISO ? payQ.gte('created_at', prevStartISO) : payQ).limit(100000),
     (prevStartISO ? bookQ.gte('created_at', prevStartISO) : bookQ).limit(100000),
     (prevStartISO ? profQ.gte('created_at', prevStartISO) : profQ).limit(100000),
+    (prevStartISO ? earnQ.gte('created_at', prevStartISO) : earnQ).limit(100000),
   ])
 
   const pays = (paysRes.data as any[]) || []
   const books = (booksRes.data as any[]) || []
   const profs = (profsRes.data as any[]) || []
+  const earns = ((earnsRes.data as any[]) || []).filter(e => (Number(e.net_amount_usd) || 0) > 0)
 
   const inCur  = (d: string) => !startISO || d >= startISO
   const inPrev = (d: string) => !!startISO && !!prevStartISO && d >= prevStartISO && d < startISO
@@ -79,8 +85,11 @@ export async function GET(req: Request) {
   const paidPrevRows = okPrev.filter(isPaid)
 
   const gtvCur = sum(okCur, 'gross_amount_usd'),   gtvPrev = sum(okPrev, 'gross_amount_usd')
-  const comCur = sum(okCur, 'platform_fee_usd'),   comPrev = sum(okPrev, 'platform_fee_usd')
-  const payoutCur = sum(okCur, 'teacher_payout_usd')
+  // Realised commission/payout from the earnings ledger (excludes held + reversed).
+  const earnCur  = earns.filter(e => inCur(e.created_at))
+  const earnPrev = earns.filter(e => inPrev(e.created_at))
+  const comCur = sum(earnCur, 'commission_usd'),   comPrev = sum(earnPrev, 'commission_usd')
+  const payoutCur = sum(earnCur, 'net_amount_usd')
 
   // [5.3] MRR: real recurring revenue from ACTIVE subscriptions, normalized to a
   // month. Computed in its own query so it never depends on the range filter.
@@ -111,7 +120,10 @@ export async function GET(req: Request) {
   const bCur  = books.filter(b => inCur(b.created_at))
   const bPrev = books.filter(b => inPrev(b.created_at))
   const trialCur = bCur.filter(b => b.is_trial).length,  trialPrev = bPrev.filter(b => b.is_trial).length
-  const paidCur  = bCur.filter(b => !b.is_trial).length,  paidPrev = bPrev.filter(b => !b.is_trial).length
+  // Paid enrollments = non-trial bookings that are actually paid + active
+  // (confirmed/completed). Held-long (pending) and cancelled don't count.
+  const isPaidEnrol = (b: any) => !b.is_trial && (b.status === 'confirmed' || b.status === 'completed')
+  const paidCur  = bCur.filter(isPaidEnrol).length,  paidPrev = bPrev.filter(isPaidEnrol).length
   const completedCur = bCur.filter(b => b.status === 'completed').length
   const cancelledCur = bCur.filter(b => b.status === 'cancelled').length
   const upcomingCur  = bCur.filter(b => b.status === 'confirmed' || b.status === 'pending').length
@@ -158,7 +170,8 @@ export async function GET(req: Request) {
     bookMap[k] = { d: k, total: 0, trial: 0, paid: 0 }
     signMap[k] = { d: k, students: 0, teachers: 0 }
   }
-  okCur.forEach(p => { const k = dayKey(p.created_at); if (revMap[k]) { revMap[k].gross += Number(p.gross_amount_usd) || 0; revMap[k].commission += Number(p.platform_fee_usd) || 0 } })
+  okCur.forEach(p => { const k = dayKey(p.created_at); if (revMap[k]) { revMap[k].gross += Number(p.gross_amount_usd) || 0 } })
+  earnCur.forEach(e => { const k = dayKey(e.created_at); if (revMap[k]) { revMap[k].commission += Number(e.commission_usd) || 0 } })
   bCur.forEach(b => { const k = dayKey(b.created_at); if (bookMap[k]) { bookMap[k].total++; b.is_trial ? bookMap[k].trial++ : bookMap[k].paid++ } })
   profs.filter(p => inCur(p.created_at)).forEach(p => { const k = dayKey(p.created_at); if (signMap[k]) { p.role === 'teacher' ? signMap[k].teachers++ : signMap[k].students++ } })
 

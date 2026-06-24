@@ -20,7 +20,6 @@ export async function GET() {
   const okPays = ((payments.data as any[]) || []).filter((p: any) => p.status === 'succeeded')
   // [5.6] Be explicit: GTV (gross) vs platform revenue (commission) are different.
   const gtv = okPays.reduce((s: number, p: any) => s + (Number(p.gross_amount_usd) || 0), 0)
-  const platformRevenue = okPays.reduce((s: number, p: any) => s + (Number(p.platform_fee_usd) || 0), 0)
 
   // Refunds (best-effort; table is additive).
   let totalRefunded = 0
@@ -32,13 +31,15 @@ export async function GET() {
   } catch { /* booking_refunds not present yet */ }
 
   // ── Ledger-driven money stages (single source of truth = teacher_earnings) ──
-  let teacherLiability = 0  // money owed to teachers, not yet paid
-  let paidOut = 0           // money already transferred to teachers
+  let teacherLiability = 0    // money owed to teachers, not yet paid
+  let paidOut = 0             // money already transferred to teachers
+  let realizedCommission = 0  // platform cut on accepted (non-reversed) earnings
   try {
     const { data: ledger } = await supabase
-      .from('teacher_earnings').select('net_amount_usd, status').limit(100000)
+      .from('teacher_earnings').select('net_amount_usd, commission_usd, status').limit(100000)
     for (const e of (ledger || []) as any[]) {
       const net = Number(e.net_amount_usd) || 0
+      if (net > 0) realizedCommission += Number(e.commission_usd) || 0  // reversed rows are net 0
       if (['pending', 'available', 'payout_pending'].includes(e.status)) teacherLiability += net
       else if (e.status === 'paid') paidOut += net
     }
@@ -72,8 +73,8 @@ export async function GET() {
     totalTeachers:   teachers.count  ?? 0,
     totalBookings:   bookings.count  ?? 0,
     gtv:             Math.round(gtv * 100) / 100,              // gross transaction value
-    platformRevenue: Math.round(platformRevenue * 100) / 100, // platform commission income
-    totalRevenue:    Math.round(platformRevenue * 100) / 100, // back-compat
+    platformRevenue: Math.round(realizedCommission * 100) / 100, // platform commission income (realized)
+    totalRevenue:    Math.round(realizedCommission * 100) / 100, // back-compat
     teacherLiability: Math.round(teacherLiability * 100) / 100,
     paidOut:          Math.round(paidOut * 100) / 100,
     pendingPayouts:   Math.round(pendingPayouts * 100) / 100,

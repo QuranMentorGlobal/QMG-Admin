@@ -16,11 +16,13 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const t: any = tp
   const userId = t.user_id
 
-  // Revenue / payout / paid lessons
+  // Revenue (gross from payments) / payout (realised from earnings ledger)
   let revenue = 0, payout = 0, paidLessons = 0
   try {
-    const { data: pays } = await svc.from('payments').select('gross_amount_usd, teacher_payout_usd, status').eq('teacher_id', userId)
-    ;(pays || []).forEach((p: any) => { if (p.status === 'succeeded') { revenue += Number(p.gross_amount_usd) || 0; payout += Number(p.teacher_payout_usd) || 0; paidLessons++ } })
+    const { data: pays } = await svc.from('payments').select('gross_amount_usd, status').eq('teacher_id', userId)
+    ;(pays || []).forEach((p: any) => { if (p.status === 'succeeded') { revenue += Number(p.gross_amount_usd) || 0; paidLessons++ } })
+    const { data: earns } = await svc.from('teacher_earnings').select('net_amount_usd').eq('teacher_id', userId)
+    ;(earns || []).forEach((e: any) => { const net = Number(e.net_amount_usd) || 0; if (net > 0) payout += net })
   } catch {}
 
   // Bookings (completion + recent)

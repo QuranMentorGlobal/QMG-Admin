@@ -31,15 +31,19 @@ export async function GET(req: Request) {
   const profQ = supabase.from('profiles').select('id, role, country, is_active, created_at, first_name, last_name')
   const payQ = supabase.from('payments').select('gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, created_at, student_id, teacher_id')
   const bookQ = supabase.from('bookings').select('status, is_trial, price_usd, created_at, course_id, courses(title)')
+  // Realised payout per teacher from the earnings ledger (excludes held + reversed).
+  const earnQ = supabase.from('teacher_earnings').select('net_amount_usd, created_at, teacher_id')
 
-  const [profsRes, paysRes, booksRes] = await Promise.all([
+  const [profsRes, paysRes, booksRes, earnsRes] = await Promise.all([
     profQ.limit(20000),
     (prevStartISO ? payQ.gte('created_at', prevStartISO) : payQ).limit(20000),
     (prevStartISO ? bookQ.gte('created_at', prevStartISO) : bookQ).limit(20000),
+    (prevStartISO ? earnQ.gte('created_at', prevStartISO) : earnQ).limit(20000),
   ])
   const profs = (profsRes.data as any[]) || []
   const pays = (paysRes.data as any[]) || []
   const books = (booksRes.data as any[]) || []
+  const earnsCur = ((earnsRes.data as any[]) || []).filter(e => (Number(e.net_amount_usd) || 0) > 0 && inCur(e.created_at))
 
   // ── Geography ──────────────────────────────────────────────────────────────
   const studentCountry: Record<string, string> = {}
@@ -148,8 +152,13 @@ export async function GET(req: Request) {
     const id = p.teacher_id; if (!id) return
     if (!tAgg[id]) tAgg[id] = { id, revenue: 0, payout: 0, lessons: 0 }
     tAgg[id].revenue += Number(p.gross_amount_usd) || 0
-    tAgg[id].payout += Number(p.teacher_payout_usd) || 0
     tAgg[id].lessons++
+  })
+  // Realised payout per teacher (held trial/long excluded until acceptance).
+  earnsCur.forEach(e => {
+    const id = e.teacher_id; if (!id) return
+    if (!tAgg[id]) tAgg[id] = { id, revenue: 0, payout: 0, lessons: 0 }
+    tAgg[id].payout += Number(e.net_amount_usd) || 0
   })
   const topTeachers = Object.values(tAgg).map((t: any) => ({
     name: nameById[t.id] || 'Teacher', revenue: round1(t.revenue), payout: round1(t.payout), lessons: t.lessons,

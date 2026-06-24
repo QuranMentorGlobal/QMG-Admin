@@ -17,10 +17,15 @@ export async function GET() {
   const all: any[] = pres.data || []
   const ok = all.filter(p => p.status === 'succeeded')
 
+  // Realised commission/payout come from the earnings ledger (held trial/long
+  // funds have no earning row until acceptance; reversed rows are net 0).
+  let eres: any = await svc.from('teacher_earnings').select('commission_usd, net_amount_usd, status, created_at, teacher_id').limit(100000)
+  const earns: any[] = ((eres.data as any[]) || []).filter(e => (Number(e.net_amount_usd) || 0) > 0)
+
   // Totals
   const gross = ok.reduce((s, p) => s + (Number(p.gross_amount_usd) || 0), 0)
-  const commission = ok.reduce((s, p) => s + (Number(p.platform_fee_usd) || 0), 0)
-  const payout = ok.reduce((s, p) => s + (Number(p.teacher_payout_usd) || 0), 0)
+  const commission = earns.reduce((s, e) => s + (Number(e.commission_usd) || 0), 0)
+  const payout = earns.reduce((s, e) => s + (Number(e.net_amount_usd) || 0), 0)
   const counts = { succeeded: ok.length, failed: all.filter(p => p.status === 'failed').length, refunded: all.filter(p => p.status === 'refunded').length, pending: all.filter(p => p.status === 'pending').length, total: all.length }
   // [6.2] AOV over PAID orders only (exclude $0 / trial rows that deflate it).
   const paidOrders = ok.filter(p => (Number(p.gross_amount_usd) || 0) > 0 && p.payment_type !== 'trial')
@@ -32,7 +37,8 @@ export async function GET() {
   for (let i = 11; i >= 0; i--) keys.push(monthKey(new Date(now.getFullYear(), now.getMonth() - i, 1)))
   const mMap: Record<string, any> = {}
   keys.forEach(k => mMap[k] = { m: k, gross: 0, commission: 0, payout: 0 })
-  ok.forEach(p => { const k = monthKey(new Date(p.created_at)); if (mMap[k]) { mMap[k].gross += Number(p.gross_amount_usd) || 0; mMap[k].commission += Number(p.platform_fee_usd) || 0; mMap[k].payout += Number(p.teacher_payout_usd) || 0 } })
+  ok.forEach(p => { const k = monthKey(new Date(p.created_at)); if (mMap[k]) { mMap[k].gross += Number(p.gross_amount_usd) || 0 } })
+  earns.forEach(e => { const k = monthKey(new Date(e.created_at)); if (mMap[k]) { mMap[k].commission += Number(e.commission_usd) || 0; mMap[k].payout += Number(e.net_amount_usd) || 0 } })
   const byMonth = keys.map(k => ({ m: k, gross: r1(mMap[k].gross), commission: r1(mMap[k].commission), payout: r1(mMap[k].payout) }))
 
   // This vs last month
@@ -49,9 +55,9 @@ export async function GET() {
   const typeBreakdown = Object.entries(byType).map(([k, v]) => ({ name: k, count: v.count, gross: r1(v.gross) })).sort((a, b) => b.gross - a.gross)
   const providerBreakdown = Object.entries(byProvider).map(([k, v]) => ({ name: k, count: v.count, gross: r1(v.gross) })).sort((a, b) => b.gross - a.gross)
 
-  // Top payout teachers
+  // Top payout teachers (realised earnings, not held payment splits)
   const tAgg: Record<string, { payout: number; count: number }> = {}
-  ok.forEach(p => { const id = p.teacher_id; if (!id) return; (tAgg[id] = tAgg[id] || { payout: 0, count: 0 }); tAgg[id].payout += Number(p.teacher_payout_usd) || 0; tAgg[id].count++ })
+  earns.forEach(e => { const id = e.teacher_id; if (!id) return; (tAgg[id] = tAgg[id] || { payout: 0, count: 0 }); tAgg[id].payout += Number(e.net_amount_usd) || 0; tAgg[id].count++ })
   const tIds = Object.keys(tAgg)
   const nameMap: Record<string, string> = {}
   if (tIds.length) {
