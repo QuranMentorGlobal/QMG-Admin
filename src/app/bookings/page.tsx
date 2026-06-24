@@ -64,14 +64,11 @@ export default function BookingsPage() {
   useEffect(() => { fetchBookings() }, [])
 
   async function fetchBookings() {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('bookings')
-      .select(`*, courses(title),
-        student:profiles!bookings_student_id_fkey(first_name, last_name, email),
-        teacher:profiles!bookings_teacher_id_fkey(first_name, last_name)`)
-      .order('created_at', { ascending: false }) as any
-    setBookings(data || [])
+    try {
+      const res = await fetch('/api/bookings')
+      const data = res.ok ? await res.json() : []
+      setBookings(Array.isArray(data) ? data : [])
+    } catch { setBookings([]) }
     setLoading(false)
   }
 

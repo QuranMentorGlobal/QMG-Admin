@@ -57,11 +57,9 @@ export default function AdminPayoutsPage() {
 
   async function load() {
     setLoading(true)
-    const { data } = await (supabase as any)
-      .from('teacher_payouts')
-      .select('*, profiles!teacher_payouts_teacher_id_fkey(first_name, last_name)')
-      .order('requested_at', { ascending: false, nullsFirst: false })
-    const list: PayoutRow[] = (data ?? []).map((r: any) => ({
+    let data: any[] = []
+    try { const res = await fetch('/api/payouts'); data = res.ok ? await res.json() : [] } catch {}
+    const list: PayoutRow[] = (Array.isArray(data) ? data : []).map((r: any) => ({
       ...r,
       teacher_name: r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}`.trim() : 'Teacher',
     }))

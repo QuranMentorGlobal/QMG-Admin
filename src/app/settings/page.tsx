@@ -223,8 +223,8 @@ export default function SettingsPage() {
 
   async function fetchSettings() {
     try {
-      const supabase = createClient()
-      const { data } = await supabase.from('platform_settings').select('*').single() as any
+      const res = await fetch('/api/platform-settings')
+      const data = res.ok ? await res.json() : null
       const merged = { ...DEFAULTS }
       if (data) Object.keys(DEFAULTS).forEach(k => { if (data[k] !== undefined && data[k] !== null) merged[k] = data[k] })
       setS(merged); setBaseline(merged)

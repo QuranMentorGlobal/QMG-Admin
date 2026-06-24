@@ -36,3 +36,12 @@ export async function POST(req: Request) {
   // Nothing matched existing columns — not an error, just nothing to persist yet
   return NextResponse.json({ ok: true, savedKeys: [], stripped })
 }
+
+// Read settings — SERVICE ROLE (bypasses RLS so the admin always sees the row).
+export async function GET() {
+  const g = await guard(['settings.view']); if ('error' in g) return g.error
+  const svc = service()
+  const { data, error } = await svc.from('platform_settings').select('*').single()
+  if (error && error.code !== 'PGRST116') return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data ?? {})
+}

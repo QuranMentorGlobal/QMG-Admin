@@ -33,14 +33,11 @@ export default function StudentManagementPage() {
   }, [search, students])
 
   async function fetchStudents() {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'student')
-      .order('created_at', { ascending: false }) as any
-    setStudents(data || [])
-    setFiltered(data || [])
+    let data: any[] = []
+    try { const res = await fetch('/api/students'); data = res.ok ? await res.json() : [] } catch {}
+    if (!Array.isArray(data)) data = []
+    setStudents(data)
+    setFiltered(data)
     setLoading(false)
   }
 

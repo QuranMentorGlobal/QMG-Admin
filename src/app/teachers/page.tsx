@@ -39,14 +39,11 @@ export default function TeacherManagementPage() {
   }, [search, teachers])
 
   async function fetchTeachers() {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('teacher_profiles')
-      .select('*, profiles(first_name, last_name, email, country, is_active)')
-      .eq('status', 'approved')
-      .order('id', { ascending: false }) as any
-    setTeachers(data || [])
-    setFiltered(data || [])
+    let data: any[] = []
+    try { const res = await fetch('/api/teachers'); data = res.ok ? await res.json() : [] } catch {}
+    if (!Array.isArray(data)) data = []
+    setTeachers(data)
+    setFiltered(data)
     setLoading(false)
   }
 
