@@ -93,6 +93,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/analytics': ['analytics.deep'],
   '/attendance': ['analytics.deep'],
   '/teachers': ['teachers.view'],
+  '/courses-hub': ['teachers.view'],
   '/verification-queue': ['verification.access'],
   '/re-verification': ['verification.access'],
   '/badges': ['badges.view', 'badges.manage'],
@@ -119,6 +120,7 @@ export const API_PERMISSIONS: { match: string; perms: string[] }[] = [
   { match: '/api/analytics/deep', perms: ['analytics.deep'] },
   { match: '/api/analytics', perms: ['analytics.dashboard'] },
   { match: '/api/stats', perms: ['analytics.dashboard'] },
+  { match: '/api/courses-hub', perms: ['teachers.view', 'analytics.dashboard'] },
 ]
 
 // ── Default Sub-Admin role presets ───────────────────────────────────────────

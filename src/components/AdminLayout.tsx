@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
   CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows,
-  SlidersHorizontal, Briefcase, RotateCcw, Award } from 'lucide-react'
+  SlidersHorizontal, Briefcase, RotateCcw, Award, Library } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
 // listing its pages (sub-items). New pages slot into a category here — the rail
@@ -40,6 +40,7 @@ const CATEGORIES = [
   { key: 'people', label: 'People Management', l1: 'People', l2: 'Management', icon: Users, items: [
     { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },
     { href: '/students', label: 'Student Management', icon: Users         },
+    { href: '/courses-hub', label: 'Courses Hub',     icon: Library       },
   ] },
   { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [
     { href: '/settings',         label: 'Platform Settings', icon: Settings   },

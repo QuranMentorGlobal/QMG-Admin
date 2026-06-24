@@ -17,6 +17,7 @@ import {
 import {
   TrendingUp, TrendingDown, Download, Users, GraduationCap, Clock, MessageSquare,
   AlertTriangle, CreditCard, Award, BookOpen, Activity, ArrowUpRight, ShieldCheck, Zap, RotateCcw,
+  Target, Video, Library,
 } from 'lucide-react'
 
 const GOLD = '#C9A227', GOLD_L = '#E3C04A', INK = '#111111', INK_MID = '#3D3D3D'
@@ -144,6 +145,7 @@ export default function DashboardPage() {
   const [activity, setActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [gran, setGran] = useState<'day' | 'week' | 'month'>('day')
+  const [courseCounts, setCourseCounts] = useState<{ trial: number; recorded: number; live: number; long: number; completed: number; total: number } | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -182,6 +184,13 @@ export default function DashboardPage() {
     if (!ctx || !canAudit) return
     fetch('/api/audit-log').then(r => r.ok ? r.json() : null).then(d => setActivity((d?.logs || []).slice(0, 6))).catch(() => {})
   }, [ctx, canAudit])
+
+  useEffect(() => {
+    if (!ctx) return
+    if (isSub && !ctx.perms.includes('teachers.view') && !ctx.perms.includes('analytics.dashboard')) return
+    fetch('/api/courses-hub?counts=1').then(r => r.ok ? r.json() : null)
+      .then(j => { if (j?.counts) setCourseCounts(j.counts) }).catch(() => {})
+  }, [ctx, isSub])
 
   const k: any = { ...(data?.kpis || {}) }
   if (refunds) {
@@ -300,6 +309,41 @@ export default function DashboardPage() {
             ? [...Array(kpiCards.length || 8)].map((_, i) => <div key={i} className="qmg-skel" style={{ borderRadius: 16, height: 92 }} />)
             : kpiCards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} />)
           }
+        </div>
+      )}
+
+      {/* Courses overview — 4 interlinked cards into the Courses Hub */}
+      {courseCounts && can('teachers.view') && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Library size={15} style={{ color: GOLD }} />
+              <p style={{ fontSize: 13, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Courses</p>
+            </div>
+            <a href="/courses-hub" style={{ fontSize: 12, fontWeight: 700, color: '#166534', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Open Courses Hub <ArrowUpRight size={13} />
+            </a>
+          </div>
+          <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
+            {[
+              { label: 'Trial Classes',    value: courseCounts.trial,    href: '/courses-hub?tab=trial',    icon: Target },
+              { label: 'Recorded Courses', value: courseCounts.recorded, href: '/courses-hub?tab=recorded', icon: BookOpen },
+              { label: 'Live Classes',     value: courseCounts.live,     href: '/courses-hub?tab=live',     icon: Video },
+              { label: 'Long Courses',     value: courseCounts.long,     href: '/courses-hub?tab=long',     icon: GraduationCap },
+            ].map(c => (
+              <a key={c.href} href={c.href} className="adminx-row"
+                style={{ display: 'block', textDecoration: 'none', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <c.icon size={15} style={{ color: GOLD }} />
+                  </div>
+                  <ArrowUpRight size={15} style={{ color: MUTED }} />
+                </div>
+                <p style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>{fmtNum(c.value)}</p>
+                <p style={{ fontSize: 12, color: MUTED, margin: '4px 0 0', fontWeight: 600 }}>{c.label}</p>
+              </a>
+            ))}
+          </div>
         </div>
       )}
 
