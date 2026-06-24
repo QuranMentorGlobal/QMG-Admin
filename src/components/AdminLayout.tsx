@@ -24,10 +24,11 @@ const CATEGORIES = [
     { href: '/analytics',  label: 'Admin Analytics',   icon: BarChart3       },
     { href: '/attendance', label: 'Attendance Center', icon: CalendarCheck   },
   ] },
-  { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [
-    { href: '/settings',         label: 'Platform Settings', icon: Settings   },
-    { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
-    { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
+  { key: 'ops', label: 'Operations Management', l1: 'Operations', l2: 'Management', icon: Briefcase, items: [
+    { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
+    { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
+    { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
+    { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
   ] },
   { key: 'trust', label: 'Verification & Trust', l1: 'Verification', l2: '& Trust', icon: ShieldCheck, items: [
     { href: '/verification-queue', label: 'Verification Queue', icon: ShieldCheck      },
@@ -40,11 +41,10 @@ const CATEGORIES = [
     { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },
     { href: '/students', label: 'Student Management', icon: Users         },
   ] },
-  { key: 'ops', label: 'Operations Management', l1: 'Operations', l2: 'Management', icon: Briefcase, items: [
-    { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
-    { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
-    { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
-    { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
+  { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [
+    { href: '/settings',         label: 'Platform Settings', icon: Settings   },
+    { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
+    { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
   ] },
 ]
 const NAV_ITEMS = CATEGORIES.flatMap(c => c.items)

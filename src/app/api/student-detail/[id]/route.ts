@@ -46,7 +46,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // Enrollments (defensive — table may not exist)
   let enrollments = courseSet.size
   try {
-    const { data: en, error: eerr } = await svc.from('enrollments').select('id', { count: 'exact' }).eq('student_id', id)
+    const { data: en, error: eerr } = await svc.from('enrollments').select('id', { count: 'exact' }).eq('student_id', id).in('status', ['active', 'completed'])
     if (!eerr && en) enrollments = Math.max(enrollments, en.length)
   } catch {}
 

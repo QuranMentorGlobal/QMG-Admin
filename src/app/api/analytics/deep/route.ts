@@ -91,7 +91,7 @@ export async function GET(req: Request) {
     if (!byCourse[title]) byCourse[title] = { course: title, enrollments: 0, revenue: 0, completed: 0, total: 0 }
     byCourse[title].total++
     if (b.status === 'completed') byCourse[title].completed++
-    if (!b.is_trial) { byCourse[title].enrollments++; byCourse[title].revenue += Number(b.price_usd) || 0 }
+    if (!b.is_trial && (b.status === 'confirmed' || b.status === 'completed')) { byCourse[title].enrollments++; byCourse[title].revenue += Number(b.price_usd) || 0 }
   })
   // optional per-course rating (guarded — column may not exist)
   const ratingByCourse: Record<string, { sum: number; n: number }> = {}

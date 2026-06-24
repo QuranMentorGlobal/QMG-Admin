@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(22,163,74,0.1)', color: GREEN },
   cancelled: { bg: '#FEE2E2', color: RED },
 }
-const STATUSES = ['all', 'pending', 'confirmed', 'completed', 'cancelled']
+const STATUSES = ['pending', 'confirmed', 'completed']
 const TYPES = [{ k: 'all', l: 'All types' }, { k: 'trial', l: 'Trial' }, { k: 'paid', l: 'Paid' }]
 const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -55,7 +55,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'list' | 'calendar'>('list')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('pending')
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [cursor, setCursor] = useState(() => new Date())

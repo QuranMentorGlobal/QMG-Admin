@@ -90,7 +90,7 @@ export default function ModerationPage() {
         <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 60, background: toast.k === 'success' ? 'linear-gradient(135deg,#166534,#C9A227)' : RED, color: '#fff', padding: '12px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14, boxShadow: '0 8px 24px rgba(0,0,0,.18)' }}>{toast.m}</div>
       )}
 
-      <div style={{ maxWidth: 980 }}>
+      <div className="w-full">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
           <ShieldAlert size={24} color={GOLD} /> Trust &amp; Safety
         </h1>
