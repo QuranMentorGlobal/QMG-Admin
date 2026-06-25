@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Auto-update badges (Phase 9): recompute this teacher's badges immediately.
     try {
-      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
       await fetch(`${frontendUrl}/api/badges/recompute`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId, audience: 'teacher' }),
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     if (teacherEmail) {
       try {
-        const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+        const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
         await fetch(`${frontendUrl}/api/email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

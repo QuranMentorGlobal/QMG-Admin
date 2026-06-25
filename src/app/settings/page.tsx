@@ -168,8 +168,8 @@ const CATEGORIES: Category[] = [
 // ── Defaults (commission default is now 20%) ─────────────────────────────────
 const DEFAULTS: Record<string, any> = {
   // general
-  platform_name: 'QuranMentorGlobal', tagline: 'Learn · Connect · Grow',
-  contact_email: 'info@quranmentorglobal.com', default_language: 'English',
+  platform_name: 'Muddarris', tagline: 'Learn · Connect · Grow',
+  contact_email: 'contact@muddarris.com', default_language: 'English',
   timezone: 'UTC', maintenance_mode: false,
   // platform
   support_email: '', support_whatsapp: '', allow_signups: true,
@@ -185,7 +185,7 @@ const DEFAULTS: Record<string, any> = {
   // payment
   default_currency: 'USD', stripe_enabled: true, jazzcash_enabled: false, easypaisa_enabled: false,
   // email
-  email_from_name: 'QuranMentorGlobal', email_from_address: '', email_signature: '',
+  email_from_name: 'Muddarris', email_from_address: '', email_signature: '',
   // notifications
   notify_new_teacher: true, notify_new_ticket: true, notify_new_booking: true, notify_failed_payment: true,
   // security

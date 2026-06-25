@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   }
 
   const system =
-    'You are a business analyst for QuranMentorGlobal, a two-sided Quran tutoring marketplace ' +
+    'You are a business analyst for Muddarris, a two-sided Quran tutoring marketplace ' +
     '(students/parents on one side, verified Quran teachers on the other; the platform earns a ' +
     'commission per lesson). You write concise, decision-ready insights for the Super Admin. ' +
     'Where the data supports it, cover booking trends, teacher performance, student retention, ' +

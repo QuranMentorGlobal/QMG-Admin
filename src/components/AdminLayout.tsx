@@ -56,7 +56,7 @@ const LOGO_SRC = '/logo.png'
 function Wordmark({ size = 16, light = true }: { size?: number; light?: boolean }) {
   return (
     <span style={{ fontFamily: "'Fraunces', serif", fontSize: size, fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1, color: light ? '#ffffff' : '#111111', whiteSpace: 'nowrap' }}>
-      Quran<span style={{ color: '#E3C04A' }}>Mentor</span>Global
+      Muddarris
     </span>
   )
 }
@@ -235,7 +235,7 @@ export default function AdminLayout({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'linear-gradient(180deg, #111111 0%, #166534 100%)' }}>
         {/* Brand header */}
         <div style={{ padding: '18px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.09)', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
-          <img src={LOGO_SRC} alt="QMG" style={{ width: 60, height: 60, objectFit: 'contain' }} />
+          <img src={LOGO_SRC} alt="Muddarris" style={{ width: 60, height: 60, objectFit: 'contain' }} />
           <Wordmark size={16} light />
           <span className="adminx-portal-pill"><span className="adminx-portal-dot" />Admin Panel</span>
         </div>
@@ -281,7 +281,7 @@ export default function AdminLayout({
             <span>Sign Out</span>
           </button>
           <p style={{ fontSize: 9, marginTop: 10, textAlign: 'center', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.4px' }}>
-            QuranMentorGlobal.com
+            Muddarris.com
           </p>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function AdminLayout({
 
           {/* Center: brand (desktop) */}
           <div className="hidden lg:flex" style={{ alignItems: 'center', gap: 9, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-            <img src={LOGO_SRC} alt="QMG" style={{ width: 60, height: 60, objectFit: 'contain' }} />
+            <img src={LOGO_SRC} alt="Muddarris" style={{ width: 60, height: 60, objectFit: 'contain' }} />
             <Wordmark size={20} light />
           </div>
 

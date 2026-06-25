@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'QMG Admin Panel',
-  description: 'QuranMentorGlobal Admin Dashboard',
+  description: 'Muddarris Admin Dashboard',
   icons: { icon: '/logo.png', apple: '/logo.png' },
 }
 

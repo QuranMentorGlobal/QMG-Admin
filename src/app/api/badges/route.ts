@@ -16,7 +16,7 @@ import { BADGE_BY_KEY } from '@/lib/badges'
 
 export const dynamic = 'force-dynamic'
 
-const FRONTEND = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.quranmentorglobal.com'
+const FRONTEND = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
 
 export async function GET(req: NextRequest) {
   const g = await guard(['badges.view', 'badges.manage']); if ('error' in g) return g.error

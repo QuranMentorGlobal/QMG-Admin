@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-10">
           {/* Logo / Brand */}
           <div className="text-center mb-8">
-            <img src="/logo.png" alt="QuranMentorGlobal" className="mx-auto mb-4" style={{ width: 72, height: 72, objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Muddarris" className="mx-auto mb-4" style={{ width: 72, height: 72, objectFit: 'contain' }} />
             <h1 className="font-display text-2xl font-bold text-[#111111]">QuranMentor<span style={{ color: '#C9A227' }}>Global</span></h1>
             <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase"
               style={{ background: '#F0E4B8', color: '#C9A227' }}>
@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@quranmentorglobal.com"
+                placeholder="admin@muddarris.com"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-[#C9A227] focus:ring-2 focus:ring-[#EFE2B5]"
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />

@@ -203,7 +203,7 @@ export default function AdminManagementPage() {
                 <Field label="First name"><input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} style={inp} /></Field>
                 <Field label="Last name"><input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} style={inp} /></Field>
               </div>
-              <Field label="Email"><input type="email" disabled={editing} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={{ ...inp, opacity: editing ? 0.6 : 1 }} placeholder="manager@quranmentorglobal.com" /></Field>
+              <Field label="Email"><input type="email" disabled={editing} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={{ ...inp, opacity: editing ? 0.6 : 1 }} placeholder="manager@muddarris.com" /></Field>
               {!editing && <Field label="Temporary password (min 8 chars)"><input type="text" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} style={inp} placeholder="Share securely; they can change it later" /></Field>}
               <Field label="Role label"><input value={form.roleLabel} onChange={e => setForm(f => ({ ...f, roleLabel: e.target.value }))} style={inp} placeholder="e.g. Support Manager" /></Field>
 

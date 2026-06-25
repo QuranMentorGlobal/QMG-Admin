@@ -1,6 +1,6 @@
 // src/lib/badges.ts
 // ════════════════════════════════════════════════════════════════════════════
-// QURAN MENTOR GLOBAL — UNIFIED BADGE SYSTEM (SINGLE SOURCE OF TRUTH)
+// MUDDARRIS — UNIFIED BADGE SYSTEM (SINGLE SOURCE OF TRUTH)
 //
 // This file is the ONE place that defines every badge on the platform: its key,
 // name, category, icon, display group, and the rule that earns it. BOTH repos
@@ -77,7 +77,7 @@ export interface ParentSignals {
 export const TEACHER_BADGES: BadgeDef[] = [
   // TRUST
   { key: 'verified_teacher', audience: 'teacher', category: 'trust', tier: 10,
-    name: 'Verified Teacher', description: 'Identity verified and approved by QuranMentorGlobal.',
+    name: 'Verified Teacher', description: 'Identity verified and approved by Muddarris.',
     icon: 'shield_check', assignment: 'auto', criteria: {} },
   { key: 'trusted_teacher', audience: 'teacher', category: 'trust', tier: 20,
     name: 'Trusted Teacher', description: 'Verified, in good standing, with a strong track record.',
