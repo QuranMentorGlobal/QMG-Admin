@@ -69,7 +69,7 @@ export default function AdminSupportPage() {
     setLoading(true)
     setErr('')
     try {
-      const res = await fetch('/api/support-metrics')
+      const res = await fetch('/api/support-metrics', { cache: 'no-store' })
       const text = await res.text()
       const json = text ? JSON.parse(text) : {}
       if (!res.ok) throw new Error(json.error || `Failed to load tickets (${res.status})`)
@@ -88,10 +88,21 @@ export default function AdminSupportPage() {
     if (!selected) return
     setSending(true)
     const res = await fetch('/api/support-ticket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: selected.id, status: replyStatus, reply: reply.trim(), priority: replyPriority }) })
-    const ok = res.ok
-    setToast(ok ? '✅ Ticket updated' : '❌ ' + ((await res.json().catch(() => ({}))).error || 'Not permitted'))
+    const json = await res.json().catch(() => ({}))
+    const ok = res.ok && json.ok
+    setToast(ok ? '✅ Ticket updated' : '❌ ' + (json.error || 'Not permitted'))
     setTimeout(() => setToast(''), 3000)
-    if (ok) { await load(); setSelected((s: any) => s ? { ...s, status: replyStatus, priority: replyPriority, adminReply: reply.trim() } : null) }
+    if (ok) {
+      const u = json.ticket || {}
+      const nextStatus = u.status ?? replyStatus
+      const nextPriority = u.priority ?? replyPriority
+      const nextReply = (typeof u.admin_reply === 'string' ? u.admin_reply : reply.trim())
+      // Reflect the *persisted* values immediately in both the list and the detail,
+      // so the list can never lag behind the detail again.
+      setD((prev: any) => prev ? { ...prev, tickets: (prev.tickets || []).map((t: any) => t.id === selected.id ? { ...t, status: nextStatus, priority: nextPriority, adminReply: nextReply, resolvedAt: u.resolved_at ?? t.resolvedAt } : t) } : prev)
+      setSelected((s: any) => s ? { ...s, status: nextStatus, priority: nextPriority, adminReply: nextReply } : null)
+      await load() // refresh KPI counts / category + priority tallies from the server
+    }
     setSending(false)
   }
 

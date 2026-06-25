@@ -18,13 +18,17 @@ export async function POST(req: Request) {
   if (category) optional.category = category
   if (status === 'resolved' || status === 'closed') optional.resolved_at = new Date().toISOString()
 
-  let { error } = await svc.from('support_tickets').update({ ...base, ...optional }).eq('id', ticketId)
-  if (error && /column|does not exist|schema cache/i.test(error.message)) {
-    // Fall back to the columns we know exist
-    ;({ error } = await svc.from('support_tickets').update(base).eq('id', ticketId))
+  let { data, error } = await svc.from('support_tickets').update({ ...base, ...optional }).eq('id', ticketId).select('*')
+  if (error && /column|does not exist|schema cache|invalid input|enum|constraint|violates/i.test(error.message)) {
+    // An optional column/value was rejected — retry with only the columns we trust.
+    ;({ data, error } = await svc.from('support_tickets').update(base).eq('id', ticketId).select('*'))
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!data || data.length === 0) {
+    // Update ran but matched no row — surface it instead of a silent success.
+    return NextResponse.json({ error: 'Ticket not found — nothing was updated.' }, { status: 404 })
+  }
 
   await logAudit(g.caller, 'ticket.update', 'ticket', ticketId, { status: status ?? null, priority: priority ?? null, category: category ?? null })
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, ticket: data[0] })
 }
