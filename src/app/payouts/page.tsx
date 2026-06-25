@@ -8,9 +8,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
+import SearchBar from '@/components/SearchBar'
 
 const GOLD = '#C9A227'
 const INK  = '#111111'
@@ -79,6 +81,9 @@ export default function AdminPayoutsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter]   = useState<Filter>('requested')
   const [search, setSearch]   = useState('')
+  const [range, setRange]     = useState('all')
+  const [from, setFrom]       = useState('')
+  const [to, setTo]           = useState('')
   const [busy, setBusy]       = useState<string | null>(null)
   const [detail, setDetail]   = useState<PayoutRow | null>(null)
   const [detailData, setDetailData] = useState<any>(null)
@@ -141,7 +146,8 @@ export default function AdminPayoutsPage() {
     } catch { setDetailData(null) }
   }
 
-  const filtered = rows.filter(r => matchesFilter(r.status, filter))
+  const filtered = withinRange(rows, range, (r) => r.requested_at, from, to)
+    .filter(r => matchesFilter(r.status, filter))
     .filter(r => !search.trim() || (r.teacher_name || '').toLowerCase().includes(search.trim().toLowerCase()))
 
   const sum = (pred: (r: PayoutRow) => boolean) => rows.filter(pred).reduce((s, r) => s + (r.amount_usd || 0), 0)
@@ -153,6 +159,18 @@ export default function AdminPayoutsPage() {
   }
 
   const btn = (bg: string, color: string): React.CSSProperties => ({ fontSize: 12, fontWeight: 700, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', background: bg, color, border: 'none' })
+
+  function exportCSV() {
+    const headers = ['Teacher', 'Amount', 'Currency', 'Method', 'Status', 'Requested', 'Approved', 'Paid', 'Reference', 'Transaction ID']
+    const lines = [headers.join(',')]
+    filtered.forEach(r => {
+      const cells = [r.teacher_name || '', r.amount_usd ?? '', r.currency || '', r.payment_method_used || r.payout_method || '', r.status || '', r.requested_at || '', r.approved_at || '', r.paid_at || r.completed_at || '', r.reference_number || '', r.transaction_id || '']
+      lines.push(cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+    })
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+    a.download = `muddarris-payouts-${new Date().toISOString().slice(0, 10)}.csv`; a.click()
+  }
 
   function RowActions({ r }: { r: PayoutRow }) {
     const st = r.status === 'pending' ? 'requested' : r.status
@@ -184,10 +202,16 @@ export default function AdminPayoutsPage() {
   return (
     <AdminLayout>
     <div style={{ width: '100%' }}>
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: INK, margin: '4px 0 0' }}>Payout Management</h1>
-        <p style={{ fontSize: 14, color: MUTED, marginTop: 4 }}>Review and process teacher payout requests.</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0 0' }}>Payout Management</h1>
+          <p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Review and process teacher payout requests.</p>
+        </div>
+        <div className="qmg-payout-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+          <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -206,19 +230,25 @@ export default function AdminPayoutsPage() {
       </div>
 
       {/* Filter tabs + search */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        {FILTERS.map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
-              background: filter === f ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: filter === f ? '#111111' : MUTED, border: `1px solid ${filter === f ? GOLD : '#E5E7EB'}` }}>
-            {f.replace('_', ' ')} {f !== 'all' && `(${rows.filter(r => matchesFilter(r.status, f)).length})`}
-          </button>
-        ))}
-        <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320, marginLeft: 'auto' }}>
-          <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: MUTED }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search teacher…"
-            style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13, background: '#fff', color: INK }} />
+      <div className="qmg-payout-filterbar" style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="qmg-payout-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {FILTERS.map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
+                background: filter === f ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: filter === f ? '#111111' : MUTED, border: `1px solid ${filter === f ? GOLD : '#E5E7EB'}` }}>
+              {f.replace('_', ' ')} {f !== 'all' && `(${rows.filter(r => matchesFilter(r.status, f)).length})`}
+            </button>
+          ))}
         </div>
+        <div className="qmg-payout-search" style={{ marginLeft: 'auto', flex: '0 1 320px', minWidth: 200 }}>
+          <SearchBar value={search} onChange={setSearch} placeholder="Search teacher…" />
+        </div>
+        <style>{`@media (max-width:640px){
+          .qmg-payout-controls{ width:100%; justify-content:center; }
+          .qmg-payout-filterbar{ justify-content:center; }
+          .qmg-payout-tabs{ width:100%; justify-content:center; }
+          .qmg-payout-search{ margin-left:0 !important; flex:1 1 100% !important; width:100%; }
+        }`}</style>
       </div>
 
       {/* Table */}
