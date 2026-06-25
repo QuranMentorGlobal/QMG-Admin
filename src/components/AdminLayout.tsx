@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
-import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail, Megaphone } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
 // listing its pages (sub-items). New pages slot into a category here — the rail
@@ -45,6 +45,7 @@ const CATEGORIES = [
     { href: '/settings',         label: 'Platform Settings', icon: Settings   },
     { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
     { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
+    { href: '/announcements',    label: 'Announcements',      icon: Megaphone  },
   ] },
 ]
 const NAV_ITEMS = CATEGORIES.flatMap(c => c.items)
