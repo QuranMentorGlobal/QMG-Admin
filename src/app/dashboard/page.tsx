@@ -35,6 +35,7 @@ const KPI_CATEGORIES: { label: string; icon: any; keys: string[] }[] = [
   { label: 'People',             icon: Users,      keys: ['activeStudents', 'activeTeachers', 'newToday', 'newRegistrations'] },
   { label: 'Sales & Value',      icon: Activity,   keys: ['trialRequests', 'paidEnrollments', 'arpu', 'arpt'] },
   { label: 'Retention & Refunds', icon: RotateCcw, keys: ['studentRetention', 'teacherRetention', 'totalRefunded', 'refundCount'] },
+  { label: 'Payouts & Liabilities', icon: CreditCard, keys: ['pendingPayouts', 'approvedPayouts', 'completedPayouts', 'totalPaidOut', 'teacherLiability'] },
 ]
 
 // Per-card icon for each KPI (so every dashboard card has an icon like the Courses cards).
@@ -43,6 +44,7 @@ const KPI_ICONS: Record<string, any> = {
   activeStudents: Users, activeTeachers: GraduationCap, newToday: Clock, newRegistrations: ArrowUpRight,
   trialRequests: Target, paidEnrollments: BookOpen, arpu: CreditCard, arpt: Award,
   studentRetention: Users, teacherRetention: GraduationCap, totalRefunded: RotateCcw, refundCount: RotateCcw,
+  pendingPayouts: Clock, approvedPayouts: ShieldCheck, completedPayouts: TrendingUp, totalPaidOut: CreditCard, teacherLiability: Activity,
 }
 
 type KPI = { value: number; growth?: number; suffix?: string; note?: string }
@@ -158,6 +160,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
   const [deep, setDeep] = useState<any>(null)
   const [refunds, setRefunds] = useState<{ total: number; count: number } | null>(null)
+  const [pstats, setPstats] = useState<any>(null)
   const [activity, setActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [gran, setGran] = useState<'day' | 'week' | 'month'>('day')
@@ -197,6 +200,12 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
+    fetch('/api/stats').then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setPstats(d) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     if (!ctx || !canAudit) return
     fetch('/api/audit-log').then(r => r.ok ? r.json() : null).then(d => setActivity((d?.logs || []).slice(0, 6))).catch(() => {})
   }, [ctx, canAudit])
@@ -212,6 +221,13 @@ export default function DashboardPage() {
   if (refunds) {
     k.totalRefunded = { value: refunds.total, note: 'Returned to students' }
     k.refundCount   = { value: refunds.count, note: 'Cancellations & declines' }
+  }
+  if (pstats) {
+    k.pendingPayouts   = { value: pstats.requestedPayouts ?? 0, note: 'Awaiting review' }
+    k.approvedPayouts  = { value: pstats.approvedPayouts ?? 0,  note: 'Approved · unpaid' }
+    k.completedPayouts = { value: pstats.completedPayouts ?? 0, note: 'Paid to teachers' }
+    k.totalPaidOut     = { value: pstats.paidOut ?? 0,          note: 'Lifetime' }
+    k.teacherLiability = { value: pstats.teacherLiability ?? 0, note: 'Owed to teachers' }
   }
   const revenueSeries = useMemo(() => aggregate(data?.series?.revenue || [], gran, ['gross', 'commission']), [data, gran])
 
@@ -252,6 +268,11 @@ export default function DashboardPage() {
     { label: 'Teacher Retention', key: 'teacherRetention', fmt: fmtNum, perm: 'analytics.dashboard' },
     { label: 'Total Refunded', key: 'totalRefunded', fmt: fmtMoney, perm: 'payments.view' },
     { label: 'Refunds Issued', key: 'refundCount', fmt: fmtNum, perm: 'payments.view' },
+    { label: 'Pending Payouts', key: 'pendingPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
+    { label: 'Approved Payouts', key: 'approvedPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
+    { label: 'Completed Payouts', key: 'completedPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
+    { label: 'Total Paid Out', key: 'totalPaidOut', fmt: fmtMoney, perm: 'analytics.dashboard' },
+    { label: 'Teacher Liabilities', key: 'teacherLiability', fmt: fmtMoney, perm: 'analytics.dashboard' },
   ]
   const kpiCards = ALL_KPIS.filter(c => can(c.perm))
   const showCharts = can('analytics.dashboard')

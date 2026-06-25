@@ -45,13 +45,17 @@ export async function GET() {
     }
   } catch { /* ledger unavailable */ }
 
-  let pendingPayouts = 0    // payout requests awaiting transfer
+  // Payout pipeline by lifecycle stage (manual-payout workflow).
+  let requestedPayouts = 0, approvedPayouts = 0, processingPayouts = 0, completedPayouts = 0, pendingPayouts = 0
   try {
     const { data: po } = await supabase
       .from('teacher_payouts').select('amount_usd, status').limit(100000)
-    pendingPayouts = ((po || []) as any[])
-      .filter(p => ['pending', 'approved', 'processing'].includes(p.status))
-      .reduce((s, p) => s + (Number(p.amount_usd) || 0), 0)
+    const sumBy = (arr: string[]) => ((po || []) as any[]).filter(p => arr.includes(String(p.status))).reduce((s, p) => s + (Number(p.amount_usd) || 0), 0)
+    requestedPayouts  = sumBy(['requested', 'pending', 'under_review'])
+    approvedPayouts   = sumBy(['approved'])
+    processingPayouts = sumBy(['processing'])
+    completedPayouts  = sumBy(['completed'])
+    pendingPayouts    = sumBy(['requested', 'pending', 'under_review', 'approved', 'processing']) // all awaiting transfer (back-compat)
   } catch {}
 
   let mrr = 0
@@ -78,6 +82,10 @@ export async function GET() {
     teacherLiability: Math.round(teacherLiability * 100) / 100,
     paidOut:          Math.round(paidOut * 100) / 100,
     pendingPayouts:   Math.round(pendingPayouts * 100) / 100,
+    requestedPayouts:  Math.round(requestedPayouts * 100) / 100,
+    approvedPayouts:   Math.round(approvedPayouts * 100) / 100,
+    processingPayouts: Math.round(processingPayouts * 100) / 100,
+    completedPayouts:  Math.round(completedPayouts * 100) / 100,
     mrr:              Math.round(mrr * 100) / 100,
     arpu:             Math.round(arpu * 100) / 100,
     totalRefunded:   Math.round(totalRefunded * 100) / 100,
