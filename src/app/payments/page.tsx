@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -70,6 +71,7 @@ export default function AdminPaymentsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => {
@@ -88,12 +90,12 @@ export default function AdminPaymentsPage() {
 
   const recent = useMemo(() => {
     const q = search.toLowerCase()
-    return (d?.recent || []).filter((p: any) => {
+    return withinRange((d?.recent || []), range, (p: any) => p.createdAt).filter((p: any) => {
       if (filter !== 'all' && p.status !== filter) return false
       if (q && !`${p.student} ${p.teacher} ${p.provider} ${p.type}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [d, filter, search])
+  }, [d, filter, search, range])
 
   function exportCSV() {
     if (!d) return
@@ -110,7 +112,10 @@ export default function AdminPaymentsPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Payments &amp; Revenue</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Financial overview across the platform.</p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <RangeTabs value={range} onChange={setRange} />
+          <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        </div>
       </div>
 
       {/* KPIs */}

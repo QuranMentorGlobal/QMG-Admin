@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import { format } from 'date-fns'
 import { Search, Inbox, AlertTriangle, CheckCircle2, Clock, MessageSquare, Send, Tag, Flag } from 'lucide-react'
 
@@ -56,6 +57,7 @@ export default function AdminSupportPage() {
   const [fStatus, setFStatus] = useState('all')
   const [fCat, setFCat] = useState('all')
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -94,13 +96,13 @@ export default function AdminSupportPage() {
   const m = d?.metrics || { total: 0, open: 0, inProgress: 0, resolved: 0, urgentOpen: 0, responded: 0, responseRate: 0, resolutionRate: 0, avgResolutionHours: 0 }
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return (d?.tickets || []).filter((t: any) => {
+    return withinRange((d?.tickets || []), range, (t: any) => t.createdAt).filter((t: any) => {
       if (fStatus !== 'all' && t.status !== fStatus) return false
       if (fCat !== 'all' && t.category !== fCat) return false
       if (q && !`${t.subject} ${t.message} ${t.userName} ${t.userEmail}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [d, fStatus, fCat, search])
+  }, [d, fStatus, fCat, search, range])
 
   return (
     <AdminLayout adminName={adminName}>
@@ -156,6 +158,7 @@ export default function AdminSupportPage() {
           <Search size={15} style={{ position: 'absolute', left: 12, top: 10, color: MUTED }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tickets…" style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
         </div>
+        <RangeTabs value={range} onChange={setRange} />
       </div>
 
       {/* Two-pane workspace */}

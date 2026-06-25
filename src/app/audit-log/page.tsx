@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import { Search, ShieldCheck } from 'lucide-react'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE'
@@ -37,6 +38,7 @@ export default function AuditLogPage() {
   const [logs, setLogs] = useState<Log[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => {
@@ -68,15 +70,19 @@ export default function AuditLogPage() {
         <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Every administrative action — who did it and when.</p>
       </div>
 
-      <div style={{ position: 'relative', maxWidth: 380, marginBottom: 14 }}>
-        <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: MUTED }} />
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search action, admin or target…"
-          style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+        <div style={{ position: 'relative', maxWidth: 380, flex: '1 1 280px' }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: MUTED }} />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search action, admin or target…"
+            style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
+        </div>
+        <RangeTabs value={range} onChange={setRange} />
       </div>
 
+      {(() => { const shownLogs = withinRange(logs, range, (l: any) => l.created_at); return (
       <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
         {loading ? <div style={{ padding: 40, textAlign: 'center', color: MUTED }}>Loading…</div>
-          : logs.length === 0 ? (
+          : shownLogs.length === 0 ? (
             <div style={{ padding: 48, textAlign: 'center' }}>
               <ShieldCheck size={28} style={{ color: GOLD }} />
               <p style={{ fontSize: 14, fontWeight: 700, color: INK, margin: '10px 0 4px' }}>No audit entries yet</p>
@@ -92,7 +98,7 @@ export default function AuditLogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map(l => (
+                  {shownLogs.map((l: any) => (
                     <tr key={l.id} style={{ borderTop: `1px solid ${BORDER}` }}>
                       <td style={{ padding: '11px 16px', color: '#555', whiteSpace: 'nowrap' }}>{fmt(l.created_at)}</td>
                       <td style={{ padding: '11px 16px', fontWeight: 600, color: INK }}>{l.actor_name || '—'}</td>
@@ -105,6 +111,7 @@ export default function AuditLogPage() {
             </div>
           )}
       </div>
+      ) })()}
     </AdminLayout>
   )
 }

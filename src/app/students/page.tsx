@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { Search, BookOpen, Globe } from 'lucide-react'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 
 type Student = {
   id: string
@@ -19,6 +20,7 @@ export default function StudentManagementPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [filtered, setFiltered] = useState<Student[]>([])
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
@@ -27,10 +29,11 @@ export default function StudentManagementPage() {
 
   useEffect(() => {
     const q = search.toLowerCase()
-    setFiltered(students.filter(s =>
+    const ranged = withinRange(students, range, (s: any) => s.created_at)
+    setFiltered(ranged.filter(s =>
       `${s.first_name} ${s.last_name} ${s.email}`.toLowerCase().includes(q)
     ))
-  }, [search, students])
+  }, [search, students, range])
 
   async function fetchStudents() {
     let data: any[] = []
@@ -72,6 +75,8 @@ export default function StudentManagementPage() {
             />
           </div>
         </div>
+
+        <div className="mb-4"><RangeTabs value={range} onChange={setRange} /></div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"

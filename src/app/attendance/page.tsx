@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs from '@/components/RangeTabs'
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { CheckCircle2, Clock, XCircle, ShieldCheck, TrendingUp } from 'lucide-react'
 
@@ -28,11 +29,16 @@ export default function AdminAttendance() {
   const [adminName, setAdminName] = useState('Admin')
   const [d, setD] = useState<Data | null>(null)
   const [loading, setLoading] = useState(true)
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
-    fetch('/api/attendance-analytics').then(r => r.ok ? r.json() : null).then(setD).catch(() => {}).finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/attendance-analytics?range=${range}`).then(r => r.ok ? r.json() : null).then(setD).catch(() => {}).finally(() => setLoading(false))
+  }, [range])
 
   const o = d?.overall
   const kpis = [
@@ -63,6 +69,8 @@ export default function AdminAttendance() {
           <TrendingUp size={24} color={GOLD} /> Attendance Center
         </h1>
         <p style={{ color: MUTED, fontSize: 14, margin: '6px 0 22px' }}>Platform-wide attendance health across all teachers, students and courses.</p>
+
+        <div style={{ marginBottom: 20 }}><RangeTabs value={range} onChange={setRange} /></div>
 
         {loading ? (
           <p style={{ color: MUTED }}>Loading…</p>

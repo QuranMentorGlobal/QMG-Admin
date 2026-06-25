@@ -28,6 +28,15 @@ const RANGES = [
   { key: '365', label: '1 Year' }, { key: 'all', label: 'All Time' },
 ]
 
+// Dashboard KPI cards grouped into labelled categories (4 per category).
+// Pure presentation — same cards, same data, just arranged like the Courses block.
+const KPI_CATEGORIES: { label: string; icon: any; keys: string[] }[] = [
+  { label: 'Revenue & Growth',   icon: CreditCard, keys: ['totalRevenue', 'commission', 'mrr', 'conversionRate'] },
+  { label: 'People',             icon: Users,      keys: ['activeStudents', 'activeTeachers', 'newToday', 'newRegistrations'] },
+  { label: 'Sales & Value',      icon: Activity,   keys: ['trialRequests', 'paidEnrollments', 'arpu', 'arpt'] },
+  { label: 'Retention & Refunds', icon: RotateCcw, keys: ['studentRetention', 'teacherRetention', 'totalRefunded', 'refundCount'] },
+]
+
 type KPI = { value: number; growth?: number; suffix?: string; note?: string }
 
 function fmtMoney(n: number) {
@@ -302,15 +311,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI grid */}
-      {kpiCards.length > 0 && (
+      {/* KPI grid — grouped into labelled categories (4 per row) */}
+      {loading ? (
         <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
-          {loading
-            ? [...Array(kpiCards.length || 8)].map((_, i) => <div key={i} className="qmg-skel" style={{ borderRadius: 16, height: 92 }} />)
-            : kpiCards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} />)
-          }
+          {[...Array(8)].map((_, i) => <div key={i} className="qmg-skel" style={{ borderRadius: 16, height: 92 }} />)}
         </div>
-      )}
+      ) : kpiCards.length > 0 && (() => {
+        const used = new Set<string>()
+        const sections = KPI_CATEGORIES.map(cat => {
+          const cards = kpiCards.filter(c => cat.keys.includes(c.key))
+          cards.forEach(c => used.add(c.key))
+          return { label: cat.label, icon: cat.icon, cards }
+        }).filter(s => s.cards.length > 0)
+        const leftover = kpiCards.filter(c => !used.has(c.key))
+        if (leftover.length) sections.push({ label: 'Other Metrics', icon: Activity, cards: leftover })
+        return (
+          <div style={{ marginBottom: 4 }}>
+            {sections.map(s => (
+              <div key={s.label} style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <s.icon size={15} style={{ color: GOLD }} />
+                  <p style={{ fontSize: 13, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>{s.label}</p>
+                </div>
+                <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
+                  {s.cards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {/* Courses overview — 4 interlinked cards into the Courses Hub */}
       {courseCounts && (can('courses.view') || can('teachers.view')) && (

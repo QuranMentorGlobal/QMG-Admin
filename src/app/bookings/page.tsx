@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import { format } from 'date-fns'
 import {
   CalendarDays, List, Search, ChevronLeft, ChevronRight, BookOpen,
@@ -58,6 +59,7 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [cursor, setCursor] = useState(() => new Date())
@@ -76,7 +78,7 @@ export default function BookingsPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return bookings.filter(b => {
+    return withinRange(bookings, range, (b: any) => b.start_date || b.created_at).filter(b => {
       if (statusFilter !== 'all' && b.status !== statusFilter) return false
       if (typeFilter === 'trial' && !b.is_trial) return false
       if (typeFilter === 'paid' && b.is_trial) return false
@@ -92,7 +94,7 @@ export default function BookingsPage() {
       }
       return true
     })
-  }, [bookings, statusFilter, typeFilter, search, dateFrom, dateTo])
+  }, [bookings, statusFilter, typeFilter, search, dateFrom, dateTo, range])
 
   const stats = useMemo(() => {
     let completed = 0, upcoming = 0, cancelled = 0, trial = 0, paid = 0, revenue = 0
@@ -127,12 +129,15 @@ export default function BookingsPage() {
             <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Bookings</h1>
             <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>{stats.total} bookings across the platform</p>
           </div>
-          <div style={{ display: 'flex', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 3 }}>
-            {([['list', List], ['calendar', CalendarDays]] as const).map(([v, Icon]) => (
-              <button key={v} onClick={() => setView(v)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer', padding: '7px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, textTransform: 'capitalize', fontFamily: "'Inter',sans-serif", background: view === v ? INK : 'transparent', color: view === v ? '#fff' : '#6B6B6B' }}>
-                <Icon size={14} /> {v}
-              </button>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <RangeTabs value={range} onChange={setRange} />
+            <div style={{ display: 'flex', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 3 }}>
+              {([['list', List], ['calendar', CalendarDays]] as const).map(([v, Icon]) => (
+                <button key={v} onClick={() => setView(v)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer', padding: '7px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, textTransform: 'capitalize', fontFamily: "'Inter',sans-serif", background: view === v ? INK : 'transparent', color: view === v ? '#fff' : '#6B6B6B' }}>
+                  <Icon size={14} /> {v}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

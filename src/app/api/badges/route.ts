@@ -28,6 +28,55 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ config: data || [] })
   }
 
+  // ── Ledger: every active badge grant across the platform (transaction view) ──
+  if (url.searchParams.get('ledger')) {
+    const roleFilter = url.searchParams.get('role') // 'teacher' | 'student' | 'parent' | null
+    let ubq: any = await svc.from('user_badges')
+      .select('id, user_id, badge_key, audience, source, reason, awarded_by, created_at')
+      .eq('revoked', false)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    if (ubq.error) ubq = await svc.from('user_badges').select('*').eq('revoked', false).limit(1000)
+    const rows: any[] = ubq.data || []
+
+    const ids = Array.from(new Set([
+      ...rows.map(r => r.user_id).filter(Boolean),
+      ...rows.map(r => r.awarded_by).filter(Boolean),
+    ]))
+    const pmap: Record<string, any> = {}
+    if (ids.length) {
+      const { data: profs } = await svc.from('profiles').select('id, first_name, last_name, email, role').in('id', ids)
+      ;((profs as any[]) || []).forEach(p => { pmap[p.id] = p })
+    }
+
+    let ledger = rows.map(r => {
+      const p = pmap[r.user_id] || {}
+      const def = BADGE_BY_KEY[r.badge_key]
+      const actor = r.awarded_by ? pmap[r.awarded_by] : null
+      return {
+        id: r.id,
+        userId: r.user_id,
+        name: `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || 'Unknown',
+        email: p.email || '',
+        role: p.role || r.audience || 'user',
+        badgeKey: r.badge_key,
+        badgeName: def?.name || r.badge_key,
+        source: r.source === 'manual' ? 'manual' : 'auto',
+        reason: r.reason || null,
+        actorName: actor ? `${actor.first_name ?? ''} ${actor.last_name ?? ''}`.trim() || 'Admin' : null,
+        createdAt: r.created_at || null,
+      }
+    })
+    if (roleFilter && roleFilter !== 'all') ledger = ledger.filter(x => x.role === roleFilter)
+
+    const counts = {
+      total: ledger.length,
+      auto: ledger.filter(x => x.source === 'auto').length,
+      manual: ledger.filter(x => x.source === 'manual').length,
+    }
+    return NextResponse.json({ ledger, counts })
+  }
+
   const search = url.searchParams.get('search')
   if (search) {
     const term = `%${search}%`

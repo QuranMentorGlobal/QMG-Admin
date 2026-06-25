@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { Search, Star, DollarSign, BookOpen } from 'lucide-react'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 
 type Teacher = {
   id: string
@@ -25,6 +26,7 @@ export default function TeacherManagementPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [filtered, setFiltered] = useState<Teacher[]>([])
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
@@ -33,10 +35,11 @@ export default function TeacherManagementPage() {
 
   useEffect(() => {
     const q = search.toLowerCase()
-    setFiltered(teachers.filter(t =>
+    const ranged = withinRange(teachers, range, (t: any) => t.created_at ?? t.profiles?.created_at)
+    setFiltered(ranged.filter(t =>
       `${t.profiles?.first_name} ${t.profiles?.last_name} ${t.profiles?.email}`.toLowerCase().includes(q)
     ))
-  }, [search, teachers])
+  }, [search, teachers, range])
 
   async function fetchTeachers() {
     let data: any[] = []
@@ -84,6 +87,8 @@ export default function TeacherManagementPage() {
             />
           </div>
         </div>
+
+        <div className="mb-4"><RangeTabs value={range} onChange={setRange} /></div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold flex items-center gap-2"

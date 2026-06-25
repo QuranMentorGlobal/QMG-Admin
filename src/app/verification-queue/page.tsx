@@ -10,6 +10,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import {
   ShieldCheck, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play,
   Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw,
@@ -66,6 +67,7 @@ export default function VerificationQueuePage() {
   const [reqs, setReqs] = useState<ChangeReq[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<StatusKey>('pending_review')
+  const [range, setRange] = useState('all')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
@@ -151,15 +153,17 @@ export default function VerificationQueuePage() {
 
   const name = (t: Teacher) => t.profiles ? `${t.profiles.first_name || ''} ${t.profiles.last_name || ''}`.trim() || 'Unknown' : 'Unknown'
 
+  const rangedTeachers = withinRange(teachers, range, (t: any) => t.created_at)
+  const rangedReqs = withinRange(reqs, range, (r: any) => r.created_at)
   const apps = {
-    pending_review: teachers.filter(t => t.status === 'pending'),
-    action_required: teachers.filter(t => t.status === 'changes_requested'),
-    verified: teachers.filter(t => t.status === 'approved'),
-    rejected: teachers.filter(t => t.status === 'rejected'),
+    pending_review: rangedTeachers.filter(t => t.status === 'pending'),
+    action_required: rangedTeachers.filter(t => t.status === 'changes_requested'),
+    verified: rangedTeachers.filter(t => t.status === 'approved'),
+    rejected: rangedTeachers.filter(t => t.status === 'rejected'),
   }
   const changes = {
-    pending_reverify: reqs.filter(r => r.status === 'pending'),
-    action_required: reqs.filter(r => r.status === 'changes_requested'),
+    pending_reverify: rangedReqs.filter(r => r.status === 'pending'),
+    action_required: rangedReqs.filter(r => r.status === 'changes_requested'),
   }
   const count: Record<StatusKey, number> = {
     pending_review: apps.pending_review.length,
@@ -178,6 +182,8 @@ export default function VerificationQueuePage() {
           <button onClick={load} title="Refresh" style={{ marginLeft: 'auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>
         </div>
         <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
+
+        <div style={{ marginBottom: 16 }}><RangeTabs value={range} onChange={setRange} /></div>
 
         <div className="vq-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {STATUSES.map(s => {

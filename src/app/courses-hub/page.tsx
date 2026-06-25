@@ -12,6 +12,7 @@ import AdminLayout from '@/components/AdminLayout'
 import {
   Search, BookOpen, Video, Target, GraduationCap, Award, Library, Users as UsersIcon,
 } from 'lucide-react'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', FOREST = '#166534'
 
@@ -67,6 +68,7 @@ export default function CoursesHubPage() {
   const [tab, setTab] = useState<TabKey>('trial')
   const [completedType, setCompletedType] = useState<'all' | 'trial' | 'recorded' | 'live' | 'long'>('all')
   const [search, setSearch] = useState('')
+  const [range, setRange] = useState('all')
 
   // Deep-link via ?tab=
   useEffect(() => {
@@ -99,9 +101,10 @@ export default function CoursesHubPage() {
     let list = tab === 'completed'
       ? courses.filter(c => c.closed && (completedType === 'all' || c.tab === completedType))
       : courses.filter(c => !c.closed && c.tab === tab)
+    list = withinRange(list, range, c => c.closed ? c.closedAt : c.createdAt)
     if (q) list = list.filter(c => c.title.toLowerCase().includes(q) || c.teacherName.toLowerCase().includes(q))
     return list
-  }, [courses, tab, completedType, search])
+  }, [courses, tab, completedType, search, range])
 
   return (
     <AdminLayout>
@@ -142,10 +145,13 @@ export default function CoursesHubPage() {
               )
             })}
           </div>
-          <div style={{ position: 'relative', minWidth: 220, flex: '0 1 280px' }}>
-            <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: MUTED }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search course or teacher…"
-              style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 13, color: INK, outline: 'none', background: '#fff' }} />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', minWidth: 220, flex: '0 1 280px' }}>
+              <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: MUTED }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search course or teacher…"
+                style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 13, color: INK, outline: 'none', background: '#fff' }} />
+            </div>
+            <RangeTabs value={range} onChange={setRange} />
           </div>
         </div>
 

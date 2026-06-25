@@ -24,14 +24,20 @@ const add = (b: Bucket, s: string) => { if (s === 'present') b.present++; else i
 
 const EMPTY = { overall: { ...newBucket(), rate: 0, total: 0 }, byTeacher: [], byCourse: [], monthly: [], mostAbsent: [], mostReliable: [] }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const admin = getAdmin()
-    const { data: rows, error } = await admin
+    const range = new URL(req.url).searchParams.get('range') || 'all'
+    const days = range === 'all' ? null : (Number(range) || null)
+    const cutoffISO = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
+
+    let query = admin
       .from('lesson_attendance')
       .select('booking_id, student_id, teacher_id, status, marked_at')
       .order('marked_at', { ascending: false })
       .limit(MAX_ROWS)
+    if (cutoffISO) query = query.gte('marked_at', cutoffISO)
+    const { data: rows, error } = await query
     if (error) return NextResponse.json(EMPTY)
     const att = ((rows as any[]) || []).filter(r => ['present', 'late', 'absent', 'excused'].includes(r.status))
     if (att.length === 0) return NextResponse.json(EMPTY)

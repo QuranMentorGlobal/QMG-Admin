@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import { ShieldAlert, CheckCircle, XCircle, Clock, MessageSquareWarning, AlertTriangle } from 'lucide-react'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', RED = '#DC2626'
@@ -49,6 +50,7 @@ export default function ModerationPage() {
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -99,17 +101,20 @@ export default function ModerationPage() {
           {highCount > 0 && <span style={{ color: RED, fontWeight: 700 }}> · {highCount} high-risk</span>}
         </p>
 
-        {loading ? (
+        <div style={{ marginTop: 14 }}><RangeTabs value={range} onChange={setRange} /></div>
+
+        {(() => { const shownFlags = withinRange(flags, range, (f: any) => f.created_at); return (
+        loading ? (
           <p style={{ color: MUTED, marginTop: 28 }}>Loading…</p>
-        ) : flags.length === 0 ? (
+        ) : shownFlags.length === 0 ? (
           <div style={{ marginTop: 28, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center' }}>
             <CheckCircle size={30} color={GOLD} style={{ margin: '0 auto 10px' }} />
             <p style={{ color: INK, fontWeight: 700, margin: 0 }}>Queue is clear</p>
-            <p style={{ color: MUTED, fontSize: 13, margin: '6px 0 0' }}>No open flags. The scanner runs on a schedule and will surface anything new here.</p>
+            <p style={{ color: MUTED, fontSize: 13, margin: '6px 0 0' }}>No open flags in this range. The scanner runs on a schedule and will surface anything new here.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 22 }}>
-            {flags.map(f => {
+            {shownFlags.map((f: any) => {
               const isOpen = open[f.id]
               return (
                 <div key={f.id} className="adminx-rise" style={{ background: '#fff', border: `1px solid ${f.risk === 'high' ? 'rgba(220,38,38,.35)' : BORDER}`, borderRadius: 16, padding: '18px 20px' }}>
@@ -193,7 +198,7 @@ export default function ModerationPage() {
               )
             })}
           </div>
-        )}
+        )) })()}
       </div>
     </AdminLayout>
   )

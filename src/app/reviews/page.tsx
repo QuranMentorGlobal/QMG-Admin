@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { Star, CheckCircle2, XCircle, Clock, MessageSquare, Award, AlertTriangle, TrendingUp } from 'lucide-react'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import { format } from 'date-fns'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626', GRID = '#EDE6D6'
@@ -45,6 +46,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
+  const [range, setRange] = useState('all')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -70,6 +72,7 @@ export default function ReviewsPage() {
   const topRated = d?.topRated || []
   const lowRated = d?.lowRated || []
   const pending = d?.pending || []
+  const shownPending = withinRange(pending, range, (r: any) => r.createdAt)
   const maxDist = Math.max(1, ...(dist.length ? dist.map((x: any) => x.count) : [1]))
   const trend = (d?.trend || []).map((x: any) => ({ ...x, label: format(new Date(x.m + '-01'), 'MMM') }))
 
@@ -77,9 +80,12 @@ export default function ReviewsPage() {
     <AdminLayout adminName={adminName}>
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Reviews</h1>
-        <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ratings, reputation, and moderation.</p>
+      <div style={{ marginBottom: 18, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Reviews</h1>
+          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ratings, reputation, and moderation.</p>
+        </div>
+        <RangeTabs value={range} onChange={setRange} />
       </div>
 
       {/* KPIs */}
@@ -163,8 +169,8 @@ export default function ReviewsPage() {
       </div>
 
       {/* Moderation queue */}
-      <Panel title={`Moderation Queue${pending.length ? ` · ${pending.length}` : ''}`} icon={MessageSquare}>
-        {loading ? <Skel h={160} /> : pending.length === 0 ? (
+      <Panel title={`Moderation Queue${shownPending.length ? ` · ${shownPending.length}` : ''}`} icon={MessageSquare}>
+        {loading ? <Skel h={160} /> : shownPending.length === 0 ? (
           <div style={{ padding: '36px 8px', textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>⭐</div>
             <p style={{ fontSize: 14, fontWeight: 700, color: INK, margin: 0 }}>All reviews moderated!</p>
@@ -172,7 +178,7 @@ export default function ReviewsPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {pending.map((r: any) => (
+            {shownPending.map((r: any) => (
               <div key={r.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 13, padding: 16, background: '#FCFAF5' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <Stars n={r.rating} />

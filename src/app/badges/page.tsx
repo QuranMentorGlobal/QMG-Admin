@@ -6,12 +6,15 @@ import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
 import { Award, Search, Plus, X, History, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { TEACHER_BADGES, STUDENT_BADGES, PARENT_BADGES, BADGE_BY_KEY, type BadgeDef } from '@/lib/badges'
+import RangeTabs, { withinRange } from '@/components/RangeTabs'
+import SearchBar from '@/components/SearchBar'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A', CREAM = '#F8F5EE', GREEN = '#16A34A', RED = '#DC2626'
 
 type U = { id: string; first_name: string; last_name: string; email: string; role: string }
 type UB = { badge_key: string; source: string; reason: string | null; created_at: string }
 type H = { badge_key: string; action: string; source: string; actor_name: string | null; reason: string | null; created_at: string }
+type LedgerRow = { id: string; userId: string; name: string; email: string; role: string; badgeKey: string; badgeName: string; source: string; reason: string | null; actorName: string | null; createdAt: string | null }
 
 function fmtDate(iso: string) { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
 
@@ -25,6 +28,13 @@ export default function BadgeManagementPage() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState('')
   const [config, setConfig] = useState<Record<string, any>>({})
+
+  // Ledger (transaction view of all badge grants)
+  const [ledger, setLedger] = useState<LedgerRow[]>([])
+  const [ledgerLoading, setLedgerLoading] = useState(true)
+  const [roleFilter, setRoleFilter] = useState<'all' | 'teacher' | 'student' | 'parent'>('all')
+  const [range, setRange] = useState('30')
+  const [ledgerSearch, setLedgerSearch] = useState('')
 
   const note = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500) }
 
@@ -42,7 +52,16 @@ export default function BadgeManagementPage() {
     const r = await fetch('/api/badges?config=1'); const j = await r.json()
     const map: Record<string, any> = {}; (j.config || []).forEach((c: any) => { map[c.badge_key] = c.overrides }); setConfig(map)
   }
-  useEffect(() => { loadConfig() }, [])
+  async function loadLedger() {
+    setLedgerLoading(true)
+    try {
+      const r = await fetch('/api/badges?ledger=1')
+      const t = await r.text(); const j = t ? JSON.parse(t) : {}
+      setLedger(j.ledger || [])
+    } catch {}
+    setLedgerLoading(false)
+  }
+  useEffect(() => { loadConfig(); loadLedger() }, [])
 
   async function act(action: string, payload: any) {
     setBusy(true)
@@ -57,23 +76,23 @@ export default function BadgeManagementPage() {
   async function assign(badgeKey: string) {
     if (!user) return
     const reason = prompt('Reason for awarding this badge?') || 'Manually assigned'
-    try { await act('assign', { userId: user.id, badgeKey, reason }); note('Badge assigned'); loadUser(user) }
+    try { await act('assign', { userId: user.id, badgeKey, reason }); note('Badge assigned'); loadUser(user); loadLedger() }
     catch (e: any) { note(e.message) }
   }
   async function remove(badgeKey: string) {
     if (!user || !confirm(`Remove "${BADGE_BY_KEY[badgeKey]?.name || badgeKey}"?`)) return
     const reason = prompt('Reason for removing?') || 'Removed by admin'
-    try { await act('remove', { userId: user.id, badgeKey, reason }); note('Badge removed'); loadUser(user) }
+    try { await act('remove', { userId: user.id, badgeKey, reason }); note('Badge removed'); loadUser(user); loadLedger() }
     catch (e: any) { note(e.message) }
   }
   async function recompute() {
     if (!user) return
-    try { const j = await act('recompute', { userId: user.id }); note(`Recomputed — awarded ${j.awarded?.length || 0}, revoked ${j.revoked?.length || 0}`); loadUser(user) }
+    try { const j = await act('recompute', { userId: user.id }); note(`Recomputed — awarded ${j.awarded?.length || 0}, revoked ${j.revoked?.length || 0}`); loadUser(user); loadLedger() }
     catch (e: any) { note(e.message) }
   }
   async function backfill() {
     if (!confirm('Re-evaluate badges for ALL approved teachers and active students? This runs the engine across the platform.')) return
-    try { const j = await act('backfill', {}); note(`Backfill done — ${j.backfilled?.teachers || 0} teachers, ${j.backfilled?.students || 0} students`) }
+    try { const j = await act('backfill', {}); note(`Backfill done — ${j.backfilled?.teachers || 0} teachers, ${j.backfilled?.students || 0} students`); loadLedger() }
     catch (e: any) { note(e.message) }
   }
   async function saveThreshold(b: BadgeDef, overrides: Record<string, number>) {
@@ -84,6 +103,19 @@ export default function BadgeManagementPage() {
   const activeKeys = new Set(badges.map(b => b.badge_key))
   const audience = user?.role === 'teacher' ? 'teacher' : user?.role === 'parent' ? 'parent' : 'student'
   const catalog = audience === 'teacher' ? TEACHER_BADGES : audience === 'parent' ? PARENT_BADGES : STUDENT_BADGES
+
+  const filteredLedger = (() => {
+    let rows = ledger
+    if (roleFilter !== 'all') rows = rows.filter(r => r.role === roleFilter)
+    rows = withinRange(rows, range, r => r.createdAt)
+    const ql = ledgerSearch.trim().toLowerCase()
+    if (ql) rows = rows.filter(r => `${r.name} ${r.email} ${r.badgeName}`.toLowerCase().includes(ql))
+    return rows
+  })()
+  const ledgerCounts = { total: filteredLedger.length, auto: filteredLedger.filter(r => r.source === 'auto').length, manual: filteredLedger.filter(r => r.source === 'manual').length }
+  const ROLE_TABS: { k: 'all' | 'teacher' | 'student' | 'parent'; label: string }[] = [
+    { k: 'all', label: 'All' }, { k: 'teacher', label: 'Teachers' }, { k: 'student', label: 'Students' }, { k: 'parent', label: 'Parents' },
+  ]
 
   return (
     <AdminLayout>
@@ -119,8 +151,73 @@ export default function BadgeManagementPage() {
         </div>
 
         {!user ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: MUTED, background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}` }}>
-            Search and select a user to manage their badges.
+          <div>
+            {/* Filters: role tabs + range + search */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {ROLE_TABS.map(rt => {
+                  const on = roleFilter === rt.k
+                  const n = rt.k === 'all' ? ledger.length : ledger.filter(r => r.role === rt.k).length
+                  return (
+                    <button key={rt.k} onClick={() => setRoleFilter(rt.k)} style={{ padding: '7px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: on ? 'none' : `1px solid ${BORDER}`, background: on ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff', color: on ? '#fff' : '#6B6B6B' }}>
+                      {rt.label} · {n}
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <SearchBar value={ledgerSearch} onChange={setLedgerSearch} placeholder="Search person or badge…" width={260} />
+                <RangeTabs value={range} onChange={setRange} />
+              </div>
+            </div>
+
+            {/* Summary chips */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+              {[
+                { label: 'Total grants', value: ledgerCounts.total, color: GOLD },
+                { label: 'Auto-awarded', value: ledgerCounts.auto, color: GREEN },
+                { label: 'Manually assigned', value: ledgerCounts.manual, color: '#6366F1' },
+              ].map(s => (
+                <div key={s.label} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 16px', minWidth: 130 }}>
+                  <p style={{ fontSize: 20, fontWeight: 800, color: s.color, margin: 0, fontFamily: "'Fraunces',serif" }}>{s.value}</p>
+                  <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0', fontWeight: 600 }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Ledger table */}
+            <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, overflow: 'hidden' }}>
+              <div className="badge-led-head" style={{ display: 'grid', gridTemplateColumns: '1.6fr 0.8fr 1.4fr 0.8fr 1.4fr 1fr', gap: 8, padding: '11px 18px', background: CREAM, fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                <span>Person</span><span>Role</span><span>Badge</span><span>Type</span><span>Awarded by / reason</span><span>Date</span>
+              </div>
+              {ledgerLoading ? (
+                <div style={{ padding: 40, textAlign: 'center', color: MUTED, fontSize: 13 }}>Loading badge activity…</div>
+              ) : filteredLedger.length === 0 ? (
+                <div style={{ padding: 48, textAlign: 'center' }}>
+                  <Award size={30} style={{ color: 'rgba(201,162,39,0.4)' }} />
+                  <p style={{ fontSize: 14, fontWeight: 700, color: INK, margin: '10px 0 4px' }}>No badge grants in this view</p>
+                  <p style={{ fontSize: 12.5, color: MUTED, margin: 0 }}>Try a wider date range or a different role.</p>
+                </div>
+              ) : filteredLedger.map((r, i) => (
+                <div key={r.id} className="badge-led-row" style={{ display: 'grid', gridTemplateColumns: '1.6fr 0.8fr 1.4fr 0.8fr 1.4fr 1fr', gap: 8, padding: '12px 18px', borderTop: i === 0 ? 'none' : `1px solid ${BORDER}`, alignItems: 'center' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <button onClick={() => loadUser({ id: r.userId, first_name: r.name.split(' ')[0] || '', last_name: r.name.split(' ').slice(1).join(' '), email: r.email, role: r.role } as U)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', maxWidth: '100%' }}>
+                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+                      {r.email && <span style={{ display: 'block', fontSize: 11, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.email}</span>}
+                    </button>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: r.role === 'teacher' ? GOLD : r.role === 'parent' ? '#6366F1' : GREEN }} className="badge-led-cell">{r.role}</span>
+                  <span style={{ fontSize: 13, color: INK }} className="badge-led-cell">{r.badgeName}</span>
+                  <span className="badge-led-cell">
+                    <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: r.source === 'manual' ? 'rgba(99,102,241,0.1)' : 'rgba(22,163,74,0.1)', color: r.source === 'manual' ? '#6366F1' : GREEN }}>{r.source === 'manual' ? 'Manual' : 'Auto'}</span>
+                  </span>
+                  <span style={{ fontSize: 12, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="badge-led-cell">{r.source === 'manual' ? (r.actorName || 'Admin') : 'Badge engine'}{r.reason ? ` · ${r.reason}` : ''}</span>
+                  <span style={{ fontSize: 12, color: MUTED }} className="badge-led-cell">{r.createdAt ? fmtDate(r.createdAt) : '—'}</span>
+                </div>
+              ))}
+            </div>
+            <style>{`@media (max-width:760px){ .badge-led-head{ display:none !important; } .badge-led-row{ grid-template-columns: 1fr 1fr !important; } .badge-led-row > div:first-child{ grid-column:1 / -1; } }`}</style>
           </div>
         ) : (
           <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
@@ -132,6 +229,7 @@ export default function BadgeManagementPage() {
               <button onClick={recompute} disabled={busy} style={{ padding: '8px 14px', borderRadius: 10, background: CREAM, color: GOLD, border: `1px solid ${GOLD}55`, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <RefreshCw size={14} /> Recompute
               </button>
+              <button onClick={() => { setUser(null); setQ(''); setResults([]) }} style={{ padding: '8px 14px', borderRadius: 10, background: '#fff', color: INK, border: `1px solid ${BORDER}`, fontWeight: 700, cursor: 'pointer' }}>← All badges</button>
             </div>
 
             {/* Tabs */}
