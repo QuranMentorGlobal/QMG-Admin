@@ -33,8 +33,8 @@ const INITIATOR: Record<string, { bg: string; color: string; label: string }> = 
 
 function Kpi({ icon: Icon, label, value, accent, sub }: { icon: any; label: string; value: string; accent?: boolean; sub?: string }) {
   return (
-    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 16, padding: '16px 18px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 16, padding: '16px 18px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
         <div style={{ width: 30, height: 30, borderRadius: 9, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={15} style={{ color: GOLD }} /></div>
         <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600 }}>{label}</p>
       </div>

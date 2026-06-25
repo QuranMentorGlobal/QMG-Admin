@@ -98,8 +98,8 @@ export default function AdminAttendance() {
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
               {kpis.map(k => (
-                <div key={k.label} style={card}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div key={k.label} style={{ ...card, textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <k.icon size={16} color={k.color} />
                     <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>{k.label}</span>
                   </div>

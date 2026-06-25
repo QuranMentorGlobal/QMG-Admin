@@ -121,19 +121,15 @@ function KpiCard({ label, kpi, fmt, accent, i, icon: Icon }: { label: string; kp
   return (
     <div className="adminx-stat adminx-rise" style={{
       background: '#fff', borderRadius: 16, padding: '16px 18px', border: `1px solid ${BORDER}`,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 92,
-      animationDelay: `${i * 35}ms`,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      textAlign: 'center', gap: 7, minHeight: 92, animationDelay: `${i * 35}ms`,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          {Icon && <span style={{ width: 26, height: 26, borderRadius: 8, background: '#F4EFE3', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon size={14} style={{ color: GOLD }} /></span>}
-          <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600, letterSpacing: '0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</p>
-        </div>
-        <GrowthChip g={kpi?.growth} />
-      </div>
-      <p style={{ fontSize: 24, fontWeight: 800, color: accent ? GOLD : INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>
+      {Icon && <span style={{ width: 30, height: 30, borderRadius: 9, background: '#F4EFE3', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon size={15} style={{ color: GOLD }} /></span>}
+      <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600, letterSpacing: '0.01em', lineHeight: 1.3 }}>{label}</p>
+      <p style={{ fontSize: 24, fontWeight: 800, color: accent ? GOLD : INK, margin: 0, lineHeight: 1.05, fontFamily: "'Fraunces',serif", wordBreak: 'break-word' }}>
         {kpi ? fmt(shown) + (kpi.suffix || '') : '—'}
       </p>
+      <GrowthChip g={kpi?.growth} />
       {kpi?.note && <p style={{ fontSize: 9.5, color: MUTED, margin: 0 }}>{kpi.note}</p>}
     </div>
   )
@@ -373,15 +369,14 @@ export default function DashboardPage() {
               { label: 'Long Courses',     value: courseCounts.long,     href: '/courses-hub?tab=long',     icon: GraduationCap },
             ].map(c => (
               <a key={c.href} href={c.href} className="adminx-row"
-                style={{ display: 'block', textDecoration: 'none', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
                   <div style={{ width: 30, height: 30, borderRadius: 9, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <c.icon size={15} style={{ color: GOLD }} />
                   </div>
-                  <ArrowUpRight size={15} style={{ color: MUTED }} />
                 </div>
                 <p style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>{fmtNum(c.value)}</p>
-                <p style={{ fontSize: 12, color: MUTED, margin: '4px 0 0', fontWeight: 600 }}>{c.label}</p>
+                <p style={{ fontSize: 12, color: MUTED, margin: '4px 0 0', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>{c.label} <ArrowUpRight size={12} style={{ color: MUTED }} /></p>
               </a>
             ))}
           </div>

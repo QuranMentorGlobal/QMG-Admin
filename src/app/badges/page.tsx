@@ -180,7 +180,7 @@ export default function BadgeManagementPage() {
                 { label: 'Auto-awarded', value: ledgerCounts.auto, color: GREEN },
                 { label: 'Manually assigned', value: ledgerCounts.manual, color: '#6366F1' },
               ].map(s => (
-                <div key={s.label} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 16px', minWidth: 130 }}>
+                <div key={s.label} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 16px', minWidth: 130, textAlign: 'center' }}>
                   <p style={{ fontSize: 20, fontWeight: 800, color: s.color, margin: 0, fontFamily: "'Fraunces',serif" }}>{s.value}</p>
                   <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0', fontWeight: 600 }}>{s.label}</p>
                 </div>

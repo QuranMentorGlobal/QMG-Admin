@@ -43,12 +43,12 @@ function StatCard({ icon: Icon, label, value, active, onClick }: { icon: any; la
     <button onClick={onClick}
       className="adminx-stat"
       style={{
-        textAlign: 'left', cursor: onClick ? 'pointer' : 'default', width: '100%',
+        textAlign: 'center', cursor: onClick ? 'pointer' : 'default', width: '100%',
         background: active ? 'linear-gradient(135deg,#166534,#C9A227)' : '#fff',
         borderRadius: 14, padding: '14px 16px', border: `1px solid ${active ? 'transparent' : BORDER}`,
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all .15s',
       }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? 'rgba(255,255,255,0.18)' : CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={14} style={{ color: active ? '#fff' : GOLD }} />
         </div>

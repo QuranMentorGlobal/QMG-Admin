@@ -28,8 +28,8 @@ const CATEGORIES = ['general', 'billing', 'technical', 'account']
 
 function Kpi({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: boolean }) {
   return (
-    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+    <div className="adminx-stat" style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: CREAM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={14} style={{ color: GOLD }} /></div>
         <p style={{ fontSize: 11, color: MUTED, margin: 0, fontWeight: 600 }}>{label}</p>
       </div>
