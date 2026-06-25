@@ -5,7 +5,7 @@
 //  Nav items + routes UNCHANGED; added pending/ticket count badges.)
 // ============================================================
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
@@ -125,6 +125,8 @@ export default function AdminLayout({
   const router   = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navScrollRef = useRef<HTMLElement | null>(null)
+  const activeNavRef = useRef<HTMLButtonElement | null>(null)
   const [openCat, setOpenCat] = useState<string | null>(null)
   const [ctxReady, setCtxReady] = useState(false)
   const [ctx, setCtx] = useState<(AdminCtx & { roleLabel?: string }) | null>(null)
@@ -175,6 +177,24 @@ export default function AdminLayout({
 
   useEffect(() => { setOpenCat(null); setSidebarOpen(false) }, [pathname])
 
+  // Keep the active nav item in view when a page opens (the sidebar remounts per
+  // navigation, so without this it snaps back to the top and hides lower items).
+  // Adjusts only the sidebar's own scroll — never the page.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const nav = navScrollRef.current, item = activeNavRef.current
+      if (!nav || !item) return
+      const navRect = nav.getBoundingClientRect()
+      const itemRect = item.getBoundingClientRect()
+      const out = itemRect.top < navRect.top || itemRect.bottom > navRect.bottom
+      if (out) {
+        const offsetWithin = itemRect.top - navRect.top + nav.scrollTop
+        nav.scrollTop = Math.max(0, offsetWithin - nav.clientHeight / 2 + item.offsetHeight / 2)
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [ctxReady, pathname])
+
   const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
   const bellCount = notes.length
 
@@ -221,7 +241,7 @@ export default function AdminLayout({
         </div>
 
         {/* Nav — flat category sections; items listed directly, scrolls if tall */}
-        <nav className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
+        <nav ref={navScrollRef} className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
           {!ctxReady ? (
             [0, 1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} style={{ height: 36, margin: '5px 0', borderRadius: 11, background: 'rgba(255,255,255,0.05)' }} />
@@ -235,6 +255,7 @@ export default function AdminLayout({
                 return (
                   <button
                     key={href}
+                    ref={active ? activeNavRef : undefined}
                     onClick={() => { router.push(href); setSidebarOpen(false) }}
                     className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
                   >
