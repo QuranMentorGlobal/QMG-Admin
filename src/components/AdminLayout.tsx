@@ -29,6 +29,7 @@ const CATEGORIES = [
     { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
     { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
     { href: '/payouts',  label: 'Payout Management',  icon: Wallet        },
+    { href: '/finance-reports', label: 'Financial Reports', icon: BarChart3 },
     { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
   ] },
   { key: 'trust', label: 'Verification & Trust', l1: 'Verification', l2: '& Trust', icon: ShieldCheck, items: [

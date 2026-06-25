@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import AdminLayout from '@/components/AdminLayout'
 
 const GOLD = '#C9A227'
 const INK  = '#111111'
@@ -181,6 +182,7 @@ export default function AdminPayoutsPage() {
   }
 
   return (
+    <AdminLayout>
     <div style={{ width: '100%' }}>
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
@@ -326,6 +328,7 @@ export default function AdminPayoutsPage() {
         </div>
       )}
     </div>
+    </AdminLayout>
   )
 }
 

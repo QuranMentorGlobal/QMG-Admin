@@ -133,6 +133,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/payments': ['payments.view'],
   '/refunds': ['payments.view'],
   '/payouts': ['finance.view', 'payments.view'],
+  '/finance-reports': ['finance.view', 'analytics.dashboard'],
   '/support': ['support.view'],
   '/settings': ['settings.view'],
   '/admin-management': ['admin.create', 'admin.edit', 'admin.delete'],
