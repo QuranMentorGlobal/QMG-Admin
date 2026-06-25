@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
+import RangeTabs from '@/components/RangeTabs'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
@@ -33,12 +34,17 @@ const STAGE = [
 export default function FinanceReportsPage() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
-    fetch('/api/finance/reports').then(r => r.ok ? r.json() : null)
+    setLoading(true)
+    const qs = new URLSearchParams({ range, from, to }).toString()
+    fetch(`/api/finance/reports?${qs}`).then(r => r.ok ? r.json() : null)
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [range, from, to])
 
   const monthly = (data?.monthlyPaidOut || []).map((m: any) => ({
     label: new Date(m.month + '-01').toLocaleString('en-GB', { month: 'short' }),
@@ -50,11 +56,17 @@ export default function FinanceReportsPage() {
   return (
     <AdminLayout>
       <div style={{ width: '100%' }}>
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: INK, margin: '4px 0 0', fontFamily: "'Fraunces',serif" }}>Financial Reports</h1>
-          <p style={{ fontSize: 14, color: MUTED, marginTop: 4 }}>Payout pipeline, liabilities and recent payments.</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+          <div>
+            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0 0', fontFamily: "'Fraunces',serif" }}>Financial Reports</h1>
+            <p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Payout pipeline and payments for the selected period · liabilities are live.</p>
+          </div>
+          <div className="qmg-fr-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+          </div>
         </div>
+        <style>{`@media (max-width:640px){ .qmg-fr-controls{ width:100%; justify-content:center; } }`}</style>
 
         {/* Headline numbers */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
@@ -104,7 +116,7 @@ export default function FinanceReportsPage() {
         </div>
 
         {/* Recent completed payouts */}
-        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+        <div style={{ ...card, padding: 0, overflow: 'auto' }}>
           <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(201,162,39,0.05)' }}>
             <span style={{ fontSize: 13, fontWeight: 800, color: INK, fontFamily: "'Fraunces',serif" }}>Recent Completed Payouts</span>
           </div>
@@ -113,7 +125,7 @@ export default function FinanceReportsPage() {
           ) : (data?.recentCompleted || []).length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: MUTED }}>No completed payouts yet.</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
               <thead>
                 <tr style={{ textAlign: 'left' }}>
                   {['Teacher', 'Amount', 'Method', 'Reference', 'Paid'].map(h => (

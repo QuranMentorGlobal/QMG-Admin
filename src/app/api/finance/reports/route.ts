@@ -13,10 +13,33 @@ export const dynamic = 'force-dynamic'
 
 const STATUSES = ['requested', 'under_review', 'approved', 'processing', 'completed', 'rejected', 'failed']
 
-export async function GET() {
+export async function GET(req: Request) {
   const g = await guard(['finance.view', 'finance.review', 'finance.process'])
   if ('error' in g) return g.error
   const svc = service()
+
+  const sp = new URL(req.url).searchParams
+  const range = sp.get('range') || 'all'
+  const from = sp.get('from') || ''
+  const to = sp.get('to') || ''
+
+  // Window payouts by requested_at (same field the Payout Management list uses).
+  // Custom from/to takes precedence over a preset range. If no row has a usable
+  // date, the filter is a no-op so the report is never accidentally blanked.
+  function windowList<T extends { requested_at?: string | null }>(list: T[]): T[] {
+    const hasCustom = !!(from || to)
+    if (!hasCustom && (!range || range === 'all')) return list
+    const fromT = from ? new Date(from + 'T00:00:00').getTime()
+      : (range && range !== 'all' ? Date.now() - (Number(range) || 0) * 86400000 : -Infinity)
+    const toT = to ? new Date(to + 'T23:59:59').getTime() : Infinity
+    let anyValid = false
+    const out = list.filter(p => {
+      const v = p.requested_at; if (!v) return false
+      const t = new Date(v as any).getTime(); if (!Number.isFinite(t)) return false
+      anyValid = true; return t >= fromT && t <= toT
+    })
+    return anyValid ? out : list
+  }
 
   // Payouts → pipeline + paid-out trend.
   const byStatus: Record<string, { count: number; amount: number }> = {}
@@ -34,7 +57,7 @@ export async function GET() {
     const { data: po } = await svc.from('teacher_payouts')
       .select('id, teacher_id, amount_usd, status, requested_at, approved_at, paid_at, completed_at, payment_method_used, reference_number, processed_by')
       .order('created_at', { ascending: false }).limit(100000)
-    const list = (po || []) as any[]
+    const list = windowList((po || []) as any[])
 
     // Resolve teacher names for the recent-completed table.
     const completed = list.filter(p => String(p.status) === 'completed').slice(0, 20)
