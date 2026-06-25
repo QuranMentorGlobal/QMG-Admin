@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     if (action === 'recompute' || action === 'backfill') {
       const payload = action === 'recompute' ? { userId: body.userId } : { all: true, audience: body.audience }
       const r = await fetch(`${FRONTEND}/api/badges/recompute`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' }, body: JSON.stringify(payload),
       })
       const text = await r.text()
       const json = text ? JSON.parse(text) : {}

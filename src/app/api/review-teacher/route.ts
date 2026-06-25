@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
     if (!id || !userId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+    if (!['approved', 'rejected', 'changes_requested'].includes(action)) {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+    }
 
     const supabase = getAdmin()
 
@@ -99,7 +102,7 @@ export async function POST(req: NextRequest) {
     try {
       const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
       await fetch(`${frontendUrl}/api/badges/recompute`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
         body: JSON.stringify({ userId: userId, audience: 'teacher' }),
       })
     } catch (e) { console.error('[badges] recompute trigger failed (non-fatal)', e) }

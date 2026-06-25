@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     try {
       const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
       await fetch(`${frontendUrl}/api/badges/recompute`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
         body: JSON.stringify({ userId: teacherUserId, audience: 'teacher' }),
       })
     } catch (e) { console.error('[badges] recompute trigger failed (non-fatal)', e) }
