@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
           {/* Logo / Brand */}
           <div className="text-center mb-8">
             <img src="/logo.png" alt="Muddarris" className="mx-auto mb-4" style={{ width: 72, height: 72, objectFit: 'contain' }} />
-            <h1 className="font-display text-2xl font-bold text-[#111111]">QuranMentor<span style={{ color: '#C9A227' }}>Global</span></h1>
+            <h1 className="font-display text-2xl font-bold text-[#111111]">Muddarris</h1>
             <div className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase"
               style={{ background: '#F0E4B8', color: '#C9A227' }}>
               Admin Panel

@@ -1,8 +1,9 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'QMG Admin Panel',
+  title: 'Muddarris Admin',
   description: 'Muddarris Admin Dashboard',
   icons: { icon: '/logo.png', apple: '/logo.png' },
 }
