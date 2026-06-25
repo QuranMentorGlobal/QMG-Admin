@@ -54,8 +54,27 @@ async function logAudit(admin: any, actorId: string | null, actorName: string, a
   } catch {}
 }
 
-async function notifyUser(admin: any, userId: string, notif: { title: string; body: string; href: string; type?: string }) {
-  try { await admin.from('notifications').insert({ user_id: userId, type: notif.type || 'booking_confirmed', title: notif.title, body: notif.body, href: notif.href }) } catch {}
+async function notifyUser(
+  admin: any,
+  userId: string,
+  notif: { title: string; body: string; href: string; type?: string; email?: { type: string; data: Record<string, any> } },
+) {
+  // Route through the frontend notify() service so the teacher gets a
+  // preference-gated email + email_logs entry alongside the in-app notification.
+  // Falls back to a direct insert so the in-app notification is never lost.
+  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
+  try {
+    const res = await fetch(`${frontendUrl}/api/notify`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId, type: notif.type || 'admin_action',
+        title: notif.title, body: notif.body, href: notif.href,
+        email: notif.email, relatedType: 'payout',
+      }),
+    })
+    if (res.ok) return
+  } catch {}
+  try { await admin.from('notifications').insert({ user_id: userId, type: notif.type || 'admin_action', title: notif.title, body: notif.body, href: notif.href }) } catch {}
 }
 
 async function notifyByPerm(admin: any, perm: string, notif: { title: string; body: string; href: string }) {
@@ -64,7 +83,7 @@ async function notifyByPerm(admin: any, perm: string, notif: { title: string; bo
     const ids = (data || [])
       .filter((p: any) => p.admin_role !== 'sub' || (Array.isArray(p.admin_permissions) && p.admin_permissions.includes(perm)))
       .map((p: any) => p.id)
-    for (const id of ids) await admin.from('notifications').insert({ user_id: id, type: 'booking_confirmed', ...notif })
+    for (const id of ids) await admin.from('notifications').insert({ user_id: id, type: 'admin_action', ...notif })
   } catch {}
 }
 
@@ -141,7 +160,7 @@ export async function POST(request: NextRequest) {
     await admin.from('teacher_payouts').update({ status: 'under_review', info_requested: true, info_request_note: note, under_review_at: now, under_review_by: user.id }).eq('id', payoutId)
     await logEvent(admin, payoutId, user.id, actorRole, 'info_requested', from, 'under_review', note)
     await logAudit(admin, user.id, actorName, 'payout.request_info', payoutId, { note })
-    await notifyUser(admin, teacherId, { title: 'Payout — Information Requested', body: `Finance needs more details on your $${amt.toFixed(2)} payout.${note ? ' ' + note : ''}`, href: '/platform/teacher/earnings', type: 'booking_confirmed' })
+    await notifyUser(admin, teacherId, { title: 'Payout — Information Requested', body: `Finance needs more details on your $${amt.toFixed(2)} payout.${note ? ' ' + note : ''}`, href: '/platform/teacher/earnings', type: 'admin_action' })
     return NextResponse.json({ success: true, status: 'under_review', info_requested: true })
   }
 
@@ -149,7 +168,7 @@ export async function POST(request: NextRequest) {
     await admin.from('teacher_payouts').update({ status: 'approved', approved_by: user.id, approved_at: now, info_requested: false }).eq('id', payoutId)
     await logEvent(admin, payoutId, user.id, actorRole, 'approved', from, 'approved')
     await logAudit(admin, user.id, actorName, 'payout.approve', payoutId, { amount: amt })
-    await notifyUser(admin, teacherId, { title: 'Payout Approved', body: `Your $${amt.toFixed(2)} payout was approved and is now with the finance team.`, href: '/platform/teacher/earnings' })
+    await notifyUser(admin, teacherId, { type: 'payout_approved', title: 'Payout Approved', body: `Your $${amt.toFixed(2)} payout was approved and is now with the finance team.`, href: '/platform/teacher/earnings', email: { type: 'payout_approved', data: { amount: amt, currency: 'USD' } } })
     await notifyByPerm(admin, 'finance.process', { title: 'Payout Ready to Process', body: `An approved $${amt.toFixed(2)} payout is awaiting payment.`, href: '/payouts' })
     return NextResponse.json({ success: true, status: 'approved' })
   }
@@ -160,7 +179,7 @@ export async function POST(request: NextRequest) {
     await logEvent(admin, payoutId, user.id, actorRole, 'rejected', from, 'rejected', body.reason || null)
     await logEvent(admin, payoutId, user.id, actorRole, 'balance_restored', 'rejected', 'rejected', 'Reserved earnings + adjustments returned to available')
     await logAudit(admin, user.id, actorName, 'payout.reject', payoutId, { amount: amt, reason: body.reason || null })
-    await notifyUser(admin, teacherId, { title: 'Payout Rejected', body: `Your $${amt.toFixed(2)} payout was rejected and the balance returned to available.${body.reason ? ' Reason: ' + body.reason : ''}`, href: '/platform/teacher/earnings', type: 'booking_cancelled' })
+    await notifyUser(admin, teacherId, { title: 'Payout Rejected', body: `Your $${amt.toFixed(2)} payout was rejected and the balance returned to available.${body.reason ? ' Reason: ' + body.reason : ''}`, href: '/platform/teacher/earnings', type: 'admin_action' })
     return NextResponse.json({ success: true, status: 'rejected' })
   }
 
@@ -192,7 +211,7 @@ export async function POST(request: NextRequest) {
     }
     await logEvent(admin, payoutId, user.id, actorRole, 'completed', from, 'completed', body.reference_number || null, { transaction_id: body.transaction_id || null, method: body.payment_method_used || null })
     await logAudit(admin, user.id, actorName, 'payout.complete', payoutId, { amount: amt, reference: body.reference_number || null, method: body.payment_method_used || null })
-    await notifyUser(admin, teacherId, { title: 'Payout Paid 🎉', body: `Your $${amt.toFixed(2)} payout has been sent${body.reference_number ? ' (ref ' + body.reference_number + ')' : ''}.`, href: '/platform/teacher/earnings' })
+    await notifyUser(admin, teacherId, { type: 'payout_completed', title: 'Payout Paid 🎉', body: `Your $${amt.toFixed(2)} payout has been sent${body.reference_number ? ' (ref ' + body.reference_number + ')' : ''}.`, href: '/platform/teacher/earnings', email: { type: 'payout_completed', data: { amount: amt, currency: 'USD', reference: body.reference_number || null } } })
     await notifyByPerm(admin, 'finance.review', { title: 'Payout Completed', body: `A $${amt.toFixed(2)} payout was marked paid.`, href: '/payouts' })
     return NextResponse.json({ success: true, status: 'completed' })
   }
@@ -203,7 +222,7 @@ export async function POST(request: NextRequest) {
     await logEvent(admin, payoutId, user.id, actorRole, 'failed', from, 'failed', body.reason || body.failure_reason || null)
     await logEvent(admin, payoutId, user.id, actorRole, 'balance_restored', 'failed', 'failed', 'Reserved earnings + adjustments returned to available')
     await logAudit(admin, user.id, actorName, 'payout.fail', payoutId, { amount: amt, reason: body.reason || body.failure_reason || null })
-    await notifyUser(admin, teacherId, { title: 'Payout Failed', body: `Your $${amt.toFixed(2)} payout could not be completed and the balance was returned to available. Please re-check your payout details.`, href: '/platform/teacher/earnings', type: 'booking_cancelled' })
+    await notifyUser(admin, teacherId, { title: 'Payout Failed', body: `Your $${amt.toFixed(2)} payout could not be completed and the balance was returned to available. Please re-check your payout details.`, href: '/platform/teacher/earnings', type: 'admin_action' })
     await notifyByPerm(admin, 'finance.review', { title: 'Payout Failed', body: `A $${amt.toFixed(2)} payout failed and the balance was restored.`, href: '/payouts' })
     return NextResponse.json({ success: true, status: 'failed' })
   }
