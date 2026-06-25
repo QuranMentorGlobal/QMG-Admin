@@ -19,8 +19,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing bucket or path' }, { status: 400 })
     }
 
-    // Only allow verification-documents bucket for security
-    if (bucket !== 'verification-documents') {
+    // Only allow known private buckets for security
+    const ALLOWED_BUCKETS = ['verification-documents', 'payout-proofs']
+    if (!ALLOWED_BUCKETS.includes(bucket)) {
       return NextResponse.json({ error: 'Unauthorized bucket access' }, { status: 403 })
     }
 
