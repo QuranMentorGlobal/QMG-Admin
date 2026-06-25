@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen,
   Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell,
   CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows,
-  SlidersHorizontal, Briefcase, RotateCcw, Award, Library } from 'lucide-react'
+  SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
 // listing its pages (sub-items). New pages slot into a category here — the rail
@@ -28,6 +28,7 @@ const CATEGORIES = [
     { href: '/bookings', label: 'Bookings Overview',  icon: BookOpen      },
     { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
     { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
+    { href: '/payouts',  label: 'Payout Management',  icon: Wallet        },
     { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
   ] },
   { key: 'trust', label: 'Verification & Trust', l1: 'Verification', l2: '& Trust', icon: ShieldCheck, items: [

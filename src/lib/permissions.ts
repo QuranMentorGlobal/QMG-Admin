@@ -67,6 +67,13 @@ export const PERMISSION_GROUPS: PermGroup[] = [
     ],
   },
   {
+    key: 'finance', label: 'Finance Management', desc: 'Payout review, manual payment processing and financial reports. Scoped to money only — no access to teachers, students, settings or verification.', perms: [
+      { key: 'finance.view', label: 'View Finance / Payouts' },
+      { key: 'finance.review', label: 'Approve / Reject Payout Requests' },
+      { key: 'finance.process', label: 'Process Payments & Upload Proof' },
+    ],
+  },
+  {
     key: 'analytics', label: 'Analytics', desc: 'Dashboards, deep analytics and report exports.', perms: [
       { key: 'analytics.dashboard', label: 'View Dashboard' },
       { key: 'analytics.deep', label: 'View Deep Analytics' },
@@ -125,6 +132,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/reviews': ['reviews.view'],
   '/payments': ['payments.view'],
   '/refunds': ['payments.view'],
+  '/payouts': ['finance.view', 'payments.view'],
   '/support': ['support.view'],
   '/settings': ['settings.view'],
   '/admin-management': ['admin.create', 'admin.edit', 'admin.delete'],
@@ -134,6 +142,8 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
 // ── API path → permission(s) required (any-of). ──────────────────────────────
 export const API_PERMISSIONS: { match: string; perms: string[] }[] = [
   { match: '/api/sub-admins', perms: ['admin.create', 'admin.edit', 'admin.delete'] },
+  { match: '/api/admin-payouts', perms: ['finance.review', 'finance.process', 'payments.manage'] },
+  { match: '/api/finance', perms: ['finance.view', 'finance.review', 'finance.process'] },
   { match: '/api/review-teacher', perms: ['teachers.approve', 'teachers.reject', 'verification.approve', 'verification.reject'] },
   { match: '/api/verification-action', perms: ['verification.approve', 'verification.reject'] },
   { match: '/api/verification-queue', perms: ['verification.access'] },
@@ -163,8 +173,12 @@ export const ROLE_PRESETS: { key: string; label: string; description: string; pe
     perms: ['teachers.view', 'teachers.approve', 'teachers.reject', 'teachers.suspend', 'students.view', 'students.toggle', 'courses.view', 'bookings.view', 'bookings.manage', 'attendance.view'],
   },
   {
-    key: 'finance', label: 'Finance Manager', description: 'Payments, commissions and revenue.',
-    perms: ['payments.view', 'payments.manage', 'analytics.dashboard', 'analytics.export'],
+    key: 'finance_reviewer', label: 'Finance — Payout Reviewer', description: 'Review, approve and reject payout requests.',
+    perms: ['finance.view', 'finance.review', 'analytics.export'],
+  },
+  {
+    key: 'finance_processor', label: 'Finance — Payment Processor', description: 'Process payouts, upload proof, mark paid / failed.',
+    perms: ['finance.view', 'finance.process', 'analytics.export'],
   },
   {
     key: 'marketing', label: 'Marketing Manager', description: 'Analytics and reports.',
