@@ -69,6 +69,8 @@ export default function CoursesHubPage() {
   const [completedType, setCompletedType] = useState<'all' | 'trial' | 'recorded' | 'live' | 'long'>('all')
   const [search, setSearch] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   // Deep-link via ?tab=
   useEffect(() => {
@@ -101,10 +103,10 @@ export default function CoursesHubPage() {
     let list = tab === 'completed'
       ? courses.filter(c => c.closed && (completedType === 'all' || c.tab === completedType))
       : courses.filter(c => !c.closed && c.tab === tab)
-    list = withinRange(list, range, c => c.closed ? c.closedAt : c.createdAt)
+    list = withinRange(list, range, c => c.closed ? c.closedAt : c.createdAt, from, to)
     if (q) list = list.filter(c => c.title.toLowerCase().includes(q) || c.teacherName.toLowerCase().includes(q))
     return list
-  }, [courses, tab, completedType, search, range])
+  }, [courses, tab, completedType, search, range, from, to])
 
   return (
     <AdminLayout>
@@ -151,7 +153,7 @@ export default function CoursesHubPage() {
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search course or teacher…"
                 style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 13, color: INK, outline: 'none', background: '#fff' }} />
             </div>
-            <RangeTabs value={range} onChange={setRange} />
+            <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
           </div>
         </div>
 
@@ -238,6 +240,7 @@ export default function CoursesHubPage() {
           .hub-row{ grid-template-columns: 1fr 1fr !important; }
           .hub-row > div:first-child{ grid-column: 1 / -1; }
         }
+        @media(max-width:640px){ .qmg-ch-filters{justify-content:center!important} .qmg-ch-filters>div{justify-content:center!important} }
       `}</style>
     </AdminLayout>
   )

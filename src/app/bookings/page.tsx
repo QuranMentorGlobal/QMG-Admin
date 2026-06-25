@@ -78,16 +78,10 @@ export default function BookingsPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return withinRange(bookings, range, (b: any) => b.start_date || b.created_at).filter(b => {
+    return withinRange(bookings, range, (b: any) => b.start_date || b.created_at, dateFrom, dateTo).filter(b => {
       if (statusFilter !== 'all' && b.status !== statusFilter) return false
       if (typeFilter === 'trial' && !b.is_trial) return false
       if (typeFilter === 'paid' && b.is_trial) return false
-      if (dateFrom || dateTo) {
-        const d = (b.start_date || b.created_at || '').slice(0, 10)
-        if (!d) return false
-        if (dateFrom && d < dateFrom) return false
-        if (dateTo && d > dateTo) return false
-      }
       if (q) {
         const hay = `${b.courses?.title} ${b.student?.first_name} ${b.student?.last_name} ${b.student?.email} ${b.teacher?.first_name} ${b.teacher?.last_name}`.toLowerCase()
         if (!hay.includes(q)) return false
@@ -130,7 +124,7 @@ export default function BookingsPage() {
             <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>{stats.total} bookings across the platform</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <RangeTabs value={range} onChange={setRange} />
+            <RangeTabs value={range} onChange={setRange} from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
             <div style={{ display: 'flex', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 3 }}>
               {([['list', List], ['calendar', CalendarDays]] as const).map(([v, Icon]) => (
                 <button key={v} onClick={() => setView(v)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer', padding: '7px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, textTransform: 'capitalize', fontFamily: "'Inter',sans-serif", background: view === v ? INK : 'transparent', color: view === v ? '#fff' : '#6B6B6B' }}>
@@ -161,12 +155,6 @@ export default function BookingsPage() {
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff', fontWeight: 600, cursor: 'pointer' }}>
             {TYPES.map(t => <option key={t.k} value={t.k}>{t.l}</option>)}
           </select>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff' }} />
-            <span style={{ fontSize: 12, color: MUTED }}>→</span>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} title="To date" style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5, color: INK, background: '#fff' }} />
-            {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(''); setDateTo('') }} style={{ padding: '7px 10px', borderRadius: 9, border: `1px solid ${BORDER}`, background: '#fff', fontSize: 12, fontWeight: 700, color: '#6B6B6B', cursor: 'pointer' }}>Clear</button>}
-          </div>
           <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
             <Search size={15} style={{ position: 'absolute', left: 12, top: 10, color: MUTED }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search course, student, teacher…" style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
@@ -231,6 +219,7 @@ export default function BookingsPage() {
         @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
         @media(max-width:1000px){ .qmg-bstats{grid-template-columns:repeat(3, minmax(0, 1fr))!important} }
         @media(max-width:520px){ .qmg-bstats{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
+        @media(max-width:640px){ .qmg-bar{justify-content:center!important} .qmg-bar>div{justify-content:center!important} }
       `}</style>
     </AdminLayout>
   )

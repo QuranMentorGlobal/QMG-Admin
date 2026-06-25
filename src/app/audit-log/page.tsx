@@ -39,6 +39,8 @@ export default function AuditLogPage() {
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     (async () => {
@@ -76,10 +78,10 @@ export default function AuditLogPage() {
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search action, admin or target…"
             style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
         </div>
-        <RangeTabs value={range} onChange={setRange} />
+        <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
       </div>
 
-      {(() => { const shownLogs = withinRange(logs, range, (l: any) => l.created_at); return (
+      {(() => { const shownLogs = withinRange(logs, range, (l: any) => l.created_at, from, to); return (
       <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
         {loading ? <div style={{ padding: 40, textAlign: 'center', color: MUTED }}>Loading…</div>
           : shownLogs.length === 0 ? (

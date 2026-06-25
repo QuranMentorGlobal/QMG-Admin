@@ -27,7 +27,10 @@ const EMPTY = { overall: { ...newBucket(), rate: 0, total: 0 }, byTeacher: [], b
 export async function GET(req: Request) {
   try {
     const admin = getAdmin()
-    const range = new URL(req.url).searchParams.get('range') || 'all'
+    const sp = new URL(req.url).searchParams
+    const range = sp.get('range') || 'all'
+    const from = sp.get('from') || ''
+    const to = sp.get('to') || ''
     const days = range === 'all' ? null : (Number(range) || null)
     const cutoffISO = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
 
@@ -36,7 +39,9 @@ export async function GET(req: Request) {
       .select('booking_id, student_id, teacher_id, status, marked_at')
       .order('marked_at', { ascending: false })
       .limit(MAX_ROWS)
-    if (cutoffISO) query = query.gte('marked_at', cutoffISO)
+    if (from) query = query.gte('marked_at', new Date(from + 'T00:00:00').toISOString())
+    if (to) query = query.lte('marked_at', new Date(to + 'T23:59:59').toISOString())
+    if (!from && !to && cutoffISO) query = query.gte('marked_at', cutoffISO)
     const { data: rows, error } = await query
     if (error) return NextResponse.json(EMPTY)
     const att = ((rows as any[]) || []).filter(r => ['present', 'late', 'absent', 'excused'].includes(r.status))

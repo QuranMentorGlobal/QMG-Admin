@@ -34,6 +34,8 @@ export default function BadgeManagementPage() {
   const [ledgerLoading, setLedgerLoading] = useState(true)
   const [roleFilter, setRoleFilter] = useState<'all' | 'teacher' | 'student' | 'parent'>('all')
   const [range, setRange] = useState('30')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [ledgerSearch, setLedgerSearch] = useState('')
 
   const note = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500) }
@@ -107,7 +109,7 @@ export default function BadgeManagementPage() {
   const filteredLedger = (() => {
     let rows = ledger
     if (roleFilter !== 'all') rows = rows.filter(r => r.role === roleFilter)
-    rows = withinRange(rows, range, r => r.createdAt)
+    rows = withinRange(rows, range, r => r.createdAt, from, to)
     const ql = ledgerSearch.trim().toLowerCase()
     if (ql) rows = rows.filter(r => `${r.name} ${r.email} ${r.badgeName}`.toLowerCase().includes(ql))
     return rows
@@ -153,7 +155,7 @@ export default function BadgeManagementPage() {
         {!user ? (
           <div>
             {/* Filters: role tabs + range + search */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div className="qmg-badge-filters" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {ROLE_TABS.map(rt => {
                   const on = roleFilter === rt.k
@@ -167,7 +169,7 @@ export default function BadgeManagementPage() {
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <SearchBar value={ledgerSearch} onChange={setLedgerSearch} placeholder="Search person or badge…" width={260} />
-                <RangeTabs value={range} onChange={setRange} />
+                <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
               </div>
             </div>
 
@@ -296,6 +298,7 @@ export default function BadgeManagementPage() {
         )}
 
         {toast && <div style={{ position: 'fixed', bottom: 24, right: 24, background: INK, color: '#fff', padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 100 }}>{toast}</div>}
+      <style>{`@media(max-width:640px){ .qmg-badge-filters{justify-content:center!important} .qmg-badge-filters>div{justify-content:center!important} }`}</style>
       </div>
     </AdminLayout>
   )

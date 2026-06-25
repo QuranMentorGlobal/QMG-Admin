@@ -64,6 +64,8 @@ export default function AdminRefundsPage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     (async () => {
@@ -80,13 +82,13 @@ export default function AdminRefundsPage() {
 
   const recent = useMemo(() => {
     const q = search.toLowerCase()
-    const ranged = withinRange((d?.recent || []), range, (p: any) => p.createdAt)
+    const ranged = withinRange((d?.recent || []), range, (p: any) => p.createdAt, from, to)
     return ranged.filter((p: any) => {
       if (filter !== 'all' && p.initiatedBy !== filter) return false
       if (q && !`${p.student} ${p.teacher} ${p.course} ${p.reason} ${p.provider}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [d, filter, search, range])
+  }, [d, filter, search, range, from, to])
 
   function exportCSV() {
     if (!d) return
@@ -104,7 +106,7 @@ export default function AdminRefundsPage() {
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Every refund issued when a paid booking is cancelled or declined.</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <RangeTabs value={range} onChange={setRange} />
+          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
           <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
         </div>
       </div>

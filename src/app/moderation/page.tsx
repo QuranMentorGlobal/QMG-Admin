@@ -51,6 +51,8 @@ export default function ModerationPage() {
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -101,9 +103,9 @@ export default function ModerationPage() {
           {highCount > 0 && <span style={{ color: RED, fontWeight: 700 }}> · {highCount} high-risk</span>}
         </p>
 
-        <div style={{ marginTop: 14 }}><RangeTabs value={range} onChange={setRange} /></div>
+        <div style={{ marginTop: 14 }}><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
 
-        {(() => { const shownFlags = withinRange(flags, range, (f: any) => f.created_at); return (
+        {(() => { const shownFlags = withinRange(flags, range, (f: any) => f.created_at, from, to); return (
         loading ? (
           <p style={{ color: MUTED, marginTop: 28 }}>Loading…</p>
         ) : shownFlags.length === 0 ? (

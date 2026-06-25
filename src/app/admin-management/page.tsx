@@ -191,7 +191,7 @@ export default function AdminManagementPage() {
       {open && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '4vh 16px', overflowY: 'auto' }} onClick={() => setOpen(false)}>
           <div onClick={e => e.stopPropagation()} style={{ width: 'min(960px, 96vw)', maxHeight: '92vh', background: '#F8F5EE', overflowY: 'auto', borderRadius: 18, boxShadow: '0 24px 70px rgba(0,0,0,0.4)' }}>
-            <div style={{ position: 'sticky', top: 0, background: '#111111', padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 1, borderRadius: '18px 18px 0 0' }}>
+            <div style={{ position: 'sticky', top: 0, background: 'linear-gradient(90deg,#111111,#166534)', padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 1, borderRadius: '18px 18px 0 0' }}>
               <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>{editing ? 'Edit Sub Admin' : 'Create Sub Admin'}</h2>
               <button onClick={() => setOpen(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff' }}><X size={18} /></button>
             </div>

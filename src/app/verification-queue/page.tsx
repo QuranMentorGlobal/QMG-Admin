@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
+import SearchBar from '@/components/SearchBar'
 import {
   ShieldCheck, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play,
   Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw,
@@ -68,6 +69,9 @@ export default function VerificationQueuePage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<StatusKey>('pending_review')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [vqSearch, setVqSearch] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
@@ -153,12 +157,16 @@ export default function VerificationQueuePage() {
 
   const name = (t: Teacher) => t.profiles ? `${t.profiles.first_name || ''} ${t.profiles.last_name || ''}`.trim() || 'Unknown' : 'Unknown'
 
-  const rangedTeachers = withinRange(teachers, range, (t: any) => t.created_at)
-  const rangedReqs = withinRange(reqs, range, (r: any) => r.created_at)
+  const rangedTeachers = withinRange(teachers, range, (t: any) => t.created_at, from, to)
+  const rangedReqs = withinRange(reqs, range, (r: any) => r.created_at, from, to)
+  const vq = vqSearch.trim().toLowerCase()
+  const searchedTeachers = vq
+    ? rangedTeachers.filter(t => `${name(t)} ${t.profiles?.email || ''}`.toLowerCase().includes(vq))
+    : rangedTeachers
   const apps = {
-    pending_review: rangedTeachers.filter(t => t.status === 'pending'),
-    action_required: rangedTeachers.filter(t => t.status === 'changes_requested'),
-    verified: rangedTeachers.filter(t => t.status === 'approved'),
+    pending_review: searchedTeachers.filter(t => t.status === 'pending'),
+    action_required: searchedTeachers.filter(t => t.status === 'changes_requested'),
+    verified: searchedTeachers.filter(t => t.status === 'approved'),
     rejected: rangedTeachers.filter(t => t.status === 'rejected'),
   }
   const changes = {
@@ -183,7 +191,11 @@ export default function VerificationQueuePage() {
         </div>
         <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
 
-        <div style={{ marginBottom: 16 }}><RangeTabs value={range} onChange={setRange} /></div>
+        <div className="vq-filterbar" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+          <SearchBar value={vqSearch} onChange={setVqSearch} placeholder="Search teachers by name or email…" width={300} />
+          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+        </div>
+        <style>{`@media (max-width:640px){ .vq-filterbar{ justify-content:center; } }`}</style>
 
         <div className="vq-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {STATUSES.map(s => {

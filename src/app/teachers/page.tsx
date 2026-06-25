@@ -27,6 +27,8 @@ export default function TeacherManagementPage() {
   const [filtered, setFiltered] = useState<Teacher[]>([])
   const [search, setSearch] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<{ m: string; k: 'success' | 'error' } | null>(null)
@@ -35,11 +37,11 @@ export default function TeacherManagementPage() {
 
   useEffect(() => {
     const q = search.toLowerCase()
-    const ranged = withinRange(teachers, range, (t: any) => t.created_at ?? t.profiles?.created_at)
+    const ranged = withinRange(teachers, range, (t: any) => t.created_at ?? t.profiles?.created_at, from, to)
     setFiltered(ranged.filter(t =>
       `${t.profiles?.first_name} ${t.profiles?.last_name} ${t.profiles?.email}`.toLowerCase().includes(q)
     ))
-  }, [search, teachers, range])
+  }, [search, teachers, range, from, to])
 
   async function fetchTeachers() {
     let data: any[] = []
@@ -88,7 +90,7 @@ export default function TeacherManagementPage() {
           </div>
         </div>
 
-        <div className="mb-4"><RangeTabs value={range} onChange={setRange} /></div>
+        <div className="mb-4"><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold flex items-center gap-2"

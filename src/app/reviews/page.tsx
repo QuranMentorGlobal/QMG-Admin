@@ -47,6 +47,8 @@ export default function ReviewsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -72,7 +74,7 @@ export default function ReviewsPage() {
   const topRated = d?.topRated || []
   const lowRated = d?.lowRated || []
   const pending = d?.pending || []
-  const shownPending = withinRange(pending, range, (r: any) => r.createdAt)
+  const shownPending = withinRange(pending, range, (r: any) => r.createdAt, from, to)
   const maxDist = Math.max(1, ...(dist.length ? dist.map((x: any) => x.count) : [1]))
   const trend = (d?.trend || []).map((x: any) => ({ ...x, label: format(new Date(x.m + '-01'), 'MMM') }))
 
@@ -85,7 +87,7 @@ export default function ReviewsPage() {
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Reviews</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ratings, reputation, and moderation.</p>
         </div>
-        <RangeTabs value={range} onChange={setRange} />
+        <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
       </div>
 
       {/* KPIs */}

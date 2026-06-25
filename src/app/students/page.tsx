@@ -21,6 +21,8 @@ export default function StudentManagementPage() {
   const [filtered, setFiltered] = useState<Student[]>([])
   const [search, setSearch] = useState('')
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
@@ -29,11 +31,11 @@ export default function StudentManagementPage() {
 
   useEffect(() => {
     const q = search.toLowerCase()
-    const ranged = withinRange(students, range, (s: any) => s.created_at)
+    const ranged = withinRange(students, range, (s: any) => s.created_at, from, to)
     setFiltered(ranged.filter(s =>
       `${s.first_name} ${s.last_name} ${s.email}`.toLowerCase().includes(q)
     ))
-  }, [search, students, range])
+  }, [search, students, range, from, to])
 
   async function fetchStudents() {
     let data: any[] = []
@@ -76,7 +78,7 @@ export default function StudentManagementPage() {
           </div>
         </div>
 
-        <div className="mb-4"><RangeTabs value={range} onChange={setRange} /></div>
+        <div className="mb-4"><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"

@@ -30,6 +30,8 @@ export default function AdminAttendance() {
   const [d, setD] = useState<Data | null>(null)
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     (async () => { try { const sb = createClient(); const { data: { user } } = await sb.auth.getUser(); if (user) { const { data: p } = await sb.from('profiles').select('first_name').eq('id', user.id).single(); setAdminName((p as any)?.first_name || 'Admin') } } catch {} })()
@@ -37,8 +39,8 @@ export default function AdminAttendance() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/attendance-analytics?range=${range}`).then(r => r.ok ? r.json() : null).then(setD).catch(() => {}).finally(() => setLoading(false))
-  }, [range])
+    fetch(`/api/attendance-analytics?range=${range}${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}`).then(r => r.ok ? r.json() : null).then(setD).catch(() => {}).finally(() => setLoading(false))
+  }, [range, from, to])
 
   const o = d?.overall
   const kpis = [
@@ -70,7 +72,7 @@ export default function AdminAttendance() {
         </h1>
         <p style={{ color: MUTED, fontSize: 14, margin: '6px 0 22px' }}>Platform-wide attendance health across all teachers, students and courses.</p>
 
-        <div style={{ marginBottom: 20 }}><RangeTabs value={range} onChange={setRange} /></div>
+        <div style={{ marginBottom: 20 }}><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
 
         {loading ? (
           <p style={{ color: MUTED }}>Loading…</p>

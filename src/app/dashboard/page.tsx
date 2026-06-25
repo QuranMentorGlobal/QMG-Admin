@@ -37,6 +37,14 @@ const KPI_CATEGORIES: { label: string; icon: any; keys: string[] }[] = [
   { label: 'Retention & Refunds', icon: RotateCcw, keys: ['studentRetention', 'teacherRetention', 'totalRefunded', 'refundCount'] },
 ]
 
+// Per-card icon for each KPI (so every dashboard card has an icon like the Courses cards).
+const KPI_ICONS: Record<string, any> = {
+  totalRevenue: CreditCard, commission: TrendingUp, mrr: Activity, conversionRate: Target,
+  activeStudents: Users, activeTeachers: GraduationCap, newToday: Clock, newRegistrations: ArrowUpRight,
+  trialRequests: Target, paidEnrollments: BookOpen, arpu: CreditCard, arpt: Award,
+  studentRetention: Users, teacherRetention: GraduationCap, totalRefunded: RotateCcw, refundCount: RotateCcw,
+}
+
 type KPI = { value: number; growth?: number; suffix?: string; note?: string }
 
 function fmtMoney(n: number) {
@@ -108,7 +116,7 @@ function GrowthChip({ g }: { g?: number }) {
   )
 }
 
-function KpiCard({ label, kpi, fmt, accent, i }: { label: string; kpi?: KPI; fmt: (n: number) => string; accent?: boolean; i: number }) {
+function KpiCard({ label, kpi, fmt, accent, i, icon: Icon }: { label: string; kpi?: KPI; fmt: (n: number) => string; accent?: boolean; i: number; icon?: any }) {
   const shown = useCountUp(kpi?.value || 0)
   return (
     <div className="adminx-stat adminx-rise" style={{
@@ -117,7 +125,10 @@ function KpiCard({ label, kpi, fmt, accent, i }: { label: string; kpi?: KPI; fmt
       animationDelay: `${i * 35}ms`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600, letterSpacing: '0.01em' }}>{label}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          {Icon && <span style={{ width: 26, height: 26, borderRadius: 8, background: '#F4EFE3', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon size={14} style={{ color: GOLD }} /></span>}
+          <p style={{ fontSize: 11.5, color: MUTED, margin: 0, fontWeight: 600, letterSpacing: '0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</p>
+        </div>
         <GrowthChip g={kpi?.growth} />
       </div>
       <p style={{ fontSize: 24, fontWeight: 800, color: accent ? GOLD : INK, margin: 0, lineHeight: 1, fontFamily: "'Fraunces',serif" }}>
@@ -334,7 +345,7 @@ export default function DashboardPage() {
                   <p style={{ fontSize: 13, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>{s.label}</p>
                 </div>
                 <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
-                  {s.cards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} />)}
+                  {s.cards.map((c, i) => <KpiCard key={c.key} i={i} label={c.label} kpi={k[c.key]} fmt={c.fmt} accent={c.accent} icon={KPI_ICONS[c.key]} />)}
                 </div>
               </div>
             ))}
@@ -581,7 +592,7 @@ export default function DashboardPage() {
         .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
         .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.5)!important}
         @media(max-width:1100px){ .qmg-kpi-grid{grid-template-columns:repeat(3, minmax(0, 1fr))!important} .qmg-two{grid-template-columns:minmax(0,1fr)!important} .qmg-ops{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
-        @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-qa{grid-template-columns:repeat(3, minmax(0, 1fr))!important} }
+        @media(max-width:640px){ .qmg-kpi-grid{grid-template-columns:repeat(2, minmax(0, 1fr))!important} .qmg-qa{grid-template-columns:repeat(2, minmax(0, 1fr))!important} }
         @media(max-width:380px){ .qmg-kpi-grid{grid-template-columns:minmax(0,1fr)!important} .qmg-ops{grid-template-columns:minmax(0,1fr)!important} }
       `}</style>
     </AdminLayout>
