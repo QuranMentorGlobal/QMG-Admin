@@ -119,6 +119,7 @@ export const ALL_PERMISSIONS: string[] = PERMISSION_GROUPS.flatMap(g => g.perms.
 // /dashboard and / are intentionally absent: every admin gets an (adaptive) home.
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/analytics': ['analytics.deep'],
+  '/platform-health': ['analytics.deep'],
   '/attendance': ['attendance.view', 'analytics.deep'],
   '/teachers': ['teachers.view'],
   '/courses-hub': ['courses.view', 'teachers.view', 'analytics.dashboard'],
@@ -154,6 +155,7 @@ export const API_PERMISSIONS: { match: string; perms: string[] }[] = [
   { match: '/api/analytics/deep', perms: ['analytics.deep'] },
   { match: '/api/analytics', perms: ['analytics.dashboard'] },
   { match: '/api/stats', perms: ['analytics.dashboard'] },
+  { match: '/api/platform-health', perms: ['analytics.deep'] },
   { match: '/api/courses-hub', perms: ['courses.view', 'teachers.view', 'analytics.dashboard'] },
   { match: '/api/attendance-analytics', perms: ['attendance.view', 'analytics.deep'] },
   { match: '/api/moderation-action', perms: ['moderation.action', 'support.manage'] },

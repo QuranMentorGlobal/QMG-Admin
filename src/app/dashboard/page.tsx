@@ -288,11 +288,9 @@ export default function DashboardPage() {
   const topTeachers: any[] = deep?.topTeachers || []
   const topCourses: any[] = (deep?.courses || []).slice(0, 5)
 
-  const attention = [
-    (can('verification.access') || can('teachers.view')) && { label: 'Pending Verifications', value: data?.totals?.pendingTeachers ?? 0, href: '/verification-queue', icon: ShieldCheck, tone: GOLD },
-    can('support.view') && { label: 'Open Support Tickets', value: data?.totals?.openTickets ?? 0, href: '/support', icon: MessageSquare, tone: INK },
-    can('payments.view') && { label: 'Failed Payments', value: deep?.attention?.failedPayments ?? 0, href: '/payments', icon: AlertTriangle, tone: RED },
-  ].filter(Boolean) as any[]
+  // Operational monitoring (verifications, tickets, failed payments) now lives on
+  // the dedicated Platform Health page — the dashboard stays business-KPI only.
+  const attention: any[] = []
 
   const quickActions = [
     { label: 'Verification Queue', href: '/verification-queue', perm: 'verification.access', icon: ShieldCheck },
@@ -406,7 +404,7 @@ export default function DashboardPage() {
 
       {/* Attention center + Quick actions */}
       {(attention.length > 0 || quickActions.length > 0) && (
-        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.4fr)', gap: 18, marginBottom: 18 }}>
+        <div className="qmg-two" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18, marginBottom: 18 }}>
           {attention.length > 0 && (
             <Panel title="Needs Attention" icon={Zap}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

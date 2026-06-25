@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
-import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail, Megaphone } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail, Megaphone, Activity } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
 // listing its pages (sub-items). New pages slot into a category here — the rail
@@ -17,6 +17,7 @@ import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut
 const CATEGORIES = [
   { key: 'overview', label: 'Admin Overview', l1: 'Admin', l2: 'Overview', icon: LayoutDashboard, items: [
     { href: '/dashboard',  label: 'Admin Dashboard',   icon: LayoutDashboard },
+    { href: '/platform-health', label: 'Platform Health', icon: Activity },
     { href: '/analytics',  label: 'Admin Analytics',   icon: BarChart3       },
     { href: '/attendance', label: 'Attendance Center', icon: CalendarCheck   },
   ] },
