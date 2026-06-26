@@ -21,7 +21,7 @@ export default function PageHead({
   title, subtitle, search, range, actions,
 }: {
   title: string
-  subtitle?: string
+  subtitle?: React.ReactNode
   search?: SearchCfg
   range?: RangeCfg
   actions?: React.ReactNode

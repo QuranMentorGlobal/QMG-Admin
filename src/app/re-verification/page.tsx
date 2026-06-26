@@ -8,6 +8,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { GitCompareArrows, CheckCircle, XCircle, MessageSquareWarning, ArrowRight, Clock, ShieldAlert } from 'lucide-react'
@@ -81,12 +82,10 @@ export default function ReVerificationPage() {
     <AdminLayout adminName={adminName}>
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 16px', borderRadius: 12, background: toast.k === 'error' ? '#DC2626' : 'linear-gradient(135deg,#166534,#C9A227)', color: toast.k === 'error' ? '#fff' : '#111111', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', gap: 8 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">{toast.k === 'error' ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <polyline points="20 6 9 17 4 12"/>}</svg>{toast.m}</div>}
 
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
-          <GitCompareArrows size={22} style={{ color: GOLD }} /> Re-Verification
-        </h1>
-        <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Approved teachers who changed trust-sensitive information. They stay hidden from students until you approve.</p>
-      </div>
+      <PageHead
+        title="Re-Verification"
+        subtitle="Approved teachers who changed trust-sensitive information. They stay hidden from students until you approve."
+      />
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{[1, 2].map(i => <div key={i} className="qmg-skel" style={{ height: 160 }} />)}</div>

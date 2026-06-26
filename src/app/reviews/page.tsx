@@ -6,6 +6,7 @@
 // ============================================================
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
@@ -82,13 +83,11 @@ export default function ReviewsPage() {
     <AdminLayout adminName={adminName}>
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
-      <div style={{ marginBottom: 18, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Reviews</h1>
-          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ratings, reputation, and moderation.</p>
-        </div>
-        <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-      </div>
+      <PageHead
+        title="Reviews"
+        subtitle="Ratings, reputation, and moderation."
+        range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+      />
 
       {/* KPIs */}
       <div className="qmg-rv-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>

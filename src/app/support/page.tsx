@@ -6,6 +6,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -121,10 +122,11 @@ export default function AdminSupportPage() {
     <AdminLayout adminName={adminName}>
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? 'linear-gradient(135deg,#166534,#C9A227)' : RED, color: toast.startsWith('✅') ? '#111111' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Support</h1>
-        <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Ticketing workspace — respond, prioritise and resolve.</p>
-      </div>
+      <PageHead
+        title="Support"
+        subtitle="Ticketing workspace — respond, prioritise and resolve."
+        range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+      />
 
       {err && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E', borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
@@ -171,7 +173,6 @@ export default function AdminSupportPage() {
           <Search size={15} style={{ position: 'absolute', left: 12, top: 10, color: MUTED }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tickets…" style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
         </div>
-        <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
       </div>
 
       {/* Two-pane workspace */}

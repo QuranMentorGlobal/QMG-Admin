@@ -8,6 +8,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -95,15 +96,11 @@ export default function ModerationPage() {
       )}
 
       <div className="w-full">
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
-          <ShieldAlert size={24} color={GOLD} /> Trust &amp; Safety
-        </h1>
-        <p style={{ color: MUTED, fontSize: 14, margin: '6px 0 0' }}>
-          Conversations the scanner flagged for possibly moving contact or payment off-platform.
-          {highCount > 0 && <span style={{ color: RED, fontWeight: 700 }}> · {highCount} high-risk</span>}
-        </p>
-
-        <div style={{ marginTop: 14 }}><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
+        <PageHead
+          title="Trust & Safety"
+          subtitle={<>Conversations the scanner flagged for possibly moving contact or payment off-platform.{highCount > 0 && <span style={{ color: RED, fontWeight: 700 }}> · {highCount} high-risk</span>}</>}
+          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+        />
 
         {(() => { const shownFlags = withinRange(flags, range, (f: any) => f.created_at, from, to); return (
         loading ? (

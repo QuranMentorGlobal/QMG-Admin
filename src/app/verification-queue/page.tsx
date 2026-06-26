@@ -9,6 +9,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import SearchBar from '@/components/SearchBar'
@@ -184,18 +185,13 @@ export default function VerificationQueuePage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <ShieldCheck size={22} style={{ color: GOLD }} />
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Verification Queue</h1>
-          <button onClick={load} title="Refresh" style={{ marginLeft: 'auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>
-        </div>
-        <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
-
-        <div className="vq-filterbar" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-          <SearchBar value={vqSearch} onChange={setVqSearch} placeholder="Search teachers by name or email…" width={300} />
-          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-        </div>
-        <style>{`@media (max-width:640px){ .vq-filterbar{ justify-content:center; } }`}</style>
+        <PageHead
+          title="Verification Queue"
+          subtitle="Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically."
+          search={{ value: vqSearch, onChange: setVqSearch, placeholder: 'Search teachers by name or email…' }}
+          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+          actions={<button onClick={load} title="Refresh" style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>}
+        />
 
         <div className="vq-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {STATUSES.map(s => {
