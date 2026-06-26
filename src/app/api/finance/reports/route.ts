@@ -7,16 +7,21 @@
 // No new money math — mirrors /api/stats. (Phase F5)
 // ────────────────────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server'
-import { guard, service } from '@/lib/admin-auth'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
 const STATUSES = ['requested', 'under_review', 'approved', 'processing', 'completed', 'rejected', 'failed']
 
 export async function GET(req: Request) {
-  const g = await guard(['finance.view', 'finance.review', 'finance.process'])
-  if ('error' in g) return g.error
-  const svc = service()
+  // Read-only finance aggregates. Raw service-role client (like /api/stats) so a
+  // guard() auth hiccup can't blank the whole report. The /finance-reports PAGE
+  // remains permission-gated by middleware.
+  const svc = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
 
   const sp = new URL(req.url).searchParams
   const range = sp.get('range') || 'all'
