@@ -8,6 +8,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
@@ -202,17 +203,12 @@ export default function AdminPayoutsPage() {
   return (
     <AdminLayout>
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
-        <div>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0 0' }}>Payout Management</h1>
-          <p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Review and process teacher payout requests.</p>
-        </div>
-        <div className="qmg-payout-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-          <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
-        </div>
-      </div>
+      <PageHead
+        title="Payout Management"
+        subtitle="Review and process teacher payout requests."
+        range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+        actions={<button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>}
+      />
 
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>

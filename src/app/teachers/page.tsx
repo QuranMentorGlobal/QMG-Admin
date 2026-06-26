@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { Search, Star, DollarSign, BookOpen } from 'lucide-react'
@@ -74,23 +75,12 @@ export default function TeacherManagementPage() {
   return (
     <AdminLayout>
       <div className="w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-ink" style={{ fontFamily: "'Fraunces',serif" }}>Teacher Management</h1>
-            <p className="text-sm text-ink-light mt-1">{teachers.length} approved teachers on platform</p>
-          </div>
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-light" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search teachers..."
-              className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#C9A227] w-64"
-            />
-          </div>
-        </div>
-
-        <div className="mb-4"><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
+        <PageHead
+          title="Teacher Management"
+          subtitle={`${teachers.length} approved teachers on platform`}
+          search={{ value: search, onChange: setSearch, placeholder: 'Search teachers…' }}
+          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+        />
 
         {toast && (
           <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold flex items-center gap-2"

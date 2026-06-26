@@ -6,6 +6,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -118,13 +119,11 @@ export default function BookingsPage() {
   return (
     <AdminLayout>
       <div className="w-full">
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
-          <div>
-            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Bookings</h1>
-            <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>{stats.total} bookings across the platform</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <RangeTabs value={range} onChange={setRange} from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
+        <PageHead
+          title="Bookings"
+          subtitle={`${stats.total} bookings across the platform`}
+          range={{ value: range, onChange: setRange, from: dateFrom, to: dateTo, onFrom: setDateFrom, onTo: setDateTo }}
+          actions={
             <div style={{ display: 'flex', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 3 }}>
               {([['list', List], ['calendar', CalendarDays]] as const).map(([v, Icon]) => (
                 <button key={v} onClick={() => setView(v)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer', padding: '7px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, textTransform: 'capitalize', fontFamily: "'Inter',sans-serif", background: view === v ? INK : 'transparent', color: view === v ? '#fff' : '#6B6B6B' }}>
@@ -132,8 +131,8 @@ export default function BookingsPage() {
                 </button>
               ))}
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Analytics */}
         <div className="qmg-bstats" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
