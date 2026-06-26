@@ -86,6 +86,10 @@ const ADMINX_STYLES = `
 .adminx-stat:hover{transform:translateY(-3px)!important;box-shadow:0 12px 30px rgba(201,162,39,.16),0 2px 8px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.55)!important}
 .adminx-row{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .adminx-row:hover{transform:translateY(-2px)!important;box-shadow:0 8px 20px rgba(0,0,0,.06)!important;border-color:rgba(201,162,39,.5)!important}
+@media(max-width:640px){
+  .adminx-row{flex-direction:column!important;align-items:center!important;text-align:center!important}
+  .adminx-stat{align-items:center!important;text-align:center!important}
+}
 .qmg-skel{background:linear-gradient(90deg,#F1ECE2 25%,#E8E2D6 50%,#F1ECE2 75%);background-size:200% 100%;animation:qmgsh 1.4s infinite;border-radius:14px}
 @keyframes qmgsh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .adminx-iconbtn{position:relative;width:38px;height:38px;border-radius:11px;border:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease}
