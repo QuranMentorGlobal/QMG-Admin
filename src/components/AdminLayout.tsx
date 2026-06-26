@@ -5,7 +5,12 @@
 //  Nav items + routes UNCHANGED; added pending/ticket count badges.)
 // ============================================================
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+// Run a layout effect on the client (pre-paint) but fall back to useEffect during
+// SSR so React doesn't warn. Used to restore the sidebar scroll before the browser
+// paints, which is what prevents the visible "snap to top" on navigation.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+const NAV_SCROLL_KEY = 'qmg-admin-nav-scroll'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
@@ -183,22 +188,39 @@ export default function AdminLayout({
 
   useEffect(() => { setOpenCat(null); setSidebarOpen(false) }, [pathname])
 
-  // Keep the active nav item in view when a page opens (the sidebar remounts per
-  // navigation, so without this it snaps back to the top and hides lower items).
-  // Adjusts only the sidebar's own scroll — never the page.
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      const nav = navScrollRef.current, item = activeNavRef.current
-      if (!nav || !item) return
+  // Persist the sidebar's own scroll position. The layout remounts on every page
+  // navigation, so without this the scroller resets to the top and the active item
+  // (when it sits low in the list) scrolls out of view. We save scrollTop as the
+  // user scrolls and restore it pre-paint on the next mount, so the sidebar stays
+  // exactly where it was — like every other dashboard. Only touches the sidebar's
+  // own scroll, never the page.
+  function saveNavScroll() {
+    const nav = navScrollRef.current
+    if (nav) { try { sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollTop)) } catch {} }
+  }
+
+  useIsoLayoutEffect(() => {
+    const nav = navScrollRef.current
+    if (!nav) return
+    // 1) Restore the saved position before the browser paints (no visible jump).
+    let restored = false
+    try {
+      const saved = sessionStorage.getItem(NAV_SCROLL_KEY)
+      if (saved != null) { nav.scrollTop = parseInt(saved, 10) || 0; restored = true }
+    } catch {}
+    // 2) Safety net: if nothing was saved (first visit) or the active item ended up
+    //    off-screen, center it — then persist that corrected position.
+    const item = activeNavRef.current
+    if (item) {
       const navRect = nav.getBoundingClientRect()
       const itemRect = item.getBoundingClientRect()
       const out = itemRect.top < navRect.top || itemRect.bottom > navRect.bottom
-      if (out) {
+      if (!restored || out) {
         const offsetWithin = itemRect.top - navRect.top + nav.scrollTop
         nav.scrollTop = Math.max(0, offsetWithin - nav.clientHeight / 2 + item.offsetHeight / 2)
+        saveNavScroll()
       }
-    })
-    return () => cancelAnimationFrame(raf)
+    }
   }, [ctxReady, pathname])
 
   const can = (perm: string) => !isSub || (ctx?.permissions || []).includes(perm)
@@ -247,7 +269,7 @@ export default function AdminLayout({
         </div>
 
         {/* Nav — flat category sections; items listed directly, scrolls if tall */}
-        <nav ref={navScrollRef} className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
+        <nav ref={navScrollRef} onScroll={saveNavScroll} className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
           {!ctxReady ? (
             [0, 1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} style={{ height: 36, margin: '5px 0', borderRadius: 11, background: 'rgba(255,255,255,0.05)' }} />
