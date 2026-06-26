@@ -31,6 +31,7 @@ export default function AnnouncementsPage() {
   const [adminName, setAdminName] = useState('Admin')
   const [counts, setCounts] = useState<Counts>({ all: 0, student: 0, teacher: 0, parent: 0 })
   const [recent, setRecent] = useState<Recent[]>([])
+  const [loading, setLoading] = useState(true)
   const [audience, setAudience] = useState<keyof Counts>('all')
   const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
@@ -55,6 +56,7 @@ export default function AnnouncementsPage() {
       const d = await res.json()
       if (res.ok) { setCounts(d.counts || counts); setRecent(d.recent || []) }
     } catch {}
+    setLoading(false)
   }
 
   const reach = counts[audience] || 0
@@ -152,7 +154,9 @@ export default function AnnouncementsPage() {
         {/* Recent */}
         <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, maxWidth: 720 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: '0 0 12px' }}>Recent announcements</p>
-          {recent.length === 0 ? (
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{[1, 2, 3].map(i => <div key={i} style={{ height: 46, borderRadius: 10, background: '#EFEADD' }} className="animate-pulse" />)}</div>
+          ) : recent.length === 0 ? (
             <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>No announcements sent yet.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
