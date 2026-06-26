@@ -81,6 +81,7 @@ export async function GET() {
   // Recent transactions (with names)
   let rcRes: any = await svc.from('payments')
     .select(`id, gross_amount_usd, platform_fee_usd, teacher_payout_usd, status, provider, payment_type, created_at,
+      pricing_mode, amount_local, local_currency, exchange_rate,
       student:profiles!payments_student_id_fkey(first_name, last_name),
       teacher:profiles!payments_teacher_id_fkey(first_name, last_name)`)
     .order('created_at', { ascending: false }).limit(60)
@@ -91,6 +92,7 @@ export async function GET() {
   const recent = (recentRaw || []).map((p: any) => ({
     id: p.id, gross: Number(p.gross_amount_usd) || 0, commission: Number(p.platform_fee_usd) || 0, payout: Number(p.teacher_payout_usd) || 0,
     status: p.status, provider: p.provider, type: p.payment_type, createdAt: p.created_at,
+    pricingMode: p.pricing_mode || null, amountLocal: p.amount_local ?? null, localCurrency: p.local_currency || null,
     student: p.student ? `${p.student.first_name || ''} ${p.student.last_name || ''}`.trim() : 'Unknown',
     teacher: p.teacher ? `${p.teacher.first_name || ''} ${p.teacher.last_name || ''}`.trim() : 'Unknown',
   }))

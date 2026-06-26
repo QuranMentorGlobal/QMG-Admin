@@ -31,6 +31,7 @@ const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 type Booking = {
   id: string; status: string; price_usd: number; is_trial: boolean
   start_date: string; session_time: string; recurrence: string; created_at: string
+  lesson_start_utc?: string | null; teacher_timezone?: string | null; student_timezone?: string | null
   student_id: string; teacher_id: string
   courses: { title: string }
   student: { first_name: string; last_name: string; email: string }
@@ -53,10 +54,15 @@ function Stat({ icon: Icon, label, value, accent }: { icon: any; label: string; 
   )
 }
 
+function fmtZoned(iso: string, tz?: string | null) {
+  try { return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: tz || 'UTC' }) } catch { return '' }
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [tzMode, setTzMode] = useState<'utc' | 'teacher' | 'student'>('student')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -164,7 +170,13 @@ export default function BookingsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{[...Array(4)].map((_, i) => <div key={i} className="qmg-skel" style={{ height: 78 }} />)}</div>
         ) : view === 'list' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {filtered.map(b => <BookingRow key={b.id} b={b} />)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+              <span style={{ fontSize: 11.5, color: MUTED, fontWeight: 600 }}>Show times in:</span>
+              {(['student', 'teacher', 'utc'] as const).map(m => (
+                <button key={m} onClick={() => setTzMode(m)} style={{ border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 8, fontSize: 11.5, fontWeight: 700, textTransform: 'capitalize', background: tzMode === m ? INK : '#F3F4F6', color: tzMode === m ? '#fff' : '#6B6B6B' }}>{m === 'utc' ? 'UTC' : m}</button>
+              ))}
+            </div>
+            {filtered.map(b => <BookingRow key={b.id} b={b} tzMode={tzMode} />)}
             {filtered.length === 0 && <Empty />}
           </div>
         ) : (
@@ -205,7 +217,7 @@ export default function BookingsPage() {
             {selectedDay && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: 0 }}>{dayBookings.length} booking{dayBookings.length === 1 ? '' : 's'} on {format(new Date(selectedDay), 'dd MMM yyyy')}</p>
-                {dayBookings.map(b => <BookingRow key={b.id} b={b} />)}
+                {dayBookings.map(b => <BookingRow key={b.id} b={b} tzMode={tzMode} />)}
                 {dayBookings.length === 0 && <p style={{ fontSize: 12.5, color: MUTED }}>No bookings this day.</p>}
               </div>
             )}
@@ -226,7 +238,7 @@ export default function BookingsPage() {
 
 const navBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 9, border: `1px solid ${BORDER}`, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: INK }
 
-function BookingRow({ b }: { b: Booking }) {
+function BookingRow({ b, tzMode }: { b: Booking; tzMode: 'utc' | 'teacher' | 'student' }) {
   const sc = STATUS_COLORS[b.status] || { bg: '#F3F4F6', color: MUTED }
   return (
     <div className="adminx-row" style={{ background: '#fff', borderRadius: 14, padding: 16, border: `1px solid ${BORDER}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14 }}>
@@ -245,7 +257,9 @@ function BookingRow({ b }: { b: Booking }) {
             <GraduationCap size={12} /> {b.teacher?.first_name} {b.teacher?.last_name} <ArrowUpRight size={11} style={{ color: MUTED }} />
           </a>
         </div>
-        <p style={{ fontSize: 11.5, color: MUTED, margin: '5px 0 0' }}>📅 {b.start_date || '—'}{b.session_time ? ` at ${b.session_time}` : ''}{b.recurrence ? ` · ${b.recurrence}` : ''}</p>
+        <p style={{ fontSize: 11.5, color: MUTED, margin: '5px 0 0' }}>📅 {b.lesson_start_utc
+          ? `${fmtZoned(b.lesson_start_utc, tzMode === 'utc' ? 'UTC' : tzMode === 'teacher' ? b.teacher_timezone : b.student_timezone)} (${tzMode === 'utc' ? 'UTC' : tzMode})`
+          : `${b.start_date || '—'}${b.session_time ? ` at ${b.session_time}` : ''}`}{b.recurrence ? ` · ${b.recurrence}` : ''}</p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <p style={{ fontSize: 16, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>${b.price_usd ?? 0}</p>

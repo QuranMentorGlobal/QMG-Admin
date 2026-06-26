@@ -236,7 +236,7 @@ export default function AdminPaymentsPage() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
               <thead><tr style={{ textAlign: 'left', color: MUTED, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', background: '#FBF8F1' }}>
-                <th style={{ padding: '10px 14px' }}>Date</th><th style={{ padding: '10px 14px' }}>Student → Teacher</th><th style={{ padding: '10px 14px' }}>Type</th><th style={{ padding: '10px 14px' }}>Status</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Gross</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Commission</th>
+                <th style={{ padding: '10px 14px' }}>Date</th><th style={{ padding: '10px 14px' }}>Student → Teacher</th><th style={{ padding: '10px 14px' }}>Type</th><th style={{ padding: '10px 14px' }}>Status</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Gross</th><th style={{ padding: '10px 14px', textAlign: 'right' }}>Commission</th><th style={{ padding: '10px 14px' }}>Pricing</th>
               </tr></thead>
               <tbody>
                 {recent.map((p: any) => { const s = STATUS[p.status] || { bg: '#F3F4F6', color: MUTED }; return (
@@ -247,6 +247,11 @@ export default function AdminPaymentsPage() {
                     <td style={{ padding: '10px 14px' }}><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, textTransform: 'uppercase', background: s.bg, color: s.color }}>{p.status}</span></td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: INK }}>{full(p.gross)}</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', color: GOLD, fontWeight: 700 }}>{full(p.commission)}</td>
+                    <td style={{ padding: '10px 14px' }}>{p.pricingMode === 'local'
+                      ? <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, background: '#EAF3EC', color: '#166534' }}>LOCAL{p.amountLocal != null ? ` · ${(p.localCurrency || '').toUpperCase()} ${Number(p.amountLocal).toLocaleString()}` : ''}</span>
+                      : p.pricingMode === 'international'
+                        ? <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 7, background: '#F3F4F6', color: MUTED }}>INTL</span>
+                        : <span style={{ color: MUTED }}>—</span>}</td>
                   </tr>
                 )})}
               </tbody>
