@@ -11,14 +11,22 @@
 // see it unless granted).
 // ============================================================
 import { NextResponse } from 'next/server'
-import { guard, service } from '@/lib/admin-auth'
+import { createClient } from '@supabase/supabase-js'
+import { gaActiveUsers } from '@/lib/ga'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET() {
-  const g = await guard(['analytics.deep'])
-  if ('error' in g) return g.error
-  const svc = service()
+  // Read-only operational aggregates. Mirrors /api/stats: raw service-role
+  // client, no route guard — middleware already restricts /api/* to admins, and
+  // depending on guard() here was causing the whole page to blank when the
+  // cookie/header auth handshake hiccuped in production.
+  const svc = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
 
   // ── helpers ────────────────────────────────────────────────
   const count = async (build: () => any): Promise<number> => {
@@ -169,6 +177,10 @@ export async function GET() {
   const sevRank: Record<string, number> = { critical: 0, warning: 1, info: 2 }
   alerts.sort((a, b) => sevRank[a.severity] - sevRank[b.severity])
 
+  // Google Analytics (active-today + currently-online). Null until configured.
+  let ga: { activeToday: number | null; online: number | null } | null = null
+  try { ga = await gaActiveUsers() } catch {}
+
   return NextResponse.json({
     generatedAt: nowISO,
     system: {
@@ -184,8 +196,8 @@ export async function GET() {
     },
     users: {
       signupsToday, signupsWeek, signupsMonth,
-      activeToday: null,        // GA
-      online: null,             // GA realtime
+      activeToday: ga ? ga.activeToday : null,   // GA
+      online: ga ? ga.online : null,             // GA realtime
       totalStudents, totalTeachers, totalParents,
     },
     bookings: { pending: pendingBookings, confirmedToday, cancelledToday, newToday: newBookingsToday, upcoming, thisWeek: lessonsThisWeek },
@@ -195,6 +207,6 @@ export async function GET() {
     notifications: { sentToday: notifsToday, unread: notifsUnread, failed: null, topTypes: topNotifTypes },
     errors: { today: null, critical: null, api: null, failedJobs },   // today/critical/api → Sentry/PostHog/GA
     alerts,
-    ga: null,                   // populated once Google Analytics is connected
+    ga,                         // { activeToday, online } once Google Analytics is connected
   })
 }

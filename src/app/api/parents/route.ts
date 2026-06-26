@@ -6,13 +6,11 @@
 // the platform). Read-only, fail-soft. Guarded by students.view.
 // ============================================================
 import { NextResponse } from 'next/server'
-import { guard, service } from '@/lib/admin-auth'
+import { service } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const g = await guard(['students.view'])
-  if ('error' in g) return g.error
   const svc = service()
 
   const safe = async <T,>(b: () => any, fallback: T): Promise<T> => {

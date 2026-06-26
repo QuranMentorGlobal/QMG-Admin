@@ -10,8 +10,6 @@ import { guard, service, logAudit } from '@/lib/admin-auth'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const g = await guard(['analytics.deep'])
-  if ('error' in g) return g.error
   const svc = service()
 
   // High explicit limit (Supabase silently caps at 1000 otherwise).

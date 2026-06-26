@@ -40,6 +40,7 @@ const CATEGORIES = [
   { key: 'people', label: 'People Management', l1: 'People', l2: 'Management', icon: Users, items: [
     { href: '/teachers', label: 'Teacher Management', icon: GraduationCap },
     { href: '/students', label: 'Student Management', icon: Users         },
+    { href: '/parents', label: 'Parents', icon: Users         },
     { href: '/courses-hub', label: 'Courses Hub',     icon: Library       },
   ] },
   { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [

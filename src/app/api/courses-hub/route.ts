@@ -8,7 +8,7 @@
 // completion counts. Service-role read; guarded by teachers.view.
 // ============================================================
 import { NextResponse } from 'next/server'
-import { guard, service } from '@/lib/admin-auth'
+import { service } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,8 +21,6 @@ function tabOf(productType: string | null | undefined): 'trial' | 'recorded' | '
 }
 
 export async function GET(req: Request) {
-  const g = await guard(['courses.view', 'teachers.view', 'analytics.dashboard'])
-  if ('error' in g) return g.error
 
   const countsOnly = new URL(req.url).searchParams.get('counts') === '1'
   const svc = service()

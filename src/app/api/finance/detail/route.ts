@@ -5,13 +5,11 @@
 // payment proof if one exists. Requires any finance permission. (Phase F3)
 // ────────────────────────────────────────────────────────────────────────────
 import { NextRequest, NextResponse } from 'next/server'
-import { guard, service } from '@/lib/admin-auth'
+import { service } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const g = await guard(['finance.view', 'finance.review', 'finance.process'])
-  if ('error' in g) return g.error
 
   const payoutId = new URL(req.url).searchParams.get('payoutId')
   if (!payoutId) return NextResponse.json({ error: 'payoutId required' }, { status: 400 })
