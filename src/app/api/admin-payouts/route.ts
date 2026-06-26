@@ -88,6 +88,62 @@ async function notifyByPerm(admin: any, perm: string, notif: { title: string; bo
 }
 
 // Return reserved earnings + settled clawback adjustments to the available pool.
+
+// ── Settlement: convert a completed payout into the teacher's chosen currency ──
+// Rule (finalized): freeze on payment day. Same-currency earnings pay the frozen
+// amount (net_usd × the payment's frozen rate — never the payout-day rate).
+// Cross-currency / USD-sourced earnings convert ONCE, at the payout-day rate.
+async function computeSettlement(admin: any, payoutId: string, teacherId: string, amtUsd: number) {
+  const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100
+  const { data: settings } = await admin.from('teacher_payout_settings').select('currency').eq('teacher_id', teacherId).maybeSingle()
+  const payCcy = String(settings?.currency || 'usd').toLowerCase()
+  if (payCcy === 'usd') return { currency: 'usd', amountLocal: r2(amtUsd), payoutRate: null as number | null, breakdown: null as any }
+
+  let payoutRate: number | null = null
+  try {
+    const { data: fx } = await admin.from('exchange_rates').select('rate').eq('base_currency', 'usd').eq('quote_currency', payCcy).maybeSingle()
+    payoutRate = fx?.rate ? Number(fx.rate) : null
+  } catch { payoutRate = null }
+
+  const { data: earns } = await admin.from('teacher_earnings')
+    .select('id, net_amount_usd, payment_id').eq('payout_id', payoutId).eq('status', 'payout_pending')
+  const earnings = earns || []
+  const payIds = earnings.map((e: any) => e.payment_id).filter(Boolean)
+  const payMap: Record<string, any> = {}
+  if (payIds.length) {
+    const { data: pays } = await admin.from('payments').select('id, local_currency, exchange_rate').in('id', payIds)
+    ;(pays || []).forEach((p: any) => { payMap[p.id] = p })
+  }
+
+  let total = 0
+  const breakdown: any = { payout_currency: payCcy, frozen: { usd: 0, local: 0 }, converted: { usd: 0, local: 0, rate: payoutRate }, rate_missing: false }
+  for (const e of earnings) {
+    const netUsd = Number(e.net_amount_usd) || 0
+    const pay = e.payment_id ? payMap[e.payment_id] : null
+    const payLocal = String(pay?.local_currency || '').toLowerCase()
+    const frozenRate = pay?.exchange_rate ? Number(pay.exchange_rate) : null
+    if (payLocal === payCcy && frozenRate) {
+      const local = r2(netUsd * frozenRate)         // frozen, no payout-day rate
+      total += local; breakdown.frozen.usd = r2(breakdown.frozen.usd + netUsd); breakdown.frozen.local = r2(breakdown.frozen.local + local)
+    } else if (payoutRate) {
+      const local = r2(netUsd * payoutRate)          // convert at payout-day rate
+      total += local; breakdown.converted.usd = r2(breakdown.converted.usd + netUsd); breakdown.converted.local = r2(breakdown.converted.local + local)
+    } else {
+      breakdown.converted.usd = r2(breakdown.converted.usd + netUsd); breakdown.rate_missing = true
+    }
+  }
+
+  // Adjustments / clawbacks attached to the payout (USD) — convert at payout-day rate.
+  const summedUsd = r2(breakdown.frozen.usd + breakdown.converted.usd)
+  const adjUsd = r2(amtUsd - summedUsd)
+  if (Math.abs(adjUsd) > 0.001) {
+    if (payoutRate) { const local = r2(adjUsd * payoutRate); total += local; breakdown.converted.usd = r2(breakdown.converted.usd + adjUsd); breakdown.converted.local = r2(breakdown.converted.local + local) }
+    else { breakdown.converted.usd = r2(breakdown.converted.usd + adjUsd); breakdown.rate_missing = true }
+  }
+
+  return { currency: payCcy, amountLocal: r2(total), payoutRate, breakdown }
+}
+
 async function restoreBalance(admin: any, payoutId: string) {
   const now = new Date().toISOString()
   await admin.from('teacher_earnings')
@@ -192,6 +248,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'complete') {
+    // Settle into the teacher's chosen currency BEFORE earnings flip to paid.
+    const settlement = await computeSettlement(admin, payoutId, teacherId, amt)
     // Reserved earnings → paid.
     await admin.from('teacher_earnings')
       .update({ status: 'paid', paid_at: now, updated_at: now })
@@ -205,13 +263,18 @@ export async function POST(request: NextRequest) {
       payment_method_used: body.payment_method_used || null,
       payment_proof_url: body.payment_proof_url || null,
       finance_notes: body.finance_notes || null,
+      settlement_currency: settlement.currency,
+      amount_local: settlement.amountLocal,
+      payout_rate: settlement.payoutRate,
+      local_breakdown: settlement.breakdown,
     }).eq('id', payoutId)
     if (body.payment_proof_url) {
       await logEvent(admin, payoutId, user.id, actorRole, 'proof_uploaded', from, from, null, { path: body.payment_proof_url })
     }
     await logEvent(admin, payoutId, user.id, actorRole, 'completed', from, 'completed', body.reference_number || null, { transaction_id: body.transaction_id || null, method: body.payment_method_used || null })
     await logAudit(admin, user.id, actorName, 'payout.complete', payoutId, { amount: amt, reference: body.reference_number || null, method: body.payment_method_used || null })
-    await notifyUser(admin, teacherId, { type: 'payout_completed', title: 'Payout Paid 🎉', body: `Your $${amt.toFixed(2)} payout has been sent${body.reference_number ? ' (ref ' + body.reference_number + ')' : ''}.`, href: '/platform/teacher/earnings', email: { type: 'payout_completed', data: { amount: amt, currency: 'USD', reference: body.reference_number || null } } })
+    const paidLabel = settlement.currency === 'usd' ? `$${amt.toFixed(2)}` : `${settlement.currency.toUpperCase()} ${Number(settlement.amountLocal).toLocaleString()}`
+    await notifyUser(admin, teacherId, { type: 'payout_completed', title: 'Payout Paid 🎉', body: `Your ${paidLabel} payout has been sent${body.reference_number ? ' (ref ' + body.reference_number + ')' : ''}.`, href: '/platform/teacher/earnings', email: { type: 'payout_completed', data: { amount: amt, currency: settlement.currency.toUpperCase(), amountLocal: settlement.amountLocal, reference: body.reference_number || null } } })
     await notifyByPerm(admin, 'finance.review', { title: 'Payout Completed', body: `A $${amt.toFixed(2)} payout was marked paid.`, href: '/payouts' })
     return NextResponse.json({ success: true, status: 'completed' })
   }
