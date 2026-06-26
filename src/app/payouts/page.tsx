@@ -27,6 +27,7 @@ interface PayoutRow {
   teacher_name?: string
   amount_usd: number
   currency: string
+  settlement_currency?: string | null; amount_local?: number | null; payout_rate?: number | null; local_breakdown?: any
   status: string
   payout_method: string | null
   payout_account: string | null
@@ -266,7 +267,7 @@ export default function AdminPayoutsPage() {
               {filtered.map(r => (
                 <tr key={r.id} style={{ borderTop: '1px solid rgba(201,162,39,0.07)' }}>
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{r.teacher_name}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: INK }}>{fmt(r.amount_usd)}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: INK }}>{fmt(r.amount_usd)}{r.settlement_currency && r.settlement_currency !== 'usd' && r.amount_local != null && <span style={{ display: 'block', fontSize: 11, color: MUTED, fontWeight: 600 }}>→ {r.settlement_currency.toUpperCase()} {Number(r.amount_local).toLocaleString()}</span>}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{prettyMethod(r.payment_method_used || r.payout_method)}</td>
                   <td style={{ padding: '12px 16px' }}><StatusBadge status={r.status} /></td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED, whiteSpace: 'nowrap' }}>{fmtDate(r.requested_at)}</td>
@@ -310,6 +311,13 @@ export default function AdminPayoutsPage() {
                 ['Reference', detail.reference_number || '—'],
                 ['Transaction ID', detail.transaction_id || '—'],
                 ['Processed by', detailData?.processedByName || '—'],
+                ...(detail.settlement_currency && detail.settlement_currency !== 'usd'
+                  ? [
+                      ['Paid as', `${detail.settlement_currency.toUpperCase()} ${Number(detail.amount_local || 0).toLocaleString()}`],
+                      ...(detail.local_breakdown?.frozen?.local ? [['  • Frozen (payment-day)', `${detail.settlement_currency.toUpperCase()} ${Number(detail.local_breakdown.frozen.local).toLocaleString()}`]] : []),
+                      ...(detail.local_breakdown?.converted?.local ? [[`  • Converted @ ${detail.payout_rate || '—'}`, `${detail.settlement_currency.toUpperCase()} ${Number(detail.local_breakdown.converted.local).toLocaleString()}`]] : []),
+                    ]
+                  : []),
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
                   <span style={{ color: MUTED }}>{k}</span><span style={{ color: INK, fontWeight: 600 }}>{v as string}</span>
