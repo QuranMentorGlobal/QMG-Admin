@@ -5,6 +5,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import {
@@ -163,12 +164,10 @@ export default function AnalyticsPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
-        <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Analytics</h1>
-          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Deep-dive intelligence across the marketplace.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <PageHead
+        title="Analytics"
+        subtitle="Deep-dive intelligence across the marketplace."
+        actions={<>
           <div style={{ display: 'flex', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 3 }}>
             {RANGES.map(r => (
               <button key={r.key} onClick={() => setRange(r.key)} style={{ border: 'none', cursor: 'pointer', padding: '7px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, fontFamily: "'Inter',sans-serif", background: range === r.key ? INK : 'transparent', color: range === r.key ? '#fff' : '#6B6B6B' }}>{r.label}</button>
@@ -176,8 +175,8 @@ export default function AnalyticsPage() {
           </div>
           <button onClick={exportCSV} className="qmg-noprint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 11, border: `1px solid ${BORDER}`, cursor: 'pointer', background: '#fff', color: INK, fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> CSV</button>
           <button onClick={() => window.print()} className="qmg-noprint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><FileText size={14} /> PDF</button>
-        </div>
-      </div>
+        </>}
+      />
 
       <div className="qmg-noprint" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18, borderBottom: `1px solid ${BORDER}`, paddingBottom: 2 }}>
         {TABS.map(t => (

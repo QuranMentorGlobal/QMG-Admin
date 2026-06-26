@@ -5,6 +5,7 @@
 // ============================================================
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { Megaphone, Users, GraduationCap, UserCog, Send, LinkIcon } from 'lucide-react'
@@ -86,12 +87,10 @@ export default function AnnouncementsPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: 'var(--ff)', margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}>
-          <Megaphone size={20} color={GOLD} /> System Announcements
-        </h1>
-        <p style={{ fontSize: 13, color: MUTED, margin: '3px 0 0' }}>Broadcast an in-app notification to everyone in a chosen audience. It appears in their bell and notifications page.</p>
-      </div>
+      <PageHead
+        title="System Announcements"
+        subtitle="Broadcast an in-app notification to everyone in a chosen audience. It appears in their bell and notifications page."
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 16 }}>
         {/* Composer */}

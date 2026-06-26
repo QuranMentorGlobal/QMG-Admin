@@ -5,6 +5,7 @@
 // ============================================================
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import { PERMISSION_GROUPS, ROLE_PRESETS } from '@/lib/permissions'
@@ -133,15 +134,13 @@ export default function AdminManagementPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Admin Management</h1>
-          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Create scoped admin accounts and assign exactly the permissions they need.</p>
-        </div>
-        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700 }}>
+      <PageHead
+        title="Admin Management"
+        subtitle="Create scoped admin accounts and assign exactly the permissions they need."
+        actions={<button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700 }}>
           <Plus size={16} /> Create Sub Admin
-        </button>
-      </div>
+        </button>}
+      />
 
       <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
         {loading ? <div style={{ padding: 40, textAlign: 'center', color: MUTED }}>Loading…</div>

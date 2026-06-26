@@ -3,6 +3,7 @@
 // tune thresholds, and run the platform-wide backfill. Reads /api/badges.
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import AdminLayout from '@/components/AdminLayout'
 import { Award, Search, Plus, X, History, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { TEACHER_BADGES, STUDENT_BADGES, PARENT_BADGES, BADGE_BY_KEY, type BadgeDef } from '@/lib/badges'
@@ -122,11 +123,10 @@ export default function BadgeManagementPage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <Award size={22} style={{ color: GOLD }} />
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Badge Management</h1>
-        </div>
-        <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Search a user to view, assign, or remove badges. All auto-badges sync from the engine; manual grants are preserved.</p>
+        <PageHead
+          title="Badge Management"
+          subtitle="Search a user to view, assign, or remove badges. All auto-badges sync from the engine; manual grants are preserved."
+        />
 
         {/* Search + backfill */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>

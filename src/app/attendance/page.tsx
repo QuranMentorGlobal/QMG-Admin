@@ -7,6 +7,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs from '@/components/RangeTabs'
@@ -67,12 +68,11 @@ export default function AdminAttendance() {
   return (
     <AdminLayout adminName={adminName}>
       <div style={{ width: '100%' }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>
-          <TrendingUp size={24} color={GOLD} /> Attendance Center
-        </h1>
-        <p style={{ color: MUTED, fontSize: 14, margin: '6px 0 22px' }}>Platform-wide attendance health across all teachers, students and courses.</p>
-
-        <div style={{ marginBottom: 20 }}><RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} /></div>
+        <PageHead
+          title="Attendance Center"
+          subtitle="Platform-wide attendance health across all teachers, students and courses."
+          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+        />
 
         {loading ? (
           <p style={{ color: MUTED }}>Loading…</p>

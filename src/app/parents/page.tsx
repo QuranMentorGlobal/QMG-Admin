@@ -6,6 +6,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -77,13 +78,10 @@ export default function ParentsPage() {
         }
       `}</style>
 
-      {/* Header */}
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: 'var(--ff)', margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}>
-          <Users size={20} color={GOLD} /> Parents
-        </h1>
-        <p style={{ fontSize: 13, color: MUTED, margin: '3px 0 0' }}>Parent accounts, their linked children and pending link requests.</p>
-      </div>
+      <PageHead
+        title="Parents"
+        subtitle="Parent accounts, their linked children and pending link requests."
+      />
 
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 16 }}>

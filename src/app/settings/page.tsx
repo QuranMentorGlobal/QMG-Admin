@@ -19,6 +19,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import {
@@ -280,16 +281,14 @@ export default function SettingsPage() {
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? 'linear-gradient(135deg,#166534,#C9A227)' : '#DC2626', color: toast.startsWith('✅') ? '#111111' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
-        <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Platform Settings</h1>
-          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Configure your platform across {CATEGORIES.length} categories.</p>
-        </div>
-        <button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+      <PageHead
+        title="Platform Settings"
+        subtitle={`Configure your platform across ${CATEGORIES.length} categories.`}
+        actions={<button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           <Save size={15} /> {saving ? 'Saving…' : 'Save changes'}
           {criticalChanges.length > 0 && !saving && <span style={{ background: '#111111', color: GOLD, borderRadius: 99, fontSize: 11, fontWeight: 800, padding: '1px 7px' }}>{criticalChanges.length}</span>}
-        </button>
-      </div>
+        </button>}
+      />
 
       {/* Search */}
       <div style={{ position: 'relative', marginBottom: 18, maxWidth: 460 }}>
