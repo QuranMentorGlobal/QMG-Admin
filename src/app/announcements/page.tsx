@@ -94,7 +94,7 @@ export default function AnnouncementsPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 16 }}>
         {/* Composer */}
-        <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, maxWidth: 720 }}>
+        <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
           {/* Audience */}
           <label style={labelStyle}>Audience</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
@@ -151,7 +151,7 @@ export default function AnnouncementsPage() {
         </div>
 
         {/* Recent */}
-        <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, maxWidth: 720 }}>
+        <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: '0 0 12px' }}>Recent announcements</p>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{[1, 2, 3].map(i => <div key={i} style={{ height: 46, borderRadius: 10, background: '#EFEADD' }} className="animate-pulse" />)}</div>
@@ -171,7 +171,7 @@ export default function AnnouncementsPage() {
         </div>
       </div>
 
-      <p style={{ fontSize: 11.5, color: MUTED, marginTop: 14, maxWidth: 720 }}>
+      <p style={{ fontSize: 11.5, color: MUTED, marginTop: 14 }}>
         Announcements are delivered in-app only. For bulk marketing email with unsubscribe handling, use Resend Broadcasts — per-event marketing email remains controlled by each user&apos;s notification preferences.
       </p>
 

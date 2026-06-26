@@ -312,6 +312,7 @@ export default function DashboardPage() {
   return (
     <AdminLayout adminName={adminName}>
       <style>{`
+        @media (max-width: 640px) { .qmg-dash-head { flex-direction: column; align-items: center; text-align: center; } }
         @media (max-width: 960px) {
           .qmg-kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
           .qmg-qa { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
@@ -324,7 +325,7 @@ export default function DashboardPage() {
         }
       `}</style>
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 20 }}>
+      <div className="qmg-dash-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 20 }}>
         <div>
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: INK, margin: 0 }}>Dashboard</h1>
           <p style={{ fontSize: 13, color: '#6B6B6B', margin: '6px 0 0' }}>{isSub ? 'Your workspace overview.' : 'Executive overview of Muddarris.'}</p>

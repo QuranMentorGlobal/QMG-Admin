@@ -134,6 +134,7 @@ export default function PlatformHealthPage() {
     <AdminLayout adminName={adminName}>
       <style>{`
         .ph-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+        @media(max-width:640px){ .ph-head{flex-direction:column;align-items:center;text-align:center} }
         @media(max-width:768px){ .ph-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
         @media(max-width:480px){
           .ph-grid{grid-template-columns:1fr}
@@ -142,7 +143,7 @@ export default function PlatformHealthPage() {
       `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
+      <div className="ph-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: 'var(--ff)', margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}>
             <Activity size={20} color={GOLD} /> Platform Health
