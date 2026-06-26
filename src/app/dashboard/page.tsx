@@ -35,7 +35,7 @@ const KPI_CATEGORIES: { label: string; icon: any; keys: string[] }[] = [
   { label: 'People',             icon: Users,      keys: ['activeStudents', 'activeTeachers', 'newToday', 'newRegistrations'] },
   { label: 'Sales & Value',      icon: Activity,   keys: ['trialRequests', 'paidEnrollments', 'arpu', 'arpt'] },
   { label: 'Retention & Refunds', icon: RotateCcw, keys: ['studentRetention', 'teacherRetention', 'totalRefunded', 'refundCount'] },
-  { label: 'Payouts & Liabilities', icon: CreditCard, keys: ['pendingPayouts', 'approvedPayouts', 'completedPayouts', 'totalPaidOut', 'teacherLiability'] },
+  { label: 'Payouts & Liabilities', icon: CreditCard, keys: ['pendingPayouts', 'approvedPayouts', 'totalPaidOut', 'teacherLiability'] },
 ]
 
 // Per-card icon for each KPI (so every dashboard card has an icon like the Courses cards).
@@ -270,7 +270,6 @@ export default function DashboardPage() {
     { label: 'Refunds Issued', key: 'refundCount', fmt: fmtNum, perm: 'payments.view' },
     { label: 'Pending Payouts', key: 'pendingPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
     { label: 'Approved Payouts', key: 'approvedPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
-    { label: 'Completed Payouts', key: 'completedPayouts', fmt: fmtMoney, perm: 'analytics.dashboard' },
     { label: 'Total Paid Out', key: 'totalPaidOut', fmt: fmtMoney, perm: 'analytics.dashboard' },
     { label: 'Teacher Liabilities', key: 'teacherLiability', fmt: fmtMoney, perm: 'analytics.dashboard' },
   ]
@@ -312,6 +311,18 @@ export default function DashboardPage() {
 
   return (
     <AdminLayout adminName={adminName}>
+      <style>{`
+        @media (max-width: 960px) {
+          .qmg-kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+          .qmg-qa { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+          .qmg-two { grid-template-columns: 1fr !important; }
+          .qmg-ops { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+        }
+        @media (max-width: 480px) {
+          .qmg-kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+          .qmg-qa { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+        }
+      `}</style>
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 20 }}>
         <div>

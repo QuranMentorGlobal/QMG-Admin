@@ -46,8 +46,8 @@ function Section({ title, icon: Icon, children, sub }: { title: string; icon: an
 
 function StatCard({ label, value, icon: Icon, tone = INK, note, connect }: { label: string; value: React.ReactNode; icon: any; tone?: string; note?: string; connect?: boolean }) {
   return (
-    <div className="ph-card" style={{ display: 'flex', flexDirection: 'column', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', minHeight: 86 }}>
-      <div className="ph-card-head" style={{ display: 'flex', alignItems: 'center', gap: 7, color: MUTED, fontSize: 12, fontWeight: 600 }}>
+    <div className="ph-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', minHeight: 86 }}>
+      <div className="ph-card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, color: MUTED, fontSize: 12, fontWeight: 600 }}>
         <Icon size={14} color={tone} /> {label}
       </div>
       {connect ? (
@@ -72,12 +72,12 @@ const STATUS_TONE: Record<string, { dot: string; label: string }> = {
 function StatusCard({ label, icon: Icon, state }: { label: string; icon: any; state: string | null }) {
   const meta = state ? (STATUS_TONE[state] || { dot: MUTED, label: typeLabel(state) }) : null
   return (
-    <div className="ph-card" style={{ display: 'flex', flexDirection: 'column', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', minHeight: 86 }}>
-      <div className="ph-card-head" style={{ display: 'flex', alignItems: 'center', gap: 7, color: MUTED, fontSize: 12, fontWeight: 600 }}>
+    <div className="ph-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', minHeight: 86 }}>
+      <div className="ph-card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, color: MUTED, fontSize: 12, fontWeight: 600 }}>
         <Icon size={14} color={INK} /> {label}
       </div>
       {meta ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9 }}>
           <span style={{ width: 9, height: 9, borderRadius: '50%', background: meta.dot, boxShadow: `0 0 0 3px ${meta.dot}22` }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: INK }}>{meta.label}</span>
         </div>
@@ -133,11 +133,10 @@ export default function PlatformHealthPage() {
   return (
     <AdminLayout adminName={adminName}>
       <style>{`
-        .ph-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
-        @media(max-width:640px){
+        .ph-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+        @media(max-width:768px){ .ph-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+        @media(max-width:480px){
           .ph-grid{grid-template-columns:1fr}
-          .ph-card{text-align:center}
-          .ph-card-head{justify-content:center}
           .ph-section-head{justify-content:center;text-align:center}
         }
       `}</style>
@@ -284,7 +283,7 @@ export default function PlatformHealthPage() {
               {QUICK.map(q => {
                 const IC = q.icon
                 return (
-                  <Link key={q.href} href={q.href} className="ph-card" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', textDecoration: 'none', color: INK, fontWeight: 700, fontSize: 13 }}>
+                  <Link key={q.href} href={q.href} className="ph-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px', textDecoration: 'none', color: INK, fontWeight: 700, fontSize: 13 }}>
                     <span style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(201,162,39,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <IC size={17} color={GOLD} />
                     </span>
