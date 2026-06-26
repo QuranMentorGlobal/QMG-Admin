@@ -7,6 +7,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs from '@/components/RangeTabs'
 import {
@@ -56,17 +57,11 @@ export default function FinanceReportsPage() {
   return (
     <AdminLayout>
       <div style={{ width: '100%' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0 0', fontFamily: "'Fraunces',serif" }}>Financial Reports</h1>
-            <p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Payout pipeline and payments for the selected period · liabilities are live.</p>
-          </div>
-          <div className="qmg-fr-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-          </div>
-        </div>
-        <style>{`@media (max-width:640px){ .qmg-fr-controls{ width:100%; justify-content:center; } }`}</style>
+        <PageHead
+          title="Financial Reports"
+          subtitle="Payout pipeline and payments for the selected period · liabilities are live."
+          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+        />
 
         {/* Headline numbers */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>

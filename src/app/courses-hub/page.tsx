@@ -8,6 +8,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import AdminLayout from '@/components/AdminLayout'
 import {
   Search, BookOpen, Video, Target, GraduationCap, Award, Library, Users as UsersIcon,
@@ -112,13 +113,10 @@ export default function CoursesHubPage() {
     <AdminLayout>
       <div style={{ width: '100%' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <Library size={22} style={{ color: GOLD }} />
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Courses Hub</h1>
-        </div>
-        <p style={{ fontSize: 13, color: MUTED, margin: '0 0 18px' }}>
-          Every course across the platform, grouped by type. When a teacher closes a course it moves to Completed.
-        </p>
+        <PageHead
+          title="Courses Hub"
+          subtitle="Every course across the platform, grouped by type. When a teacher closes a course it moves to Completed."
+        />
 
         {/* Type stat cards (also act as tab shortcuts) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 18 }}>

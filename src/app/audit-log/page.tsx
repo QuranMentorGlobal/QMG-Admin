@@ -4,6 +4,7 @@
 // ============================================================
 'use client'
 import { useEffect, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -67,19 +68,12 @@ export default function AuditLogPage() {
 
   return (
     <AdminLayout adminName={adminName}>
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Audit Log</h1>
-        <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Every administrative action — who did it and when.</p>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
-        <div style={{ position: 'relative', maxWidth: 380, flex: '1 1 280px' }}>
-          <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: MUTED }} />
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search action, admin or target…"
-            style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 11, border: `1px solid ${BORDER}`, fontSize: 13, background: '#fff', color: INK }} />
-        </div>
-        <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-      </div>
+      <PageHead
+        title="Audit Log"
+        subtitle="Every administrative action — who did it and when."
+        search={{ value: q, onChange: setQ, placeholder: 'Search action, admin or target…' }}
+        range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
+      />
 
       {(() => { const shownLogs = withinRange(logs, range, (l: any) => l.created_at, from, to); return (
       <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>

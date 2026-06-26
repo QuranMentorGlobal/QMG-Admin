@@ -5,6 +5,7 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
@@ -114,18 +115,14 @@ export default function EmailLogsPage() {
   return (
     <AdminLayout adminName={adminName}>
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: 'var(--ff)', margin: 0, display: 'flex', alignItems: 'center', gap: 9 }}>
-            <Mail size={20} color={GOLD} /> Email Logs
-          </h1>
-          <p style={{ fontSize: 13, color: MUTED, margin: '3px 0 0' }}>Delivery status for every transactional email.</p>
-        </div>
-        <button onClick={retryFailed} disabled={retrying || failedCount === 0}
+      <PageHead
+        title="Email Logs"
+        subtitle="Delivery status for every transactional email."
+        actions={<button onClick={retryFailed} disabled={retrying || failedCount === 0}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 11, border: 'none', cursor: failedCount === 0 ? 'default' : 'pointer', fontSize: 13, fontWeight: 700, color: '#fff', background: failedCount === 0 ? '#C9C3B5' : 'linear-gradient(135deg,#166534,#C9A227)', opacity: retrying ? 0.6 : 1 }}>
           <RotateCcw size={15} /> {retrying ? 'Retrying…' : `Retry failed${failedCount ? ` (${failedCount})` : ''}`}
-        </button>
-      </div>
+        </button>}
+      />
 
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 16 }}>
