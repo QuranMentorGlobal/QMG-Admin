@@ -258,7 +258,7 @@ export default function AdminLayout({
     return pathname === href || pathname.startsWith(href + '/')
   }
 
-  function SidebarContent() {
+  function SidebarContent({ primary = false }: { primary?: boolean } = {}) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'linear-gradient(180deg, #111111 0%, #166534 100%)' }}>
         {/* Brand header */}
@@ -269,7 +269,7 @@ export default function AdminLayout({
         </div>
 
         {/* Nav — flat category sections; items listed directly, scrolls if tall */}
-        <nav ref={navScrollRef} onScroll={saveNavScroll} className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
+        <nav ref={primary ? navScrollRef : undefined} onScroll={primary ? saveNavScroll : undefined} className="adminx-nav-scroll" style={{ flex: 1, padding: '6px 10px 12px', overflowY: 'auto', minHeight: 0 }}>
           {!ctxReady ? (
             [0, 1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} style={{ height: 36, margin: '5px 0', borderRadius: 11, background: 'rgba(255,255,255,0.05)' }} />
@@ -283,7 +283,7 @@ export default function AdminLayout({
                 return (
                   <button
                     key={href}
-                    ref={active ? activeNavRef : undefined}
+                    ref={active && primary ? activeNavRef : undefined}
                     onClick={() => { router.push(href); setSidebarOpen(false) }}
                     className={`adminx-nav ${active ? 'adminx-nav-active' : ''}`}
                   >
@@ -324,13 +324,13 @@ export default function AdminLayout({
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:flex-col" style={{ width: 240, flexShrink: 0, height: '100%', position: 'relative', zIndex: 50 }}>
-        <SidebarContent />
+        {SidebarContent({ primary: true })}
       </div>
 
       {/* Mobile Overlay + drawer */}
       {sidebarOpen && (
         <div className="lg:hidden" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
-          <div style={{ width: 240, flexShrink: 0, height: '100%', boxShadow: '6px 0 30px rgba(0,0,0,0.5)' }}><SidebarContent /></div>
+          <div style={{ width: 240, flexShrink: 0, height: '100%', boxShadow: '6px 0 30px rgba(0,0,0,0.5)' }}>{SidebarContent()}</div>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.55)' }} onClick={() => setSidebarOpen(false)} />
         </div>
       )}
