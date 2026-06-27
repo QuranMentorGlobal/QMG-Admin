@@ -163,6 +163,19 @@ export const API_PERMISSIONS: { match: string; perms: string[] }[] = [
   { match: '/api/moderation-action', perms: ['moderation.action', 'support.manage'] },
   { match: '/api/moderation', perms: ['moderation.view', 'support.view'] },
   { match: '/api/audit-log', perms: ['audit.view', 'admin.create', 'admin.edit', 'admin.delete'] },
+  // ── A1: data-read routes that previously relied on the bare "is admin" check ──
+  { match: '/api/students', perms: ['students.view'] },
+  { match: '/api/student-detail', perms: ['students.view'] },
+  { match: '/api/teachers', perms: ['teachers.view'] },
+  { match: '/api/teacher-detail', perms: ['teachers.view'] },
+  { match: '/api/bookings', perms: ['bookings.view'] },
+  { match: '/api/refunds', perms: ['payments.view'] },
+  { match: '/api/payouts', perms: ['finance.view', 'payments.view'] },
+  { match: '/api/payments-finance', perms: ['payments.view'] },
+  { match: '/api/reviews-analytics', perms: ['reviews.view'] },
+  { match: '/api/support-metrics', perms: ['support.view'] },
+  { match: '/api/profile-change-requests', perms: ['verification.access'] },
+  { match: '/api/ai', perms: ['analytics.deep', 'analytics.dashboard'] },
 ]
 
 // ── Default Sub-Admin role presets ───────────────────────────────────────────
