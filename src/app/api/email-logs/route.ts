@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
 
   const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  // Frontend retry is open until CRON_SECRET is configured; forward it when present.
+  // Authenticate to the frontend's now-gated retry endpoint via the shared internal secret.
+  if (process.env.INTERNAL_API_SECRET) headers['x-internal-secret'] = process.env.INTERNAL_API_SECRET
   if (process.env.CRON_SECRET) headers.Authorization = `Bearer ${process.env.CRON_SECRET}`
 
   try {
