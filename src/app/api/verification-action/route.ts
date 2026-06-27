@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
         const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
         await fetch(`${frontendUrl}/api/email`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
           body: JSON.stringify({
             type: action === 'approve' ? 'application_approved' : 'application_rejected',
             data: { teacherName, teacherEmail, feedback: notes || null },

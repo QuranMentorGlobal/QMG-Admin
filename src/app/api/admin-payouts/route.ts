@@ -65,7 +65,7 @@ async function notifyUser(
   const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://www.muddarris.com'
   try {
     const res = await fetch(`${frontendUrl}/api/notify`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET || '' },
       body: JSON.stringify({
         userId, type: notif.type || 'admin_action',
         title: notif.title, body: notif.body, href: notif.href,
