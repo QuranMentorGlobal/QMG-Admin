@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Always compute live — these are money/lifecycle figures that must match the
+// Payout Management, Finance, and Refunds pages. Never serve a cached snapshot.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

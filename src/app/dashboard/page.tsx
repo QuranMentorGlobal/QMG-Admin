@@ -200,7 +200,7 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/stats').then(r => r.ok ? r.json() : null)
+    fetch('/api/stats', { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setPstats(d) })
       .catch(() => {})
   }, [])
