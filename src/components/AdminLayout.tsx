@@ -51,6 +51,7 @@ const CATEGORIES = [
   { key: 'system', label: 'System & Access', l1: 'System', l2: '& Access', icon: SlidersHorizontal, items: [
     { href: '/settings',         label: 'Platform Settings', icon: Settings   },
     { href: '/admin-management', label: 'Admin Management',   icon: UserCog    },
+    { href: '/account-security', label: 'Two-Factor Auth',     icon: ShieldCheck },
     { href: '/audit-log',        label: 'Audit Logs',         icon: ScrollText },
     { href: '/announcements',    label: 'Announcements',      icon: Megaphone  },
   ] },
