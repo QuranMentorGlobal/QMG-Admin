@@ -1,99 +1,106 @@
+// ============================================================
+// PASTE THIS WHOLE FILE INTO (qmg-admin):  src/app/login/page.tsx
+// ------------------------------------------------------------
+// Admin login WITH 2FA challenge (Phase 2 enforcement).
+//   Step 1 (password): signInWithPassword → check assurance level.
+//   Step 2 (code):     ONLY if the account has a verified TOTP factor and the
+//                      session is still aal1 → prompt for the 6-digit code,
+//                      challenge + verify → session upgrades to aal2.
+// Admins WITHOUT a factor never see step 2 and are never blocked.
+// If you lose your authenticator, see BREAK-GLASS in the delivery notes.
+// ============================================================
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AdminLoginPage() {
   const router = useRouter()
+  const supabase = createClient()
+
+  const [step, setStep] = useState<'password' | 'mfa'>('password')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [factorId, setFactorId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [booting, setBooting] = useState(true)
 
-  // --- 2FA challenge state ---
-  // Once password is correct AND the account has a verified TOTP factor,
-  // we pause here and ask for the 6-digit code before granting access.
-  const [needsMfa, setNeedsMfa] = useState(false)
-  const [factorId, setFactorId] = useState<string | null>(null)
-  const [mfaCode, setMfaCode] = useState('')
-  const [mfaBusy, setMfaBusy] = useState(false)
+  // If the admin already has a session that is stuck at aal1 with a verified
+  // factor (e.g. they were redirected here by the middleware mfa gate, or closed
+  // the tab mid-login), jump straight to the code step instead of asking for the
+  // password again. If they're already aal2, send them in.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: s } = await supabase.auth.getSession()
+        if (s?.session?.user) {
+          const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+          if (aal?.currentLevel === 'aal2') { router.replace('/dashboard'); return }
+          if (aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2') {
+            const { data: f } = await supabase.auth.mfa.listFactors()
+            const totp = (f?.totp || []).find((x: any) => x.status === 'verified')
+            if (totp) { setFactorId(totp.id); setStep('mfa') }
+          }
+        }
+      } catch { /* fall through to the password form */ }
+      setBooting(false)
+    })()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleLogin() {
-    setError('')
-    setLoading(true)
-    const supabase = createClient()
-
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (authError || !data.user) {
-      setError('Invalid email or password.')
-      setLoading(false)
-      return
-    }
-
-    // Authoritative admin check via the service role (RLS-proof). Only accounts
-    // with role='admin' and an active admin_status may enter the panel.
+  async function finishLogin() {
+    // Authoritative admin check via the service role (RLS-proof).
     let ok = false
     try { const res = await fetch('/api/auth-check'); const j = await res.json(); ok = !!j.ok } catch {}
     if (!ok) {
       await supabase.auth.signOut()
       setError('Access denied. This panel is for administrators only.')
-      setLoading(false)
+      setStep('password'); setLoading(false)
       return
     }
-
-    // --- 2FA gate ---
-    // Password + admin check passed. Now see if this account has a verified
-    // TOTP factor enrolled. If so, we must not let them in until they prove
-    // possession of the authenticator (AAL2). If not enrolled, let them
-    // through as before so no one is locked out before they've set it up.
-    try {
-      const { data: factors } = await supabase.auth.mfa.listFactors()
-      const verified = (factors?.totp || []).find((f: any) => f.status === 'verified')
-      if (verified) {
-        setFactorId(verified.id)
-        setNeedsMfa(true)
-        setLoading(false)
-        return // wait for code entry below
-      }
-    } catch {
-      // If we can't even check, fail safe and continue to dashboard rather
-      // than locking out every admin due to a transient API hiccup.
-    }
-
     router.push('/dashboard')
   }
 
-  async function handleVerifyMfa() {
-    if (!factorId || mfaCode.trim().length < 6) return
-    setError('')
-    setMfaBusy(true)
-    const supabase = createClient()
+  async function handleLogin() {
+    setError(''); setLoading(true)
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    if (authError || !data.user) {
+      setError('Invalid email or password.'); setLoading(false); return
+    }
+
+    // Does this account require a second factor?
+    try {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      if (aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2') {
+        const { data: f } = await supabase.auth.mfa.listFactors()
+        const totp = (f?.totp || []).find((x: any) => x.status === 'verified')
+        if (totp) { setFactorId(totp.id); setStep('mfa'); setCode(''); setLoading(false); return }
+      }
+    } catch { /* no MFA / call failed → continue as a normal (aal1) login */ }
+
+    await finishLogin()
+  }
+
+  async function handleVerifyCode() {
+    if (!factorId || code.trim().length < 6) return
+    setError(''); setLoading(true)
     try {
       const { data: ch, error: cErr } = await supabase.auth.mfa.challenge({ factorId })
       if (cErr) throw cErr
-      const { error: vErr } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: ch.id,
-        code: mfaCode.trim(),
-      })
+      const { error: vErr } = await supabase.auth.mfa.verify({ factorId, challengeId: ch.id, code: code.trim() })
       if (vErr) throw vErr
-      router.push('/dashboard')
+      await finishLogin()
     } catch (e: any) {
-      setError(e?.message || 'That code was not accepted. Check your authenticator app and try again.')
+      setError(e?.message || 'That code was not accepted. Check your authenticator and try again.')
+      setLoading(false)
     }
-    setMfaBusy(false)
   }
 
   async function cancelMfa() {
-    // Bail out cleanly: sign the (already-authenticated) session back out
-    // so a half-finished MFA challenge can't be left dangling.
-    const supabase = createClient()
     try { await supabase.auth.signOut() } catch {}
-    setNeedsMfa(false)
-    setFactorId(null)
-    setMfaCode('')
-    setError('')
+    setStep('password'); setCode(''); setFactorId(null); setPassword(''); setError('')
   }
 
   return (
@@ -107,7 +114,6 @@ export default function AdminLoginPage() {
         style={{ background: 'linear-gradient(135deg,#166534,#C9A227)', transform: 'translate(-30%, 30%)' }} />
 
       <div className="relative w-full max-w-md">
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-10">
           {/* Logo / Brand */}
           <div className="text-center mb-8">
@@ -119,17 +125,19 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {!needsMfa ? (
+          {error && (
+            <div className="mb-5 px-4 py-3 rounded-xl text-sm font-medium"
+              style={{ background: '#FEE2E2', color: '#DC2626' }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          {booting ? (
+            <p className="text-center text-sm text-ink-light py-6">Loading…</p>
+          ) : step === 'password' ? (
             <>
               <h2 className="text-xl font-bold text-ink mb-1">Welcome back</h2>
               <p className="text-sm text-ink-light mb-7">Sign in to manage the platform</p>
-
-              {error && (
-                <div className="mb-5 px-4 py-3 rounded-xl text-sm font-medium"
-                  style={{ background: '#FEE2E2', color: '#DC2626' }}>
-                  ⚠️ {error}
-                </div>
-              )}
 
               <div className="space-y-4">
                 <div>
@@ -164,56 +172,45 @@ export default function AdminLoginPage() {
                   {loading ? 'Signing in...' : 'Sign In to Admin Panel'}
                 </button>
               </div>
-
-              <p className="text-center text-xs text-ink-light mt-6">
-                🔒 Restricted to authorized administrators only
-              </p>
             </>
           ) : (
             <>
               <h2 className="text-xl font-bold text-ink mb-1">Two-factor verification</h2>
-              <p className="text-sm text-ink-light mb-7">Enter the 6-digit code from your authenticator app</p>
-
-              {error && (
-                <div className="mb-5 px-4 py-3 rounded-xl text-sm font-medium"
-                  style={{ background: '#FEE2E2', color: '#DC2626' }}>
-                  ⚠️ {error}
-                </div>
-              )}
+              <p className="text-sm text-ink-light mb-7">Enter the 6-digit code from your authenticator app.</p>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-ink-mid mb-1.5">Authentication Code</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoFocus
-                    maxLength={6}
-                    value={mfaCode}
-                    onChange={e => setMfaCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000000"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-center text-lg tracking-widest font-bold outline-none transition-all focus:border-[#C9A227] focus:ring-2 focus:ring-[#EFE2B5]"
-                    onKeyDown={e => e.key === 'Enter' && handleVerifyMfa()}
-                  />
-                </div>
+                <input
+                  value={code}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  placeholder="000000"
+                  autoFocus
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none transition-all focus:border-[#C9A227] focus:ring-2 focus:ring-[#EFE2B5] text-center font-bold"
+                  style={{ fontSize: 24, letterSpacing: 8 }}
+                  onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}
+                />
 
                 <button
-                  onClick={handleVerifyMfa}
-                  disabled={mfaBusy || mfaCode.length < 6}
+                  onClick={handleVerifyCode}
+                  disabled={loading || code.length < 6}
                   className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(135deg, #166534, #111111)', boxShadow: '0 8px 24px rgba(201,162,39,0.35)' }}>
-                  {mfaBusy ? 'Verifying...' : 'Verify & Continue'}
+                  {loading ? 'Verifying...' : 'Verify & Continue'}
                 </button>
 
                 <button
                   onClick={cancelMfa}
-                  disabled={mfaBusy}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold text-ink-light hover:text-ink-mid transition-all">
-                  Back to login
+                  disabled={loading}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm text-ink-mid hover:bg-gray-50 transition-all disabled:opacity-60">
+                  Use a different account
                 </button>
               </div>
             </>
           )}
+
+          <p className="text-center text-xs text-ink-light mt-6">
+            🔒 Restricted to authorized administrators only
+          </p>
         </div>
       </div>
     </div>

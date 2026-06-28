@@ -60,6 +60,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=suspended', request.url))
   }
 
+  // ── 2FA enforcement ────────────────────────────────────────────────────────
+  // If this admin has a verified factor (nextLevel === 'aal2') but the current
+  // session is still aal1, they must complete the code challenge at /login.
+  // Admins WITHOUT a factor have nextLevel === 'aal1' and are never blocked.
+  // Fail OPEN: any error here lets the request through — a bug must never lock
+  // an admin out of their own panel.
+  try {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const needs2fa = aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2'
+    if (needs2fa) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Two-factor authentication required', code: 'mfa_required' }, { status: 401 })
+      }
+      return NextResponse.redirect(new URL('/login?mfa=1', request.url))
+    }
+  } catch { /* fail open */ }
+  // ────────────────────────────────────────────────────────────────────────────
+
   // Permission gate. Super/legacy admins bypass (hasAnyPerm/canAccessRoute return true for non-sub).
   const isApi = pathname.startsWith('/api/')
   if (isApi) {
