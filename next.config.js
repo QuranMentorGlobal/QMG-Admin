@@ -22,7 +22,7 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   { key: 'Permissions-Policy', value: 'accelerometer=(), gyroscope=(), magnetometer=(), midi=(), usb=(), serial=(), bluetooth=(), hid=(), camera=(), microphone=(), geolocation=()' },
-  { key: 'Content-Security-Policy-Report-Only', value: CSP },
+  { key: 'Content-Security-Policy', value: CSP },
 ]
 
 const nextConfig = {
