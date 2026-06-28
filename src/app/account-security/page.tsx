@@ -35,16 +35,46 @@ export default function AccountSecurityPage() {
   async function refresh() {
     setLoading(true)
     try {
-      const { data: u } = await supabase.auth.getUser()
-      if (u?.user) {
-        const { data: p } = await (supabase as any).from('profiles')
-          .select('first_name, last_name').eq('id', u.user.id).maybeSingle()
-        setAdminName(p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() || (u.user.email || 'Admin') : (u.user.email || 'Admin'))
+      // Wait for the login session to hydrate before calling any MFA method.
+      // If MFA is called before the session is ready, the request goes out with
+      // the anon token (no `sub`), and the auth server rejects it with
+      // "invalid claim: missing sub claim". getSession() reads locally, so we
+      // poll it a few times until the user session is present.
+      let session: any = null
+      for (let i = 0; i < 6; i++) {
+        const { data: s } = await supabase.auth.getSession()
+        if (s?.session?.user) { session = s.session; break }
+        await new Promise((r) => setTimeout(r, 250))
       }
-      const { data } = await supabase.auth.mfa.listFactors()
-      const verified = (data?.totp || []).find((f: any) => f.status === 'verified')
+      if (!session?.user) {
+        setMsg({ type: 'error', text: 'Your admin session is still loading. Please refresh the page, or sign out and sign back in.' })
+        setLoading(false)
+        return
+      }
+
+      const uid = session.user.id
+      const email = session.user.email || 'Admin'
+      const { data: p } = await (supabase as any).from('profiles')
+        .select('first_name, last_name').eq('id', uid).maybeSingle()
+      setAdminName(p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() || email : email)
+
+      // listFactors can still throw the same claim error transiently right after
+      // hydration — retry once before surfacing anything.
+      let factors: any = null
+      for (let i = 0; i < 2; i++) {
+        try {
+          const { data, error } = await supabase.auth.mfa.listFactors()
+          if (error) throw error
+          factors = data; break
+        } catch (err) {
+          if (i === 1) throw err
+          await new Promise((r) => setTimeout(r, 300))
+        }
+      }
+      const verified = (factors?.totp || []).find((f: any) => f.status === 'verified')
       setEnrolled(!!verified)
       setFactorId(verified?.id || null)
+      setMsg(null)
     } catch (e: any) {
       setMsg({ type: 'error', text: e?.message || 'Could not load 2FA status.' })
     }
@@ -104,7 +134,7 @@ export default function AccountSecurityPage() {
     setBusy(false)
   }
 
-  const card: React.CSSProperties = { background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, maxWidth: 560 }
+  const card: React.CSSProperties = { background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }
   const btn = (bg: string, color = '#fff'): React.CSSProperties => ({ background: bg, color, border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 14, cursor: busy ? 'wait' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy ? 0.7 : 1 })
 
   return (
@@ -113,7 +143,7 @@ export default function AccountSecurityPage() {
 
       <div style={{ padding: '8px 4px 40px' }}>
         {msg && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, maxWidth: 560,
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18,
             background: msg.type === 'error' ? '#FEF2F2' : '#ECFDF5', color: msg.type === 'error' ? '#991B1B' : '#065F46',
             border: `1px solid ${msg.type === 'error' ? '#FECACA' : '#A7F3D0'}`, borderRadius: 12, padding: '12px 16px', fontSize: 14, fontWeight: 600 }}>
             {msg.type === 'error' ? <AlertTriangle size={18} /> : <Check size={18} />}{msg.text}
@@ -188,7 +218,7 @@ export default function AccountSecurityPage() {
           </div>
         )}
 
-        <p style={{ fontSize: 12, color: '#9CA3AF', maxWidth: 560, marginTop: 18 }}>
+        <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 18 }}>
           This only enrolls a 2FA device. Login is not yet changed, so enabling this cannot lock you out.
           Enforcing 2FA at login is a separate step that will be turned on once enrollment is confirmed working.
         </p>
