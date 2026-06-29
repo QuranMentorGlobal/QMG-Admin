@@ -152,21 +152,21 @@ export default function AdminLayout({
   useEffect(() => {
     (async () => {
       try {
-        const sb = createClient()
-        const { data: { user } } = await sb.auth.getUser()
-        if (!user) return
-        const { data: p } = await sb.from('profiles')
-          .select('role, admin_role, admin_permissions, admin_status, admin_role_label, first_name')
-          .eq('id', user.id).single()
-        const prof = (p as any) || {}
-        setCtx({
-          role: prof.role ?? null,
-          adminRole: prof.admin_role ?? null,
-          permissions: Array.isArray(prof.admin_permissions) ? prof.admin_permissions : [],
-          status: prof.admin_status ?? 'active',
-          roleLabel: prof.admin_role_label ?? undefined,
-        })
-        setName(prof.first_name || adminName || 'Admin')
+        // Role/permissions/name come from the server (service role). The browser
+        // can't read profiles' admin columns (PII hardening), so a direct query
+        // here returns nothing → name falls back to 'Admin' and nav mis-gates.
+        const res = await fetch('/api/admin/me', { cache: 'no-store' })
+        const me: any = res.ok ? await res.json() : null
+        if (me) {
+          setCtx({
+            role: me.role ?? null,
+            adminRole: me.adminRole ?? null,
+            permissions: Array.isArray(me.permissions) ? me.permissions : [],
+            status: me.status ?? 'active',
+            roleLabel: undefined,
+          })
+          setName(me.name || adminName || 'Admin')
+        }
       } catch {}
       finally { setCtxReady(true) }
     })()

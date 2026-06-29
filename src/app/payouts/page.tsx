@@ -99,12 +99,12 @@ export default function AdminPayoutsPage() {
 
   async function loadCtx() {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: prof } = await (supabase as any).from('profiles')
-        .select('admin_role, admin_permissions').eq('id', user.id).single()
-      const isSuper = prof?.admin_role !== 'sub'
-      const perms: string[] = Array.isArray(prof?.admin_permissions) ? prof.admin_permissions : []
+      // Read role/perms from the server (service role) — the browser cannot read
+      // profiles' admin columns (PII hardening), which would silently hide actions.
+      const res = await fetch('/api/admin/me', { cache: 'no-store' })
+      const me: any = res.ok ? await res.json() : null
+      const isSuper = !!me?.isSuper
+      const perms: string[] = Array.isArray(me?.permissions) ? me.permissions : []
       setCanReview(isSuper || perms.includes('finance.review'))
       setCanProcess(isSuper || perms.includes('finance.process'))
     } catch {}

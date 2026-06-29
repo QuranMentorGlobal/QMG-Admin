@@ -64,14 +64,13 @@ export default function WithdrawalsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: prof } = await supabase.from('profiles').select('admin_role, admin_permissions').eq('id', user.id).single()
-          const isSuper = (prof as any)?.admin_role !== 'sub'
-          const perms: string[] = Array.isArray((prof as any)?.admin_permissions) ? (prof as any).admin_permissions : []
-          setCanReview(isSuper || perms.includes('finance.review'))
-          setCanProcess(isSuper || perms.includes('finance.process'))
-        }
+        // Server-side role/perms (service role) — browser can't read profiles' admin cols.
+        const res = await fetch('/api/admin/me', { cache: 'no-store' })
+        const me: any = res.ok ? await res.json() : null
+        const isSuper = !!me?.isSuper
+        const perms: string[] = Array.isArray(me?.permissions) ? me.permissions : []
+        setCanReview(isSuper || perms.includes('finance.review'))
+        setCanProcess(isSuper || perms.includes('finance.process'))
       } catch {}
       load()
     })()
