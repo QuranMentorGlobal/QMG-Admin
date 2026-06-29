@@ -9,7 +9,6 @@
 // ════════════════════════════════════════════════════════════════════════════
 'use client'
 import { useEffect, useState } from 'react'
-import PageHead from '@/components/PageHead'
 import AdminLayout from '@/components/AdminLayout'
 import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import SearchBar from '@/components/SearchBar'
@@ -185,13 +184,18 @@ export default function VerificationQueuePage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '100%' }}>
-        <PageHead
-          title="Verification Queue"
-          subtitle="Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically."
-          search={{ value: vqSearch, onChange: setVqSearch, placeholder: 'Search teachers by name or email…' }}
-          range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
-          actions={<button onClick={load} title="Refresh" style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <ShieldCheck size={22} style={{ color: GOLD }} />
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: INK, margin: 0, fontFamily: "'Fraunces',serif" }}>Verification Queue</h1>
+          <button onClick={load} title="Refresh" style={{ marginLeft: 'auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 8, cursor: 'pointer' }}><RefreshCw size={15} style={{ color: MUTED }} /></button>
+        </div>
+        <p style={{ color: MUTED, fontSize: 13, margin: '0 0 18px' }}>Review new applications and profile changes in one place. Approving updates the teacher, the public profile, and trust badges automatically.</p>
+
+        <div className="vq-filterbar" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+          <SearchBar value={vqSearch} onChange={setVqSearch} placeholder="Search teachers by name or email…" width={300} />
+          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+        </div>
+        <style>{`@media (max-width:640px){ .vq-filterbar{ justify-content:center; } }`}</style>
 
         <div className="vq-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {STATUSES.map(s => {
@@ -255,6 +259,9 @@ export default function VerificationQueuePage() {
 function ApplicationCard({ t, name, expanded, onToggle, notes, setNotes, busy, openDoc, decideApplication, tierAction, showVerified }: any) {
   const reviewables: { label: string; value: string }[] = [
     { label: 'Country', value: fmtVal(t.profiles?.country) },
+    { label: 'International Teacher', value: t.offers_international ? 'Yes — approving unlocks USD pricing' : 'No (Pakistan only)' },
+    ...(Number(t.local_hourly_rate) > 0 ? [{ label: 'Pakistan rate', value: `PKR ${Number(t.local_hourly_rate).toLocaleString()}/hr` }] : []),
+    ...(Number(t.hourly_rate_usd) > 0 ? [{ label: 'International rate', value: `$${Number(t.hourly_rate_usd).toLocaleString()}/hr` }] : []),
     { label: 'Languages', value: fmtVal(t.teaching_languages) },
     { label: 'Specializations', value: fmtVal(t.specializations) },
     { label: 'Experience', value: `${t.years_experience || 0} yrs` },
