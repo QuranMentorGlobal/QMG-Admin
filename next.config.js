@@ -30,7 +30,21 @@ const nextConfig = {
     domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com'],
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }]
+    return [
+      { source: '/(.*)', headers: securityHeaders },
+      // Force Vercel's Edge CDN (and any CDN) to NEVER cache API responses.
+      // force-dynamic + Cache-Control alone don't stop Vercel's edge; it honors
+      // Vercel-CDN-Cache-Control / CDN-Cache-Control specifically. Without this,
+      // dynamic JSON (payouts, stats, finance) can be served stale for hours.
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, max-age=0' },
+          { key: 'CDN-Cache-Control', value: 'no-store' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
+        ],
+      },
+    ]
   },
 }
 
