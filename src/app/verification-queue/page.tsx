@@ -118,6 +118,9 @@ export default function VerificationQueuePage() {
       const text = await r.text(); const d = text ? JSON.parse(text) : {}
       if (!r.ok || d.error) throw new Error(d.error || 'Action failed')
       show(action === 'approved' ? 'Approved — teacher is live and badges updated' : action === 'rejected' ? 'Application rejected' : 'Changes requested')
+      // Move the card to its new tab immediately — don't wait on (or trust the
+      // timing of) the re-fetch, which can briefly read the pre-update status.
+      setTeachers(prev => prev.map(x => x.id === t.id ? { ...x, status: action } : x))
       load()
     } catch (e: any) { showErr(e.message) }
     setBusy(null)
@@ -150,6 +153,8 @@ export default function VerificationQueuePage() {
       const text = await res.text(); const d = text ? JSON.parse(text) : {}
       if (!res.ok || d.error) throw new Error(d.error || 'Action failed')
       show(action === 'approve' ? 'Changes approved — profile re-listed and badges updated' : action === 'reject' ? 'Changes rejected' : 'Changes requested from teacher')
+      const newStatus = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'changes_requested'
+      setReqs(prev => prev.map(x => x.id === r.id ? { ...x, status: newStatus } : x))
       load()
     } catch (e: any) { showErr(e.message) }
     setBusy(null)
