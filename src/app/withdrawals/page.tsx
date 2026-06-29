@@ -80,7 +80,7 @@ export default function WithdrawalsPage() {
     setLoading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin-withdrawals', { headers: { Authorization: `Bearer ${session?.access_token}` } })
+      const res = await fetch('/api/admin-withdrawals', { cache: 'no-store', headers: { Authorization: `Bearer ${session?.access_token}` } })
       const j = res.ok ? await res.json() : []
       setRows(Array.isArray(j) ? j : [])
     } catch { setRows([]) }

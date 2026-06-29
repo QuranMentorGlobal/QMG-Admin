@@ -113,7 +113,7 @@ export default function AdminPayoutsPage() {
   async function load() {
     setLoading(true)
     let data: any[] = []
-    try { const res = await fetch('/api/payouts'); data = res.ok ? await res.json() : [] } catch {}
+    try { const res = await fetch('/api/payouts', { cache: 'no-store' }); data = res.ok ? await res.json() : [] } catch {}
     const list: PayoutRow[] = (Array.isArray(data) ? data : []).map((r: any) => ({
       ...r,
       teacher_name: r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}`.trim() : 'Teacher',
@@ -143,7 +143,7 @@ export default function AdminPayoutsPage() {
   async function openDetail(r: PayoutRow) {
     setDetail(r); setDetailData(null)
     try {
-      const res = await fetch(`/api/finance/detail?payoutId=${r.id}`)
+      const res = await fetch(`/api/finance/detail?payoutId=${r.id}`, { cache: 'no-store' })
       setDetailData(res.ok ? await res.json() : null)
     } catch { setDetailData(null) }
   }
