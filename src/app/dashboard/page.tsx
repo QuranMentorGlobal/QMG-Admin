@@ -226,7 +226,7 @@ export default function DashboardPage() {
     k.pendingPayouts   = { value: pstats.requestedPayouts ?? 0, note: 'Awaiting review' }
     k.approvedPayouts  = { value: pstats.approvedPayouts ?? 0,  note: 'Approved · unpaid' }
     k.completedPayouts = { value: pstats.completedPayouts ?? 0, note: 'Paid to teachers' }
-    k.totalPaidOut     = { value: pstats.paidOut ?? 0,          note: 'Lifetime' }
+    k.totalPaidOut     = { value: pstats.completedPayouts ?? 0, note: 'Lifetime' }
     k.teacherLiability = { value: pstats.teacherLiability ?? 0, note: 'Owed to teachers' }
   }
   const revenueSeries = useMemo(() => aggregate(data?.series?.revenue || [], gran, ['gross', 'commission']), [data, gran])
