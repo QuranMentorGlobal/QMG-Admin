@@ -88,6 +88,7 @@ export default function WithdrawalsPage() {
   }
 
   async function action(id: string, act: string, extra?: any) {
+    if (busy === id) return   // re-entry guard: ignore double-fire on same row
     setBusy(id)
     try {
       const { data: { session } } = await supabase.auth.getSession()

@@ -128,6 +128,7 @@ export default function AdminPayoutsPage() {
   }
 
   async function action(payoutId: string, act: string, extra?: any) {
+    if (busy === payoutId) return   // re-entry guard: ignore double-fire on same row
     setBusy(payoutId)
     try {
       const res = await fetch('/api/admin-payouts', {

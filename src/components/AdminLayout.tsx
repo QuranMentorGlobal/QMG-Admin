@@ -14,7 +14,7 @@ const NAV_SCROLL_KEY = 'qmg-admin-nav-scroll'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccessRoute, type AdminCtx } from '@/lib/permissions'
-import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail, Megaphone, Activity } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookOpen, Star, Settings, LogOut, Menu, X, ChevronRight, Search, Bell, CreditCard, MessageSquare, ShieldCheck, ShieldAlert, BarChart3, CalendarCheck, UserCog, ScrollText, GitCompareArrows, SlidersHorizontal, Briefcase, RotateCcw, Award, Library, Wallet, Mail, Megaphone, Activity, Banknote } from 'lucide-react'
 
 // Two-level nav: primary rail = categories; clicking a category opens a drawer
 // listing its pages (sub-items). New pages slot into a category here — the rail
@@ -31,6 +31,7 @@ const CATEGORIES = [
     { href: '/payments', label: 'Payments & Revenue', icon: CreditCard    },
     { href: '/refunds',  label: 'Refunds & Cancellations', icon: RotateCcw },
     { href: '/payouts',  label: 'Payout Management',  icon: Wallet        },
+    { href: '/withdrawals', label: 'Wallet Withdrawals', icon: Banknote   },
     { href: '/finance-reports', label: 'Financial Reports', icon: BarChart3 },
     { href: '/support',  label: 'Support Tickets',    icon: MessageSquare },
     { href: '/email-logs', label: 'Email Logs',         icon: Mail          },
