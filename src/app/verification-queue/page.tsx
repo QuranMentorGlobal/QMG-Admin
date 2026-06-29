@@ -83,8 +83,8 @@ export default function VerificationQueuePage() {
     setLoading(true)
     try {
       const [tRes, rRes] = await Promise.all([
-        fetch('/api/verification-queue').then(r => r.json()).catch(() => []),
-        fetch('/api/profile-change-requests').then(r => r.json()).catch(() => []),
+        fetch('/api/verification-queue', { cache: 'no-store' }).then(r => r.json()).catch(() => []),
+        fetch('/api/profile-change-requests', { cache: 'no-store' }).then(r => r.json()).catch(() => []),
       ])
       setTeachers(Array.isArray(tRes) ? tRes : [])
       setReqs(Array.isArray(rRes) ? rRes : [])
