@@ -14,7 +14,7 @@ import RangeTabs, { withinRange } from '@/components/RangeTabs'
 import SearchBar from '@/components/SearchBar'
 import {
   ShieldCheck, CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Play,
-  Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw,
+  Clock, GitCompareArrows, AlertTriangle, BadgeCheck, RefreshCw, Globe,
 } from 'lucide-react'
 
 const GOLD = '#C9A227', INK = '#111111', BORDER = '#E8E4DA', MUTED = '#9A9A8A'
@@ -41,6 +41,7 @@ type ChangeReq = {
 const STATUSES = [
   { key: 'pending_review',     label: 'Pending Review',          color: GOLD,  icon: Clock },
   { key: 'pending_reverify',   label: 'Pending Re-Verification', color: BLUE,  icon: GitCompareArrows },
+  { key: 'international',       label: 'International Requests',   color: BLUE,  icon: Globe },
   { key: 'action_required',    label: 'Action Required',         color: AMBER, icon: AlertTriangle },
   { key: 'verified',           label: 'Verified',                color: GREEN, icon: BadgeCheck },
   { key: 'rejected',           label: 'Rejected',                color: RED,   icon: XCircle },
@@ -126,6 +127,22 @@ export default function VerificationQueuePage() {
     setBusy(null)
   }
 
+  async function decideInternational(t: Teacher, action: 'approve' | 'reject') {
+    setBusy(`intl-${t.id}-${action}`)
+    try {
+      const r = await fetch('/api/international-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: t.id, userId: t.user_id, action }),
+      })
+      const text = await r.text(); const d = text ? JSON.parse(text) : {}
+      if (!r.ok || d.error) throw new Error(d.error || 'Action failed')
+      show(action === 'approve' ? 'International teaching approved — teacher is now live to students abroad' : 'International request rejected')
+      setTeachers(prev => prev.map(x => x.id === t.id ? { ...x, international_status: action === 'approve' ? 'approved' : 'rejected' } : x))
+      load()
+    } catch (e: any) { showErr(e.message) }
+    setBusy(null)
+  }
+
   async function tierAction(t: Teacher, tier: string, action: 'approve' | 'reject') {
     setBusy(`tier-${t.id}-${tier}-${action}`)
     try {
@@ -178,9 +195,12 @@ export default function VerificationQueuePage() {
     pending_reverify: rangedReqs.filter(r => r.status === 'pending'),
     action_required: rangedReqs.filter(r => r.status === 'changes_requested'),
   }
+  // Approved teachers awaiting international (USD) approval.
+  const intlReqs = searchedTeachers.filter(t => t.status === 'approved' && (t as any).international_status === 'pending')
   const count: Record<StatusKey, number> = {
     pending_review: apps.pending_review.length,
     pending_reverify: changes.pending_reverify.length,
+    international: intlReqs.length,
     action_required: apps.action_required.length + changes.action_required.length,
     verified: apps.verified.length,
     rejected: apps.rejected.length,
@@ -246,6 +266,30 @@ export default function VerificationQueuePage() {
                   onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
                   notes={notes} setNotes={setNotes} busy={busy} decideChange={decideChange} />
               ))}
+
+            {tab === 'international' && intlReqs.map((t: Teacher) => (
+              <div key={t.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18, marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: INK }}>{name(t)}</div>
+                    <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>
+                      {t.profiles?.email || ''}{t.profiles?.country ? ` · ${t.profiles.country}` : ''}
+                    </div>
+                    <div style={{ fontSize: 13, color: INK, marginTop: 8 }}>
+                      Requested international rate: <strong>${Number((t as any).hourly_rate_usd) || 0}/hr</strong>
+                      {Number((t as any).trial_rate_usd) > 0 ? <> · Trial <strong>${Number((t as any).trial_rate_usd)}</strong></> : null}
+                    </div>
+                    <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>
+                      Stays live to Pakistani students at PKR {Number((t as any).local_hourly_rate) || 0}/hr regardless of this decision.
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <button disabled={!!busy} onClick={() => decideInternational(t, 'approve')} style={btn(GREEN)}><CheckCircle size={14} /> Approve</button>
+                    <button disabled={!!busy} onClick={() => decideInternational(t, 'reject')} style={btn(RED)}><XCircle size={14} /> Reject</button>
+                  </div>
+                </div>
+              </div>
+            ))}
 
             {count[tab] === 0 && (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: MUTED, background: '#fff', borderRadius: 16, border: `1px solid ${BORDER}` }}>
