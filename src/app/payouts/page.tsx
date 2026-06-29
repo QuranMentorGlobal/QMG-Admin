@@ -382,9 +382,12 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
   const input: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13, background: '#fff', color: INK, marginTop: 4 }
   const label: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: MUTED }
 
+  const [submitting, setSubmitting] = useState(false)
   async function submit() {
+    if (submitting || uploading) return   // hard guard against double-submit
     setErr('')
     if (!reference.trim()) { setErr('A reference / transaction number is required.'); return }
+    setSubmitting(true)
     let proofPath: string | null = null
     try {
       if (file) {
@@ -397,16 +400,19 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
           body: fd,
         })
         const j = await res.json()
-        if (!res.ok) { setErr(j.error || 'Proof upload failed.'); setUploading(false); return }
+        if (!res.ok) { setErr(j.error || 'Proof upload failed.'); setUploading(false); setSubmitting(false); return }
         proofPath = j.path
       }
-    } catch { setErr('Proof upload failed.'); setUploading(false); return }
+    } catch { setErr('Proof upload failed.'); setUploading(false); setSubmitting(false); return }
     setUploading(false)
-    onSubmit({
-      payment_method_used: method, reference_number: reference.trim(),
-      transaction_id: txn.trim() || null, finance_notes: notes.trim() || null,
-      payment_proof_url: proofPath,
-    })
+    // Await the completion so the button stays locked until the row is done.
+    try {
+      await onSubmit({
+        payment_method_used: method, reference_number: reference.trim(),
+        transaction_id: txn.trim() || null, finance_notes: notes.trim() || null,
+        payment_proof_url: proofPath,
+      })
+    } finally { setSubmitting(false) }
   }
 
   return (
@@ -438,8 +444,8 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#F8F5EE', color: INK, border: 'none' }}>Cancel</button>
-          <button disabled={busy || uploading} onClick={submit} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#16A34A', color: '#fff', border: 'none', opacity: (busy || uploading) ? 0.6 : 1 }}>
-            {uploading ? 'Uploading…' : busy ? 'Saving…' : 'Confirm Paid'}
+          <button disabled={busy || uploading || submitting} onClick={submit} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#16A34A', color: '#fff', border: 'none', opacity: (busy || uploading || submitting) ? 0.6 : 1 }}>
+            {uploading ? 'Uploading…' : (busy || submitting) ? 'Saving…' : 'Confirm Paid'}
           </button>
         </div>
       </div>
