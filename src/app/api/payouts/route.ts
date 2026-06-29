@@ -18,5 +18,8 @@ export async function GET() {
     ? await s.from('profiles').select('id, first_name, last_name').in('id', ids)
     : { data: [] } as any
   const pMap: Record<string, any> = {}; ((profs as any[]) || []).forEach(p => { pMap[p.id] = p })
-  return NextResponse.json(rows.map(r => ({ ...r, profiles: r.teacher_id ? (pMap[r.teacher_id] || null) : null })))
+  return NextResponse.json(
+    rows.map(r => ({ ...r, profiles: r.teacher_id ? (pMap[r.teacher_id] || null) : null })),
+    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+  )
 }

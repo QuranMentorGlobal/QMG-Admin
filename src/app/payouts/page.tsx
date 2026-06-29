@@ -135,7 +135,7 @@ export default function AdminPayoutsPage() {
         body: JSON.stringify({ action: act, payoutId, ...extra }),
       })
       const text = await res.text(); const j = text ? JSON.parse(text) : {}
-      if (!res.ok) { alert(j.error || 'Failed'); return }
+      if (!res.ok) { alert(j.error || 'Failed'); await load(); return }
       await load(); setDetail(null); setCompleteFor(null)
     } finally { setBusy(null) }
   }

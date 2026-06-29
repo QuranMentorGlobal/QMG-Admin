@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     user_name: `${nameMap[r.user_id]?.first_name || ''} ${nameMap[r.user_id]?.last_name || ''}`.trim() || 'User',
     user_email: nameMap[r.user_id]?.email || null,
   }))
-  return NextResponse.json(out)
+  return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } })
 }
 
 // ── POST: lifecycle actions ───────────────────────────────────────────────────

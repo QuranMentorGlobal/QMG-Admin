@@ -97,7 +97,7 @@ export default function WithdrawalsPage() {
         body: JSON.stringify({ action: act, withdrawalId: id, ...extra }),
       })
       const t = await res.text(); const j = t ? JSON.parse(t) : {}
-      if (!res.ok) { alert(j.error || 'Failed'); return }
+      if (!res.ok) { alert(j.error || 'Failed'); await load(); return }
       await load()
     } finally { setBusy(null) }
   }
