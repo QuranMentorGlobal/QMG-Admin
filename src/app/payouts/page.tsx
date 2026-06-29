@@ -8,7 +8,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import PageHead from '@/components/PageHead'
 import { Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
@@ -26,8 +25,8 @@ interface PayoutRow {
   teacher_id: string
   teacher_name?: string
   amount_usd: number
+  amount?: number
   currency: string
-  settlement_currency?: string | null; amount_local?: number | null; payout_rate?: number | null; local_breakdown?: any
   status: string
   payout_method: string | null
   payout_account: string | null
@@ -68,6 +67,11 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const fmt = (n: number) => `$${(n || 0).toFixed(2)}`
+// Native payout amount in its own currency (PKR for a Pakistani teacher, USD otherwise).
+const money = (amount: number | undefined, currency?: string) =>
+  String(currency || 'usd').toLowerCase() === 'pkr'
+    ? `PKR ${Math.round(Number(amount) || 0).toLocaleString()}`
+    : `$${(Number(amount) || 0).toFixed(2)}`
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 const prettyMethod = (m: string | null) => (m || '—').replace(/_/g, ' ')
 
@@ -99,12 +103,12 @@ export default function AdminPayoutsPage() {
 
   async function loadCtx() {
     try {
-      // Read role/perms from the server (service role) — the browser cannot read
-      // profiles' admin columns (PII hardening), which would silently hide actions.
-      const res = await fetch('/api/admin/me', { cache: 'no-store' })
-      const me: any = res.ok ? await res.json() : null
-      const isSuper = !!me?.isSuper
-      const perms: string[] = Array.isArray(me?.permissions) ? me.permissions : []
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: prof } = await (supabase as any).from('profiles')
+        .select('admin_role, admin_permissions').eq('id', user.id).single()
+      const isSuper = prof?.admin_role !== 'sub'
+      const perms: string[] = Array.isArray(prof?.admin_permissions) ? prof.admin_permissions : []
       setCanReview(isSuper || perms.includes('finance.review'))
       setCanProcess(isSuper || perms.includes('finance.process'))
     } catch {}
@@ -113,7 +117,7 @@ export default function AdminPayoutsPage() {
   async function load() {
     setLoading(true)
     let data: any[] = []
-    try { const res = await fetch(`/api/payouts?_=${Date.now()}`, { cache: 'no-store' }); data = res.ok ? await res.json() : [] } catch {}
+    try { const res = await fetch('/api/payouts'); data = res.ok ? await res.json() : [] } catch {}
     const list: PayoutRow[] = (Array.isArray(data) ? data : []).map((r: any) => ({
       ...r,
       teacher_name: r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}`.trim() : 'Teacher',
@@ -128,7 +132,6 @@ export default function AdminPayoutsPage() {
   }
 
   async function action(payoutId: string, act: string, extra?: any) {
-    if (busy === payoutId) return   // re-entry guard: ignore double-fire on same row
     setBusy(payoutId)
     try {
       const res = await fetch('/api/admin-payouts', {
@@ -136,7 +139,7 @@ export default function AdminPayoutsPage() {
         body: JSON.stringify({ action: act, payoutId, ...extra }),
       })
       const text = await res.text(); const j = text ? JSON.parse(text) : {}
-      if (!res.ok) { alert(j.error || 'Failed'); await load(); return }
+      if (!res.ok) { alert(j.error || 'Failed'); return }
       await load(); setDetail(null); setCompleteFor(null)
     } finally { setBusy(null) }
   }
@@ -144,7 +147,7 @@ export default function AdminPayoutsPage() {
   async function openDetail(r: PayoutRow) {
     setDetail(r); setDetailData(null)
     try {
-      const res = await fetch(`/api/finance/detail?payoutId=${r.id}&_=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/finance/detail?payoutId=${r.id}`)
       setDetailData(res.ok ? await res.json() : null)
     } catch { setDetailData(null) }
   }
@@ -205,12 +208,17 @@ export default function AdminPayoutsPage() {
   return (
     <AdminLayout>
     <div style={{ width: '100%' }}>
-      <PageHead
-        title="Payout Management"
-        subtitle="Review and process teacher payout requests."
-        range={{ value: range, onChange: setRange, from, to, onFrom: setFrom, onTo: setTo }}
-        actions={<button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>}
-      />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: GOLD, margin: 0 }}>Finance</p>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0 0' }}>Payout Management</h1>
+          <p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Review and process teacher payout requests.</p>
+        </div>
+        <div className="qmg-payout-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <RangeTabs value={range} onChange={setRange} from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+          <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 12.5, fontWeight: 700 }}><Download size={14} /> Export CSV</button>
+        </div>
+      </div>
 
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
@@ -268,7 +276,7 @@ export default function AdminPayoutsPage() {
               {filtered.map(r => (
                 <tr key={r.id} style={{ borderTop: '1px solid rgba(201,162,39,0.07)' }}>
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{r.teacher_name}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: INK }}>{fmt(r.amount_usd)}{r.settlement_currency && r.settlement_currency !== 'usd' && r.amount_local != null && <span style={{ display: 'block', fontSize: 11, color: MUTED, fontWeight: 600 }}>→ {r.settlement_currency.toUpperCase()} {Number(r.amount_local).toLocaleString()}</span>}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: INK }}>{money(r.amount ?? r.amount_usd, r.currency)}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{prettyMethod(r.payment_method_used || r.payout_method)}</td>
                   <td style={{ padding: '12px 16px' }}><StatusBadge status={r.status} /></td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED, whiteSpace: 'nowrap' }}>{fmtDate(r.requested_at)}</td>
@@ -300,7 +308,7 @@ export default function AdminPayoutsPage() {
         <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 520, width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: INK, margin: '0 0 4px' }}>Payout Details</h3>
-            <p style={{ fontSize: 13, color: MUTED, margin: '0 0 16px' }}>{detail.teacher_name} · {fmt(detail.amount_usd)} · <StatusBadge status={detail.status} /></p>
+            <p style={{ fontSize: 13, color: MUTED, margin: '0 0 16px' }}>{detail.teacher_name} · {money(detail.amount ?? detail.amount_usd, detail.currency)} · <StatusBadge status={detail.status} /></p>
 
             {/* Key facts */}
             <div style={{ background: 'rgba(201,162,39,0.05)', borderRadius: 12, padding: 16, fontSize: 13 }}>
@@ -312,13 +320,6 @@ export default function AdminPayoutsPage() {
                 ['Reference', detail.reference_number || '—'],
                 ['Transaction ID', detail.transaction_id || '—'],
                 ['Processed by', detailData?.processedByName || '—'],
-                ...(detail.settlement_currency && detail.settlement_currency !== 'usd'
-                  ? [
-                      ['Paid as', `${detail.settlement_currency.toUpperCase()} ${Number(detail.amount_local || 0).toLocaleString()}`],
-                      ...(detail.local_breakdown?.frozen?.local ? [['  • Frozen (payment-day)', `${detail.settlement_currency.toUpperCase()} ${Number(detail.local_breakdown.frozen.local).toLocaleString()}`]] : []),
-                      ...(detail.local_breakdown?.converted?.local ? [[`  • Converted @ ${detail.payout_rate || '—'}`, `${detail.settlement_currency.toUpperCase()} ${Number(detail.local_breakdown.converted.local).toLocaleString()}`]] : []),
-                    ]
-                  : []),
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
                   <span style={{ color: MUTED }}>{k}</span><span style={{ color: INK, fontWeight: 600 }}>{v as string}</span>
@@ -383,12 +384,9 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
   const input: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13, background: '#fff', color: INK, marginTop: 4 }
   const label: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: MUTED }
 
-  const [submitting, setSubmitting] = useState(false)
   async function submit() {
-    if (submitting || uploading) return   // hard guard against double-submit
     setErr('')
     if (!reference.trim()) { setErr('A reference / transaction number is required.'); return }
-    setSubmitting(true)
     let proofPath: string | null = null
     try {
       if (file) {
@@ -401,26 +399,23 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
           body: fd,
         })
         const j = await res.json()
-        if (!res.ok) { setErr(j.error || 'Proof upload failed.'); setUploading(false); setSubmitting(false); return }
+        if (!res.ok) { setErr(j.error || 'Proof upload failed.'); setUploading(false); return }
         proofPath = j.path
       }
-    } catch { setErr('Proof upload failed.'); setUploading(false); setSubmitting(false); return }
+    } catch { setErr('Proof upload failed.'); setUploading(false); return }
     setUploading(false)
-    // Await the completion so the button stays locked until the row is done.
-    try {
-      await onSubmit({
-        payment_method_used: method, reference_number: reference.trim(),
-        transaction_id: txn.trim() || null, finance_notes: notes.trim() || null,
-        payment_proof_url: proofPath,
-      })
-    } finally { setSubmitting(false) }
+    onSubmit({
+      payment_method_used: method, reference_number: reference.trim(),
+      transaction_id: txn.trim() || null, finance_notes: notes.trim() || null,
+      payment_proof_url: proofPath,
+    })
   }
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 460, width: '100%' }}>
         <h3 style={{ fontSize: 18, fontWeight: 800, color: INK, margin: '0 0 4px' }}>Mark Payout Paid</h3>
-        <p style={{ fontSize: 13, color: MUTED, margin: '0 0 16px' }}>{payout.teacher_name} · {fmt(payout.amount_usd)}</p>
+        <p style={{ fontSize: 13, color: MUTED, margin: '0 0 16px' }}>{payout.teacher_name} · {money(payout.amount ?? payout.amount_usd, payout.currency)}</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div><span style={label}>Payment Method</span>
@@ -445,8 +440,8 @@ function CompleteModal({ payout, onClose, onSubmit, busy, uploadHeaders, supabas
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#F8F5EE', color: INK, border: 'none' }}>Cancel</button>
-          <button disabled={busy || uploading || submitting} onClick={submit} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#16A34A', color: '#fff', border: 'none', opacity: (busy || uploading || submitting) ? 0.6 : 1 }}>
-            {uploading ? 'Uploading…' : (busy || submitting) ? 'Saving…' : 'Confirm Paid'}
+          <button disabled={busy || uploading} onClick={submit} style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', background: '#16A34A', color: '#fff', border: 'none', opacity: (busy || uploading) ? 0.6 : 1 }}>
+            {uploading ? 'Uploading…' : busy ? 'Saving…' : 'Confirm Paid'}
           </button>
         </div>
       </div>
