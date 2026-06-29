@@ -19,7 +19,6 @@
 // ============================================================
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import PageHead from '@/components/PageHead'
 import { createClient } from '@/lib/supabase/client'
 import AdminLayout from '@/components/AdminLayout'
 import {
@@ -281,14 +280,16 @@ export default function SettingsPage() {
       {toast && <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 90, padding: '12px 18px', borderRadius: 12, background: toast.startsWith('✅') ? 'linear-gradient(135deg,#166534,#C9A227)' : '#DC2626', color: toast.startsWith('✅') ? '#111111' : '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>{toast}</div>}
 
       {/* Header */}
-      <PageHead
-        title="Platform Settings"
-        subtitle={`Configure your platform across ${CATEGORIES.length} categories.`}
-        actions={<button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+        <div>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: INK, margin: 0 }}>Platform Settings</h1>
+          <p style={{ fontSize: 13, color: '#6B6B6B', margin: '5px 0 0' }}>Configure your platform across {CATEGORIES.length} categories.</p>
+        </div>
+        <button onClick={attemptSave} disabled={saving} className="qmg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           <Save size={15} /> {saving ? 'Saving…' : 'Save changes'}
           {criticalChanges.length > 0 && !saving && <span style={{ background: '#111111', color: GOLD, borderRadius: 99, fontSize: 11, fontWeight: 800, padding: '1px 7px' }}>{criticalChanges.length}</span>}
-        </button>}
-      />
+        </button>
+      </div>
 
       {/* Search */}
       <div style={{ position: 'relative', marginBottom: 18, maxWidth: 460 }}>
@@ -335,6 +336,9 @@ export default function SettingsPage() {
           </div>
         )
       )}
+
+      {/* ── Manual USD→PKR exchange rate ── */}
+      {!activeCat && !query && <UsdPkrRateCard />}
 
       {/* ── Single category form ── */}
       {activeCat && (
@@ -452,5 +456,70 @@ export default function SettingsPage() {
         .qmg-modal{width:min(460px,94vw);background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3);padding:22px 22px 20px;animation:qmgrise .25s ease both}
       `}</style>
     </AdminLayout>
+  )
+}
+
+// ── Manual USD→PKR exchange rate card ───────────────────────────────────────
+// Lives in exchange_rates (not platform_settings), so it has its own endpoint.
+// This is the single rate used to convert a PK teacher's USD earning into PKR.
+function UsdPkrRateCard() {
+  const [rate, setRate] = useState('')
+  const [saved, setSaved] = useState<number | null>(null)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    fetch('/api/exchange-rate')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.rate) { setRate(String(d.rate)); setSaved(Number(d.rate)); setUpdatedAt(d.updated_at || null) } })
+      .catch(() => {})
+  }, [])
+
+  async function save() {
+    const r = Number(rate)
+    if (!Number.isFinite(r) || r <= 0) { setMsg('Enter a valid rate greater than 0.'); return }
+    setBusy(true); setMsg('')
+    try {
+      const res = await fetch('/api/exchange-rate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rate: r }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) setMsg(j.error || 'Could not save the rate.')
+      else { setSaved(j.rate); setUpdatedAt(j.updated_at || null); setMsg('Saved ✓') }
+    } catch { setMsg('Could not save the rate.') }
+    setBusy(false)
+  }
+
+  const fieldStyle: React.CSSProperties = { width: 180, padding: '11px 14px', borderRadius: 11, border: `1.5px solid ${BORDER}`, fontSize: 14, outline: 'none', color: INK, background: '#fff', boxSizing: 'border-box' }
+
+  return (
+    <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '20px 22px', marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <span style={{ fontSize: 14.5, fontWeight: 800, color: INK }}>USD → PKR exchange rate</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: GOLD, background: 'rgba(201,162,39,0.12)', borderRadius: 99, padding: '2px 9px' }}>MANUAL · MONTHLY</span>
+      </div>
+      <p style={{ fontSize: 12.5, color: '#6B6B6B', margin: '0 0 14px', lineHeight: 1.5 }}>
+        Set this from current market rates each month. It converts a Pakistani teacher&apos;s USD (international) earnings into PKR for their ledger, and is never overwritten by the auto feed.
+      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <span style={{ position: 'absolute', left: 12, fontSize: 13, fontWeight: 700, color: MUTED }}>1 USD =</span>
+          <input type="number" min={0} step="0.01" value={rate} onChange={e => setRate(e.target.value)}
+            style={{ ...fieldStyle, paddingLeft: 64 }} placeholder="280" />
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: INK }}>PKR</span>
+        <button onClick={save} disabled={busy}
+          style={{ padding: '10px 18px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#166534,#C9A227)', color: '#fff', fontSize: 13, fontWeight: 700, opacity: busy ? 0.6 : 1 }}>
+          {busy ? 'Saving…' : 'Save rate'}
+        </button>
+        {msg && <span style={{ fontSize: 12.5, fontWeight: 700, color: msg.includes('✓') ? '#15803D' : '#DC2626' }}>{msg}</span>}
+      </div>
+      {saved != null && (
+        <p style={{ fontSize: 11.5, color: MUTED, margin: '12px 0 0' }}>
+          Current: 1 USD = PKR {saved.toLocaleString()}{updatedAt ? ` · updated ${new Date(updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+        </p>
+      )}
+    </div>
   )
 }
