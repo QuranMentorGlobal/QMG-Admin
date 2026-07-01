@@ -30,9 +30,9 @@ type TeacherCompletion = { teacherId: string; teacherName: string; completed: nu
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'trial',     label: 'Trial Classes',    icon: Target        },
-  { key: 'recorded',  label: 'Recorded Courses', icon: BookOpen      },
   { key: 'live',      label: 'Live Classes',     icon: Video         },
   { key: 'long',      label: 'Long Courses',     icon: GraduationCap },
+  { key: 'recorded',  label: 'Recorded Courses', icon: BookOpen      },
   { key: 'completed', label: 'Completed',        icon: Award         },
 ]
 
@@ -121,9 +121,9 @@ export default function CoursesHubPage() {
         {/* Type stat cards (also act as tab shortcuts) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 18 }}>
           <StatCard icon={Target}        label="Trial Classes"    value={counts.trial}     active={tab === 'trial'}     onClick={() => setTab('trial')} />
-          <StatCard icon={BookOpen}      label="Recorded Courses" value={counts.recorded}  active={tab === 'recorded'}  onClick={() => setTab('recorded')} />
           <StatCard icon={Video}         label="Live Classes"     value={counts.live}      active={tab === 'live'}      onClick={() => setTab('live')} />
           <StatCard icon={GraduationCap} label="Long Courses"     value={counts.long}      active={tab === 'long'}      onClick={() => setTab('long')} />
+          <StatCard icon={BookOpen}      label="Recorded Courses" value={counts.recorded}  active={tab === 'recorded'}  onClick={() => setTab('recorded')} />
           <StatCard icon={Award}         label="Completed"        value={counts.completed} active={tab === 'completed'} onClick={() => setTab('completed')} />
         </div>
 
@@ -159,7 +159,7 @@ export default function CoursesHubPage() {
         {tab === 'completed' && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-              {(['all', 'trial', 'recorded', 'live', 'long'] as const).map(k => {
+              {(['all', 'trial', 'live', 'long', 'recorded'] as const).map(k => {
                 const on = completedType === k
                 const n = k === 'all' ? counts.completed : courses.filter(c => c.closed && c.tab === k).length
                 return (

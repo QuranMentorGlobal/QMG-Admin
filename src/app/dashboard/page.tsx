@@ -395,9 +395,9 @@ export default function DashboardPage() {
           <div className="qmg-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
             {[
               { label: 'Trial Classes',    value: courseCounts.trial,    href: '/courses-hub?tab=trial',    icon: Target },
-              { label: 'Recorded Courses', value: courseCounts.recorded, href: '/courses-hub?tab=recorded', icon: BookOpen },
               { label: 'Live Classes',     value: courseCounts.live,     href: '/courses-hub?tab=live',     icon: Video },
               { label: 'Long Courses',     value: courseCounts.long,     href: '/courses-hub?tab=long',     icon: GraduationCap },
+              { label: 'Recorded Courses', value: courseCounts.recorded, href: '/courses-hub?tab=recorded', icon: BookOpen },
             ].map(c => (
               <a key={c.href} href={c.href} className="adminx-row"
                 style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
